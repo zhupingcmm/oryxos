@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 980"
+     font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif">
+
+  <!-- ============================================================ -->
+  <!-- DEFINITIONS: arrow markers, gradients                          -->
+  <!-- ============================================================ -->
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#06b6d4"/>
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444"/>
+    </marker>
+
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#eff6ff"/>
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ede9fe"/><stop offset="100%" stop-color="#f5f3ff"/>
+    </linearGradient>
+    <linearGradient id="grad-orange" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fed7aa"/><stop offset="100%" stop-color="#fff7ed"/>
+    </linearGradient>
+    <linearGradient id="grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a7f3d0"/><stop offset="100%" stop-color="#f0fdf4"/>
+    </linearGradient>
+    <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a5f3fc"/><stop offset="100%" stop-color="#ecfeff"/>
+    </linearGradient>
+    <linearGradient id="grad-gray" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e5e7eb"/><stop offset="100%" stop-color="#f9fafb"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ============================================================ -->
+  <!-- BACKGROUND + TITLE                                            -->
+  <!-- ============================================================ -->
+  <rect width="1280" height="980" fill="#fafbfc"/>
+  <text x="640" y="42" text-anchor="middle" font-size="26" font-weight="700" fill="#111827">OryxOS 整体架构</text>
+  <text x="640" y="66" text-anchor="middle" font-size="13" fill="#6b7280">Java/Spring Boot 单体  ·  JDK 21 + virtual thread  ·  单二进制部署  ·  数据不出企业</text>
+
+  <!-- ============================================================ -->
+  <!-- ORYXOS INSTANCE BOUNDARY                                       -->
+  <!-- ============================================================ -->
+  <rect x="40" y="90" width="1200" height="700" rx="18" fill="#ffffff" stroke="#1f2937" stroke-width="1.5"/>
+  <path d="M 40 108 L 40 90 Q 40 90 58 90 L 222 90 Q 240 90 240 108 L 240 116 L 40 116 Z" fill="#1f2937"/>
+  <text x="60" y="108" font-size="11" font-weight="700" fill="#ffffff" letter-spacing="1.5">ORYXOS INSTANCE</text>
+
+  <!-- ============================================================ -->
+  <!-- ENTRY LAYER (y: 140 - 220)                                    -->
+  <!-- ============================================================ -->
+
+  <!-- CLI Channel -->
+  <g>
+    <rect x="120" y="140" width="220" height="80" rx="10" fill="url(#grad-blue)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="230" y="166" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">CLI Channel</text>
+    <text x="230" y="186" text-anchor="middle" font-size="11" fill="#1d4ed8">oryxos chat</text>
+    <text x="230" y="203" text-anchor="middle" font-size="10" fill="#6b7280">人推  ·  本地交互</text>
+  </g>
+
+  <!-- Web Service -->
+  <g>
+    <rect x="530" y="140" width="220" height="80" rx="10" fill="url(#grad-blue)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="640" y="166" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">Web Service</text>
+    <text x="640" y="186" text-anchor="middle" font-size="11" fill="#1d4ed8">REST API  ·  :8080</text>
+    <text x="640" y="203" text-anchor="middle" font-size="10" fill="#6b7280">人推  ·  业务系统集成</text>
+  </g>
+
+  <!-- AgentScheduler -->
+  <g>
+    <rect x="940" y="140" width="220" height="80" rx="10" fill="url(#grad-blue)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="1050" y="166" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">AgentScheduler</text>
+    <text x="1050" y="186" text-anchor="middle" font-size="11" fill="#1d4ed8">cron  ·  ThreadPoolTaskScheduler</text>
+    <text x="1050" y="203" text-anchor="middle" font-size="10" fill="#6b7280">钟推  ·  到点自动触发</text>
+  </g>
+
+  <!-- Arrows from triggers to AgentService -->
+  <path d="M 230 220 L 230 240 L 540 240 L 540 250" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <path d="M 640 220 L 640 250" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <path d="M 1050 220 L 1050 240 L 740 240 L 740 250" fill="none" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+  <!-- ============================================================ -->
+  <!-- ENGINE LAYER (y: 250 - 455)                                   -->
+  <!-- ============================================================ -->
+
+  <!-- AgentService container -->
+  <rect x="120" y="250" width="1040" height="80" rx="12" fill="url(#grad-purple)" stroke="#7c3aed" stroke-width="2"/>
+  <text x="140" y="276" font-size="14" font-weight="700" fill="#5b21b6">AgentService  —  Three Trigger Sources Converge Here</text>
+  <text x="140" y="297" font-size="11" fill="#6b21a8" font-family="ui-monospace, 'SF Mono', Consolas, monospace">process(Session, msg) → ProfileContext.set(profile) → ReActLoop.run() → persist → finally clear</text>
+  <text x="140" y="316" font-size="10" fill="#7c3aed">ThreadLocal ProfileContext 让 OryxTool.execute 不带 Profile 也能感知当前 Agent</text>
+
+  <!-- Arrow from AgentService to ReActLoop -->
+  <line x1="640" y1="330" x2="640" y2="365" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
+
+  <!-- ReActLoop container -->
+  <rect x="120" y="365" width="1040" height="100" rx="12" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="140" y="390" font-size="14" font-weight="700" fill="#5b21b6">ReActLoop  —  Self-Implemented Reason + Act Engine  (~tens of lines)</text>
+
+  <!-- PromptBuilder sub-box -->
+  <rect x="140" y="400" width="280" height="55" rx="6" fill="url(#grad-purple)" stroke="#7c3aed" stroke-width="1"/>
+  <text x="280" y="421" text-anchor="middle" font-size="12" font-weight="600" fill="#5b21b6">PromptBuilder</text>
+  <text x="280" y="437" text-anchor="middle" font-size="10" fill="#6b21a8">① system  ② memory  ③ history  ④ tools</text>
+  <text x="280" y="450" text-anchor="middle" font-size="9.5" fill="#7c3aed">末尾附当前日期时间</text>
+
+  <!-- ToolExecutor sub-box -->
+  <rect x="500" y="400" width="280" height="55" rx="6" fill="url(#grad-purple)" stroke="#7c3aed" stroke-width="1"/>
+  <text x="640" y="421" text-anchor="middle" font-size="12" font-weight="600" fill="#5b21b6">ToolExecutor</text>
+  <text x="640" y="437" text-anchor="middle" font-size="10" fill="#6b21a8">find Tool → sandbox → exec → audit</text>
+  <text x="640" y="450" text-anchor="middle" font-size="9.5" fill="#7c3aed">失败按可重试策略返回错误</text>
+
+  <!-- MAX_ITERATIONS sub-box -->
+  <rect x="860" y="400" width="280" height="55" rx="6" fill="url(#grad-purple)" stroke="#7c3aed" stroke-width="1"/>
+  <text x="1000" y="421" text-anchor="middle" font-size="12" font-weight="600" fill="#5b21b6">Loop Control</text>
+  <text x="1000" y="437" text-anchor="middle" font-size="10" fill="#6b21a8">MAX_ITERATIONS default 10</text>
+  <text x="1000" y="450" text-anchor="middle" font-size="9.5" fill="#7c3aed">Profile 可覆盖</text>
+
+  <!-- ============================================================ -->
+  <!-- CAPABILITY LAYER (y: 480 - 660)                               -->
+  <!-- ============================================================ -->
+
+  <!-- Arrows down from ReActLoop to capability columns -->
+  <line x1="280" y1="465" x2="280" y2="540" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <line x1="640" y1="465" x2="640" y2="540" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)"/>
+  <line x1="1000" y1="465" x2="1000" y2="540" stroke="#06b6d4" stroke-width="2" marker-end="url(#arrow-cyan)"/>
+
+  <!-- Column labels -->
+  <rect x="120" y="480" width="400" height="22" rx="4" fill="#fed7aa"/>
+  <text x="320" y="496" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412" letter-spacing="0.5">CAPABILITY 1 · LLM PROVIDER</text>
+
+  <rect x="540" y="480" width="200" height="22" rx="4" fill="#a7f3d0"/>
+  <text x="640" y="496" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46" letter-spacing="0.5">CAPABILITY 3 · MEMORY</text>
+
+  <rect x="780" y="480" width="400" height="22" rx="4" fill="#a5f3fc"/>
+  <text x="980" y="496" text-anchor="middle" font-size="11" font-weight="700" fill="#155e75" letter-spacing="0.5">CAPABILITY 4 · TOOL</text>
+
+  <!-- ProviderService -->
+  <rect x="120" y="510" width="400" height="90" rx="10" fill="url(#grad-orange)" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="320" y="535" text-anchor="middle" font-size="14" font-weight="700" fill="#9a3412">ProviderService</text>
+  <text x="320" y="555" text-anchor="middle" font-size="10.5" fill="#c2410c">Spring AI Alibaba + 显式 name → ChatModel 映射</text>
+  <text x="320" y="572" text-anchor="middle" font-size="10" fill="#7c2d12">DeepSeek  ·  Qwen  ·  Kimi  ·  Zhipu  ·  Doubao</text>
+  <text x="320" y="586" text-anchor="middle" font-size="10" fill="#7c2d12">Anthropic  ·  OpenAI  ·  Ollama</text>
+
+  <!-- MemoryService -->
+  <rect x="540" y="510" width="200" height="90" rx="10" fill="url(#grad-green)" stroke="#10b981" stroke-width="1.5"/>
+  <text x="640" y="535" text-anchor="middle" font-size="14" font-weight="700" fill="#065f46">MemoryService</text>
+  <text x="640" y="552" text-anchor="middle" font-size="10" fill="#047857">三层门面</text>
+
+  <!-- 3 backends -->
+  <rect x="552" y="563" width="56" height="28" rx="4" fill="#ffffff" stroke="#10b981" stroke-width="1"/>
+  <text x="580" y="581" text-anchor="middle" font-size="9.5" fill="#065f46">Markdown</text>
+
+  <rect x="612" y="563" width="56" height="28" rx="4" fill="#ffffff" stroke="#10b981" stroke-width="1"/>
+  <text x="640" y="581" text-anchor="middle" font-size="9.5" fill="#065f46">SQLite</text>
+
+  <rect x="672" y="563" width="56" height="28" rx="4" fill="#ffffff" stroke="#10b981" stroke-width="1"/>
+  <text x="700" y="581" text-anchor="middle" font-size="9.5" fill="#065f46">Mem0</text>
+
+  <!-- Tool column -->
+  <rect x="780" y="510" width="400" height="90" rx="10" fill="url(#grad-cyan)" stroke="#06b6d4" stroke-width="1.5"/>
+  <text x="980" y="535" text-anchor="middle" font-size="14" font-weight="700" fill="#155e75">ToolRegistry  +  Sandbox</text>
+
+  <!-- Built-in column -->
+  <text x="800" y="558" font-size="11" font-weight="700" fill="#0e7490">Built-in (9):</text>
+  <text x="800" y="572" font-size="9.5" fill="#155e75">FileTools · ShellTools · HttpTools</text>
+  <text x="800" y="585" font-size="9.5" fill="#155e75">MemoryTools · NotifyTools</text>
+
+  <!-- Plugin column -->
+  <text x="990" y="558" font-size="11" font-weight="700" fill="#0e7490">Plugin Tools:</text>
+  <text x="990" y="572" font-size="9.5" fill="#155e75">① AGENT.md + MCP  零代码</text>
+  <text x="990" y="585" font-size="9.5" fill="#155e75">② 自写 MCP server  ③ @Tool Java</text>
+
+  <!-- WhitelistSandbox callout -->
+  <rect x="780" y="610" width="400" height="22" rx="4" fill="#ecfeff" stroke="#0891b2" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="980" y="625" text-anchor="middle" font-size="10" fill="#0e7490" font-style="italic">WhitelistSandbox: file/shell/http 路径/命令/域名白名单 (扩展阶段: 容器 → microVM)</text>
+
+  <!-- ============================================================ -->
+  <!-- FOUNDATION LAYER (y: 680 - 770)                               -->
+  <!-- ============================================================ -->
+
+  <rect x="40" y="660" width="200" height="22" rx="4" fill="#e5e7eb"/>
+  <text x="140" y="676" text-anchor="middle" font-size="11" font-weight="700" fill="#374151" letter-spacing="0.5">FOUNDATION</text>
+
+  <!-- Filesystem -->
+  <rect x="100" y="690" width="380" height="80" rx="10" fill="url(#grad-gray)" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="290" y="713" text-anchor="middle" font-size="13" font-weight="700" fill="#374151">.oryxos/  文件系统</text>
+  <text x="290" y="733" text-anchor="middle" font-size="10.5" fill="#4b5563">agents/  ·  profiles/  ·  memory/MEMORY.md</text>
+  <text x="290" y="749" text-anchor="middle" font-size="10.5" fill="#4b5563">mcp_servers.yaml  ·  AGENTS.md · SOUL.md · USER.md</text>
+  <text x="290" y="765" text-anchor="middle" font-size="9.5" fill="#6b7280" font-style="italic">git 可跟踪  ·  用户可手编  ·  AgentLoader 扫目录 deriveProfile</text>
+
+  <!-- SQLite -->
+  <rect x="500" y="690" width="380" height="80" rx="10" fill="url(#grad-gray)" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="690" y="713" text-anchor="middle" font-size="13" font-weight="700" fill="#374151">SQLite  +  Spring Data JPA</text>
+  <text x="690" y="733" text-anchor="middle" font-size="10.5" fill="#4b5563">sessions  ·  tool_invocations  ·  llm_calls</text>
+  <text x="690" y="749" text-anchor="middle" font-size="10.5" fill="#4b5563">scheduled_tasks  ·  task_executions</text>
+  <text x="690" y="765" text-anchor="middle" font-size="9.5" fill="#6b7280" font-style="italic">审计 day-one 写入  ·  Session 跨重启恢复</text>
+
+  <!-- ConfigLoader -->
+  <rect x="900" y="690" width="300" height="80" rx="10" fill="url(#grad-gray)" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="1050" y="713" text-anchor="middle" font-size="13" font-weight="700" fill="#374151">ConfigLoader</text>
+  <text x="1050" y="733" text-anchor="middle" font-size="10.5" fill="#4b5563">环境变量注入  ·  ${ENV_VAR} 占位</text>
+  <text x="1050" y="749" text-anchor="middle" font-size="10.5" fill="#4b5563">敏感配置不落 Profile</text>
+  <text x="1050" y="765" text-anchor="middle" font-size="9.5" fill="#6b7280" font-style="italic">扩展: KMS/Vault 接入</text>
+
+  <!-- ============================================================ -->
+  <!-- EXTERNAL (below boundary, dashed)                              -->
+  <!-- ============================================================ -->
+
+  <rect x="40" y="810" width="1200" height="140" rx="18" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <path d="M 40 828 L 40 810 Q 40 810 58 810 L 282 810 Q 300 810 300 828 L 300 836 L 40 836 Z" fill="#ef4444"/>
+  <text x="60" y="828" font-size="11" font-weight="700" fill="#ffffff" letter-spacing="1.5">EXTERNAL  ·  OUTSIDE ORYXOS BOUNDARY</text>
+
+  <!-- LLM APIs -->
+  <rect x="120" y="855" width="540" height="70" rx="10" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="390" y="880" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">LLM Provider APIs</text>
+  <text x="390" y="898" text-anchor="middle" font-size="11" fill="#b91c1c">DeepSeek  ·  Qwen  ·  Kimi  ·  Zhipu  ·  Doubao  ·  Anthropic  ·  OpenAI  ·  Ollama</text>
+  <text x="390" y="914" text-anchor="middle" font-size="10" fill="#dc2626">OpenAI-兼容协议即可接入</text>
+
+  <!-- MCP servers -->
+  <rect x="740" y="855" width="460" height="70" rx="10" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="970" y="880" text-anchor="middle" font-size="14" font-weight="700" fill="#991b1b">MCP Servers</text>
+  <text x="970" y="898" text-anchor="middle" font-size="11" fill="#b91c1c">GitHub  ·  Slack  ·  飞书  ·  企业微信  ·  自定义业务系统</text>
+  <text x="970" y="914" text-anchor="middle" font-size="10" fill="#dc2626">JSON-RPC over stdio (核心) / SSE (扩展)</text>
+
+  <!-- ============================================================ -->
+  <!-- CROSS-BOUNDARY ARROWS (dashed)                                -->
+  <!-- ============================================================ -->
+
+  <!-- Provider → LLM APIs (orange dashed, exit boundary) -->
+  <path d="M 280 600 L 280 820 L 280 855" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-orange)" opacity="0.7"/>
+
+  <!-- Tool → MCP (cyan dashed, exit boundary) -->
+  <path d="M 1000 632 L 1000 820 L 970 855" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)" opacity="0.7"/>
+
+  <!-- ============================================================ -->
+  <!-- LEGEND                                                         -->
+  <!-- ============================================================ -->
+
+  <rect x="40" y="958" width="1200" height="20" fill="none"/>
+  <text x="50" y="972" font-size="10" fill="#6b7280" font-style="italic">所有外部依赖都在应用边界之外  ·  OryxOS 自身不绑定任何一家  ·  数据可完全留在企业基础设施  ·  5 个 Maven 模块的颜色对应 5 个能力</text>
+
+</svg>

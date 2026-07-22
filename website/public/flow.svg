@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="g-entry" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f8f8f8"/>
+      <stop offset="100%" stop-color="#e8e8e8"/>
+    </linearGradient>
+    <linearGradient id="g-engine" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="g-capability" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#dcdcdc"/>
+    </linearGradient>
+    <linearGradient id="g-foundation" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fafafa"/>
+      <stop offset="100%" stop-color="#eeeeee"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#666666"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="520" fill="#ffffff"/>
+
+  <!-- ── Layer labels (left side) ── -->
+  <text x="20" y="70" font-size="11" font-weight="700" fill="#999" letter-spacing="2">ENTRY LAYER</text>
+  <text x="20" y="190" font-size="11" font-weight="700" fill="#999" letter-spacing="2">ENGINE LAYER</text>
+  <text x="20" y="320" font-size="11" font-weight="700" fill="#999" letter-spacing="2">CAPABILITY LAYER</text>
+  <text x="20" y="450" font-size="11" font-weight="700" fill="#999" letter-spacing="2">FOUNDATION LAYER</text>
+
+  <!-- ── ENTRY LAYER ── -->
+  <g>
+    <rect x="160" y="40" width="220" height="70" rx="10" fill="url(#g-entry)" stroke="#cccccc"/>
+    <text x="270" y="68" font-size="14" font-weight="700" fill="#000" text-anchor="middle">CLI Channel</text>
+    <text x="270" y="88" font-size="11" fill="#666" text-anchor="middle">oryxos chat · init · status</text>
+
+    <rect x="490" y="40" width="220" height="70" rx="10" fill="url(#g-entry)" stroke="#cccccc"/>
+    <text x="600" y="68" font-size="14" font-weight="700" fill="#000" text-anchor="middle">REST Web Service</text>
+    <text x="600" y="88" font-size="11" fill="#666" text-anchor="middle">:8080 · 10 endpoints</text>
+
+    <rect x="820" y="40" width="220" height="70" rx="10" fill="url(#g-entry)" stroke="#cccccc"/>
+    <text x="930" y="68" font-size="14" font-weight="700" fill="#000" text-anchor="middle">AgentScheduler</text>
+    <text x="930" y="88" font-size="11" fill="#666" text-anchor="middle">cron · 钟推触发</text>
+  </g>
+
+  <!-- ── ENGINE LAYER (dark) ── -->
+  <g>
+    <rect x="160" y="150" width="880" height="80" rx="10" fill="url(#g-engine)"/>
+    <text x="600" y="184" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">AgentService · ReActLoop · PromptBuilder · ToolExecutor</text>
+    <text x="600" y="208" font-size="11" fill="#bbb" text-anchor="middle">Self-implemented Reason+Act engine · max_iterations cap · profile context</text>
+  </g>
+
+  <!-- arrows entry → engine -->
+  <line x1="270" y1="110" x2="270" y2="148" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="600" y1="110" x2="600" y2="148" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="930" y1="110" x2="930" y2="148" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ── CAPABILITY LAYER (5 caps) ── -->
+  <g>
+    <rect x="160" y="280" width="170" height="80" rx="10" fill="url(#g-capability)" stroke="#cccccc"/>
+    <text x="245" y="310" font-size="13" font-weight="700" fill="#000" text-anchor="middle">Provider</text>
+    <text x="245" y="332" font-size="11" fill="#666" text-anchor="middle">DeepSeek · Kimi ·</text>
+    <text x="245" y="348" font-size="11" fill="#666" text-anchor="middle">Qwen · Ollama</text>
+
+    <rect x="350" y="280" width="170" height="80" rx="10" fill="url(#g-capability)" stroke="#cccccc"/>
+    <text x="435" y="310" font-size="13" font-weight="700" fill="#000" text-anchor="middle">Memory</text>
+    <text x="435" y="332" font-size="11" fill="#666" text-anchor="middle">Session · MEMORY.md</text>
+    <text x="435" y="348" font-size="11" fill="#666" text-anchor="middle">3 pluggable backends</text>
+
+    <rect x="540" y="280" width="170" height="80" rx="10" fill="url(#g-capability)" stroke="#cccccc"/>
+    <text x="625" y="310" font-size="13" font-weight="700" fill="#000" text-anchor="middle">Tool</text>
+    <text x="625" y="332" font-size="11" fill="#666" text-anchor="middle">9 built-in · MCP</text>
+    <text x="625" y="348" font-size="11" fill="#666" text-anchor="middle">@Tool · Sandbox</text>
+
+    <rect x="730" y="280" width="170" height="80" rx="10" fill="url(#g-capability)" stroke="#cccccc"/>
+    <text x="815" y="310" font-size="13" font-weight="700" fill="#000" text-anchor="middle">Channel</text>
+    <text x="815" y="332" font-size="11" fill="#666" text-anchor="middle">CLI · Web ·</text>
+    <text x="815" y="348" font-size="11" fill="#666" text-anchor="middle">extensible</text>
+
+    <rect x="920" y="280" width="120" height="80" rx="10" fill="url(#g-capability)" stroke="#cccccc"/>
+    <text x="980" y="315" font-size="13" font-weight="700" fill="#000" text-anchor="middle">Notify</text>
+    <text x="980" y="338" font-size="11" fill="#666" text-anchor="middle">webhook · IM</text>
+  </g>
+
+  <!-- arrows engine → capabilities -->
+  <line x1="300" y1="230" x2="245" y2="278" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="450" y1="230" x2="435" y2="278" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="600" y1="230" x2="625" y2="278" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="750" y1="230" x2="815" y2="278" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="900" y1="230" x2="980" y2="278" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ── FOUNDATION LAYER ── -->
+  <g>
+    <rect x="160" y="410" width="880" height="70" rx="10" fill="url(#g-foundation)" stroke="#cccccc"/>
+    <text x="600" y="440" font-size="14" font-weight="700" fill="#000" text-anchor="middle">.oryxos/ (agents · skills · scripts · memory) · SQLite (sessions · tool_invocations · llm_calls) · ConfigLoader</text>
+    <text x="600" y="464" font-size="11" fill="#666" text-anchor="middle">User-editable workspace · audit-grade persistence · secret-safe config</text>
+  </g>
+
+  <!-- arrows capabilities → foundation -->
+  <line x1="245" y1="360" x2="245" y2="408" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="435" y1="360" x2="435" y2="408" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="625" y1="360" x2="625" y2="408" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="815" y1="360" x2="815" y2="408" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="980" y1="360" x2="980" y2="408" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ── EXTERNAL (outside OryxOS) ── -->
+  <text x="1080" y="120" font-size="10" font-weight="700" fill="#999" letter-spacing="2">EXTERNAL</text>
+  <rect x="1075" y="40" width="105" height="60" rx="8" fill="#fff" stroke="#cccccc" stroke-dasharray="4 3"/>
+  <text x="1127" y="68" font-size="12" font-weight="600" fill="#000" text-anchor="middle">LLM APIs</text>
+  <text x="1127" y="86" font-size="10" fill="#666" text-anchor="middle">vendor</text>
+
+  <rect x="1075" y="280" width="105" height="60" rx="8" fill="#fff" stroke="#cccccc" stroke-dasharray="4 3"/>
+  <text x="1127" y="308" font-size="12" font-weight="600" fill="#000" text-anchor="middle">MCP servers</text>
+  <text x="1127" y="326" font-size="10" fill="#666" text-anchor="middle">external</text>
+
+  <line x1="1075" y1="70" x2="1040" y2="60" stroke="#999" stroke-dasharray="3 3" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="1075" y1="310" x2="1040" y2="320" stroke="#999" stroke-dasharray="3 3" stroke-width="1.2" marker-end="url(#arr)"/>
+</svg>

@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: oryxos
+  main:
+    banner-mode: off
+  # US-5 will re-enable JPA + DataSource auto-config once entities and SQLite
+  # configuration are in place. The scaffold intentionally excludes these so
+  # `java -jar oryxos.jar` starts cleanly even before any feature is implemented.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+
+server:
+  port: 8080
+
+# OryxOS configuration (placeholders — actual keys are wired up in US-1 onwards)
+oryxos:
+  workspace:
+    path: ${ORYXOS_WORKSPACE:./.oryxos}
+  providers:
+    # name → model mapping (US-1 will read these into ProviderService)
+    deepseek:
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: deepseek-chat
+    qwen:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${QWEN_API_KEY:}
+      model: qwen-plus
+  memory:
+    backend: markdown   # markdown | sqlite | mem0
+  tool:
+    sandbox:
+      file:
+        allowed-paths:
+          - ${ORYXOS_WORKSPACE:./.oryxos}
+      shell:
+        allowed-commands:
+          - ls
+          - cat
+          - echo
+          - python
+          - git
+      http:
+        allowed-domains:
+          - api.github.com
+          - api.openweathermap.org
+
+logging:
+  level:
+    root: INFO
+    io.oryxos: DEBUG

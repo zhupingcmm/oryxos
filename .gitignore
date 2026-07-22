@@ -1,0 +1,100 @@
+# ─────────────────────────────────────────────────────────────
+# OryxOS · root .gitignore
+# Java 21 + Spring Boot 3.x + Maven 9 modules
+# ─────────────────────────────────────────────────────────────
+
+# ── Maven build output ──
+target/
+**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ── Java / JVM ──
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+*.hprof
+
+# ── IDE: IntelliJ IDEA ──
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ── IDE: Eclipse ──
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+
+# ── IDE: VS Code ──
+.vscode/
+*.code-workspace
+
+# ── IDE: NetBeans ──
+nb-configuration.xml
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Logs ──
+*.log
+logs/
+spring.log
+
+# ── Secrets / local config ──
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-local.yaml
+application-local.properties
+
+# ── OryxOS runtime workspace ──
+# Created by `oryxos init` in the user's project dir.
+# The demo Agents that *should* be committed live under examples/agents/.
+.oryxos/
+!**/examples/.oryxos/   # (defensive — if examples/ ever ships a workspace)
+
+# ── Build output from VitePress website/ ──
+# website/node_modules/ and website/.vitepress/dist/ are gitignored
+# in website/.gitignore. Listed here too in case of nested setups.
+website/node_modules/
+website/.vitepress/cache/
+website/.vitepress/dist/
+
+# ── Misc ──
+*.bak
+*.swp
+*.swo
+*~
+*.tmp
+.cache/
+.nyc_output/
+coverage/
+*.lcov
+.nitro/
+.output/

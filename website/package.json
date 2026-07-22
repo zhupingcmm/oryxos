@@ -1,0 +1,20 @@
+{
+  "name": "oryxos-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OryxOS documentation website (VitePress). Mirrors the structure of mq9.robustmq.com.",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev . --port 5173 --host",
+    "docs:build": "vitepress build .",
+    "docs:preview": "vitepress preview . --port 4173",
+    "docs:clean": "rm -rf docs/.vitepress/cache docs/.vitepress/dist"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3",
+    "vue": "^3.5.13"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

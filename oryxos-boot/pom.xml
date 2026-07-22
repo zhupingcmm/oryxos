@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.oryxos</groupId>
+        <artifactId>oryxos-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>oryxos-boot</artifactId>
+    <name>OryxOS Boot</name>
+    <description>Spring Boot bootstrap module. Main class, auto-configuration, dependency aggregation. Produces the executable fat JAR.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-cli</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-provider</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-memory</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-tool</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>oryxos</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>io.oryxos.boot.OryxOsApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
