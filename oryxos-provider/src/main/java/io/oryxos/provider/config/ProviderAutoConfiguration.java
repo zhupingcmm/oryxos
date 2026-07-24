@@ -1,9 +1,7 @@
 package io.oryxos.provider.config;
 
-import io.oryxos.provider.CredentialResolver;
 import io.oryxos.provider.Provider;
 import io.oryxos.provider.ProviderRegistry;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;
@@ -55,11 +53,6 @@ public class ProviderAutoConfiguration {
         this.applicationContext = applicationContext;
     }
 
-    @Bean
-    public CredentialResolver credentialResolver() {
-        return new CredentialResolver();
-    }
-
     /**
      * 启动期按 {@code application.yml} 中每条 {@link Provider} 显式名注册 {@link ChatModel}。
      *
@@ -105,9 +98,19 @@ public class ProviderAutoConfiguration {
 
     /**
      * 启动期校验：任一违反抛 {@link IllegalStateException}（fail-fast）。
+     *
+     * <p>实现为独立的 {@code @Bean} 方法，{@link DependsOn @DependsOn("chatModelRegistrar")}
+     * 强制 {@link #chatModelRegistrar()} 先于本方法执行——后者把每个 Provider 对应的
+     * {@link ChatModel} 用显式 name 注册到容器，本方法才能 {@code getBeanNamesForType}
+     * 拿到并做"全覆盖"校验。
+     *
+     * <p>不能放在本类的 {@code @PostConstruct}：{@code @PostConstruct} 在 Spring
+     * 完成本类字段注入后立即执行，但本类定义的 {@code @Bean} 方法（{@code chatModelRegistrar}）
+     * 要等到其他 bean 引用时才被调用——顺序不对会导致校验看到 0 个 ChatModel 而误报。
      */
-    @PostConstruct
-    public void validateOnStartup() {
+    @Bean
+    @DependsOn("chatModelRegistrar")
+    public ChatModelRegistrar providerStartupValidator() {
         List<Provider> providers = providerProperties.getProviders();
         log.info("ProviderRegistry startup validation: {} provider(s) configured",
             providers.size());
@@ -141,6 +144,7 @@ public class ProviderAutoConfiguration {
         }
 
         log.info("ProviderRegistry validated OK. Active providers: {}", providers.stream().map(Provider::name).toList());
+        return new ChatModelRegistrar();
     }
 
     /** 单纯用于触发 {@link #chatModelRegistrar()} Bean 顺序的占位类型。 */

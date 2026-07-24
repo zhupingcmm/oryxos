@@ -19,10 +19,13 @@ import java.util.List;
  *         temperature: 0.5
  * }</pre>
  *
+ * <p>prefix = {@code oryxos}，字段名 {@code providers} 对应子节点 {@code oryxos.providers}；
+ * 列表条目逐条绑定到 {@link Provider} record（Spring Boot 3.x record 构造器绑定）。
+ *
  * <p>字段级校验（非空 / 唯一 / 正则匹配）由 {@code ProviderRegistry} 在启动期执行，
  * 不在本类做——本类只做绑定 + getter，避免 Spring Boot 配置元数据膨胀。
  */
-@ConfigurationProperties(prefix = "oryxos.providers")
+@ConfigurationProperties(prefix = "oryxos")
 public class ProviderProperties {
 
     /** {@code oryxos.providers} 列表；空列表会导致启动失败（{@code ProviderRegistry} 校验）。 */

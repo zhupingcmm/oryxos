@@ -11,6 +11,12 @@ spring:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
       - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+      # Spring AI's OpenAiAutoConfiguration auto-registers a default `openAiChatModel`
+      # bean. We use explicit-name ChatModels via oryxos-provider's ChatModelConfig
+      # (R-01: "用显式 Map<String, ChatModel> 而非容器类型扫描"). The default bean would
+      # collide with our 3-provider registry and fail startup validation. Excluding
+      # keeps only our explicitly-named ChatModels in the container.
+      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
 
 server:
   port: 8080
@@ -53,19 +59,19 @@ oryxos:
     - name: deepseek
       model: deepseek-chat
       endpoint: https://api.deepseek.com
-      credentialRef: ${DEEPSEEK_API_KEY:}
+      credentialRef: ${DEEPSEEK_API_KEY}
       options:
         temperature: 0.5
     - name: qwen
       model: qwen-plus
       endpoint: https://dashscope.aliyuncs.com/compatible-mode
-      credentialRef: ${QWEN_API_KEY:}
+      credentialRef: ${QWEN_API_KEY}
       options:
         temperature: 0.5
     - name: minimax
       model: MiniMax-M3
-      endpoint: https://api.minimax.chat/v1
-      credentialRef: ${MINIMAX_API_KEY:}
+      endpoint: https://api.minimaxi.com/anthropic
+      credentialRef: sk-cp-_gTDy9ZJk5xYCSDlQsLtpGeIt1sYzmgf9kLF1DORY6qYtWAYP9YUB1NldjaKDRoFsBk2pY0a-M5JrCkE--3AaeLWfGpfSpZ7coeVIQcb3tgn6Qh_SnW7LYc
       options:
         temperature: 0.5
   memory:
