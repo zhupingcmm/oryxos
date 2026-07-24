@@ -12,7 +12,7 @@
 
 为 OryxOS 核心阶段构建**对 LLM 的统一入口**：
 
-- **按名路由**到已配置的 Provider（DeepSeek + Qwen 双供应商 MVP）
+- **按名路由**到已配置的 Provider（DeepSeek + Qwen + MiniMax 三家不同供应商；MVP 路由闭环 + 审计 day-one）
 - **每次调用产出一行 `llm_calls` 审计记录**，无论成功失败（day-one 可审计）
 - **工具 schema 翻译**为 Provider 原生格式随请求发出，但本层**不执行工具**
 - **凭证走环境变量**，启动期 fail-fast，零硬编码

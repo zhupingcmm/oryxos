@@ -16,14 +16,52 @@
     <description>Capability 1 — LLM Provider abstraction. ProviderService, Function Calling adaptation, explicit provider name to ChatModel mapping.</description>
 
     <dependencies>
+        <!-- Internal modules -->
         <dependency>
             <groupId>io.oryxos</groupId>
             <artifactId>oryxos-core</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-storage</artifactId>
+        </dependency>
+
+        <!-- Spring Boot (provides Spring context + auto-configuration for @ConfigurationProperties) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Spring AI: ChatModel interface + OpenAI-compatible client (DeepSeek + Qwen + MiniMax) -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- JSR-305 nullability annotations on Spring AI API surfaces -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+        </dependency>
+
+        <!-- Test scope -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- WireMock for e2e Provider HTTP simulation (T016 / T027 / T031) -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- e2e test uses real SQLite via JPA; community dialects provides SQLiteDialect -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-community-dialects</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

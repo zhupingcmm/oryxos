@@ -41,5 +41,13 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- SQLite 方言：Hibernate 6 默认不内置，需要社区方言包；
+             放到测试作用域——生产环境 flyway 维护 schema，运行时不需要 dialect autoconfigure -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-community-dialects</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
