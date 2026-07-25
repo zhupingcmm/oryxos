@@ -15,10 +15,33 @@
     <name>OryxOS CLI</name>
     <description>Picocli command-line entry + 12 sub-commands + ConfigLoader. init / status / chat / serve / gateway / profile / provider / tool / session.</description>
 
+    <!-- Single source of truth for the CLI main class — referenced by
+         maven-jar-plugin's <manifest><mainClass>, exec-maven-plugin's
+         <mainClass>, and the spec's NFR-005. Any rename must update
+         <cli.main.class> AND all reference sites in lockstep (CI lint
+         safeguards against drift). -->
+    <properties>
+        <cli.main.class>io.oryxos.cli.OryxOsCli</cli.main.class>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.oryxos</groupId>
             <artifactId>oryxos-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-provider</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-tool</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-storage</artifactId>
         </dependency>
 
         <dependency>
@@ -46,6 +69,26 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- WireMock for ChatCommandIT / ProviderListCommandTest (T003, T018, T030). -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito for SessionListCommandTest (T032). -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -56,7 +99,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.oryxos.cli.OryxOsCli</mainClass>
+                            <mainClass>${cli.main.class}</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Implementation-Title>${project.name}</Implementation-Title>
@@ -74,7 +117,23 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <mainClass>io.oryxos.cli.OryxOsCli</mainClass>
+                    <mainClass>${cli.main.class}</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- Run *IT.java classes alongside *Test.java under `mvn test`.
+                 The CLI does not yet wire maven-failsafe-plugin (Phase 5),
+                 so we extend Surefire's default include pattern instead. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/Test*.java</include>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>

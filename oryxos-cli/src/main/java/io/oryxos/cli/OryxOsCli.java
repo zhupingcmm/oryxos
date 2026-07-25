@@ -1,5 +1,8 @@
 package io.oryxos.cli;
 
+import io.oryxos.cli.command.ChatCommand;
+import io.oryxos.cli.command.GatewayCommand;
+import io.oryxos.cli.command.ServeCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -7,20 +10,45 @@ import picocli.CommandLine.Option;
 /**
  * OryxOS command-line entry point.
  *
- * <p>Default behavior (no subcommand, no flag): print the version banner and a pointer
- * to {@code oryxos --help}. The 12 sub-commands listed in
- * {@code docs/DemandAnalysis.md §5.11} are wired in subsequent user stories (US-1, US-2,
- * US-5, etc.) — this scaffold delivers only the entry point and version printer so the
- * CLI module is runnable from day one.
+ * <p>This root command owns the banner printer and the Picocli
+ * {@link CommandLine} registry. Subcommands are grouped into:
+ * <ul>
+ *   <li><strong>Zero-Spring</strong> — registered statically here
+ *       ({@code init}, {@code status}, {@code serve}, {@code gateway}).
+ *       They never boot a Spring context, per FR-011.</li>
+ *   <li><strong>Spring-required</strong> — registered dynamically after
+ *       Spring boots via {@code BootCommandLineRegistrar}
+ *       ({@code chat}, {@code provider list}, {@code tool list},
+ *       {@code session list}). Per FR-012.</li>
+ * </ul>
  *
- * <p>Run with: {@code mvn -pl oryxos-cli exec:java} (after a parent {@code mvn install}),
- * or with an explicit classpath: {@code java -cp <classpath> io.oryxos.cli.OryxOsCli}.
+ * <p>{@code ProfileCommand} is added in its own phase (US-3, T033) so is
+ * not listed in {@code subcommands} here yet — Picocli requires the class
+ * to exist at registration time.
+ *
+ * <p>Run with: {@code mvn -pl oryxos-cli exec:java} (after a parent
+ * {@code mvn install}), or {@code java -cp <classpath> io.oryxos.cli.OryxOsCli}.
  */
 @Command(
     name = "oryxos",
     mixinStandardHelpOptions = true,
     version = "OryxOS 1.0.0-SNAPSHOT",
-    description = "OryxOS — Enterprise Agent OS runtime kernel CLI"
+    description = "OryxOS — Enterprise Agent OS runtime kernel CLI",
+    subcommands = {
+        // US-2 (P2): init + status — zero-Spring
+        // InitCommand.class,
+        // StatusCommand.class,
+        // US-1 (P1) chat — must-Spring, statically listed so --help shows it
+        // without booting the Spring context (Spring is only booted by
+        // ChatCommand#runBody on actual invocation).
+        ChatCommand.class,
+        // US-5 stub
+        ServeCommand.class,
+        GatewayCommand.class,
+        // US-3 (P3) profile/provider/tool/session: registered dynamically
+        // by BootCommandLineRegistrar (T013) after Spring boots, or
+        // statically once their classes land.
+    }
 )
 public class OryxOsCli implements Runnable {
 

@@ -216,6 +216,46 @@ if (-not $DryRun) {
 
     New-Item -ItemType Directory -Path $featureDir -Force | Out-Null
 
+    # Plan C: branch creation is the contract of THIS script, not delegated to
+    # the optional before_specify hook. create-new-feature.ps1 is the only step
+    # in the chain that runs as part of the parent command, so it is the only
+    # step whose branch operation is guaranteed to actually happen. If we are
+    # not inside a git working tree (e.g. fresh CI sandbox), skip silently and
+    # surface a warning so the human operator can decide what to do.
+    # NOTE: do NOT wrap git invocations in try/catch — $ErrorActionPreference='Stop'
+    # makes PowerShell parse git's stdout ("Switched to a new branch ...") as
+    # non-terminating errors, which would terminate the script. Locally relax
+    # $ErrorActionPreference around the git block, then restore. Check
+    # $LASTEXITCODE explicitly instead.
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $branchOp = 'skipped'
+    $insideWorkTree = (& git rev-parse --is-inside-work-tree 2>$null) -eq 'true'
+    if ($insideWorkTree) {
+        & git rev-parse --verify --quiet "refs/heads/$branchName" 2>$null | Out-Null
+        $be = $LASTEXITCODE
+        if ($be -eq 0) {
+            & git checkout $branchName *>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                [Console]::Error.WriteLine("[create-new-feature] Switched to existing branch: $branchName")
+                $branchOp = 'reused'
+            } else {
+                [Console]::Error.WriteLine("[create-new-feature] Warning: git checkout $branchName failed (exit $LASTEXITCODE)")
+            }
+        } else {
+            & git checkout -b $branchName *>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0) {
+                [Console]::Error.WriteLine("[create-new-feature] Created and switched to new branch: $branchName")
+                $branchOp = 'created'
+            } else {
+                [Console]::Error.WriteLine("[create-new-feature] Warning: git checkout -b $branchName failed (exit $LASTEXITCODE)")
+            }
+        }
+    } else {
+        [Console]::Error.WriteLine("[create-new-feature] Warning: not inside a git working tree; skipping branch creation for '$branchName'")
+    }
+    $ErrorActionPreference = $prevPref
+
     if (-not (Test-Path -PathType Leaf $specFile)) {
         $template = Resolve-Template -TemplateName 'spec-template' -RepoRoot $repoRoot
         if ($template -and (Test-Path $template)) {
@@ -250,6 +290,7 @@ if (-not $DryRun) {
 if ($Json) {
     $obj = [PSCustomObject]@{
         BRANCH_NAME = $branchName
+        BRANCH_OP = $branchOp
         SPEC_FILE = $specFile
         FEATURE_NUM = $featureNum
     }
@@ -259,6 +300,7 @@ if ($Json) {
     $obj | ConvertTo-Json -Compress
 } else {
     Write-Output "BRANCH_NAME: $branchName"
+    Write-Output "BRANCH_OP: $branchOp"
     Write-Output "SPEC_FILE: $specFile"
     Write-Output "FEATURE_NUM: $featureNum"
     if (-not $DryRun) {

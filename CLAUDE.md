@@ -336,6 +336,7 @@ settings:
 ### Git
 - 每个 user story 完成时打 commit，方便回退到稳定状态
 - 改 main 前先建分支（CLAUDE.md 里说明）
+- **`/speckit-specify` 的分支创建契约**：分支创建归 `.specify/scripts/powershell/create-new-feature.ps1`（在脚本内部 `git checkout -b <branch>`），**不依赖** `before_specify` 钩子（Claude Code 运行时没有 hook executor 自动派发机制）。`.specify/extensions.yml` 的 `before_specify: speckit.git.checkout` 仅作 defensive fallback（`optional: false`），等未来运行时真的支持 hook 派发时自动生效。若任何场景下出现"分支没建但 spec 已经写入"，立即在 `specs/<feature>/evidence/` 记一个 `<branch>-branch-missing.md` 复盘并修复。
 
 ---
 
@@ -380,3 +381,36 @@ settings:
 **OryxOS 不是一个完整的企业级 Agent OS 产品——它是这个产品的运行时内核地基。** 企业级治理层（多租户/SSO/完整审计/Tool Policy）是终局，**核心阶段不做**。文档/对话里如果有人说"我们要做完整 Agent OS"，先确认他说的是核心阶段还是扩展阶段。
 
 Anchor on the unchanging need: **严监管企业要一个自己能完全掌控的 Agent 底座**——这不是"Agent OS 这个概念"，是不会变的需求。
+
+---
+
+## 21. Spec-Kit 输出语言约束
+
+**所有 `/speckit.*` 命令（`specify` / `plan` / `tasks` / `clarify` / `checklist` / `analyze` / `implement` / `converge` / `constitution`）生成的所有 Markdown 文件一律使用中文撰写**。包括但不限于：
+
+- 章节标题、User Story 描述、验收场景（Given/When/Then）
+- 任务列表项及其说明、子任务分解、依赖关系备注
+- 数据模型字段说明、Quickstart 步骤、风险与权衡段落
+- Plan 里的架构决策、模块划分、调用链描述
+- Constitution 原则陈述、Feedback 备注
+
+**保留英文原文不翻译的"技术性名称"**（这些是字面量，不是叙述）：
+
+- 文件名、目录名、命令名（如 `AGENT.md`、`MEMORY.md`、`oryxos chat`、`POST /api/v1/agents/{name}/invoke`）
+- YAML key、配置项 key、SQL 列名、Java 类名/方法名/注解
+- 代码块（java/yaml/sql/bash/json）整体保持英文
+- spec.md / plan.md 顶部的 metadata 字段值（`Feature Branch`、`Created`、`Status` 等）按英文模板保留
+- 引用 [docs/](../docs/) 里的章节号（`§3.2`、`CLAUDE.md §10` 这种锚点)
+
+**为什么这样定**：
+
+1. CLAUDE.md 是 per-turn 自动加载的，等价于系统级约束——一处生效，全项目所有 Spec-Kit 调用默认走中文，不需要每次手敲"用中文写"
+2. 不改 `.specify/templates/` 目录，Spec-Kit 升级无破坏
+3. 让中英文分工清晰：**叙述/决策/解释用中文（人读的），标识符/代码用英文（机器读的）**
+4. 协作时新加入的协作者打开项目立刻看到这条约束，不会因为输入英文需求就生成英文 spec
+
+**冲突时的优先序**：
+
+1. 用户在调用时显式说明"这次用英文" → 这次按英文
+2. 用户没说明 → 默认中文（这条约束生效）
+3. 已存在的历史英文 spec（如早期 US-1）→ 不追溯重写，下一个新增/重生成的文件才走这条规则

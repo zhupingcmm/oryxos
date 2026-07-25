@@ -28,13 +28,16 @@ hooks:
   before_specify:
     - extension: speckit.git.checkout
       command: speckit.git.checkout
-      optional: true
+      optional: false
       enabled: true
-      description: Auto-create and switch to the feature branch emitted by create-new-feature.ps1
+      description: Defensive fallback: verify create-new-feature.ps1 already switched to the feature branch; only act if it did not.
       prompt: >
-        Create and switch to git branch '{branch_name}' based on
-        feature number '{feature_num}' and feature name '{feature_name}'.
-        If the branch already exists locally, just switch to it (do not fail).
+        Verify that git is currently on branch '{branch_name}' (created by
+        create-new-feature.ps1 as part of the parent /speckit.specify command).
+        If not on that branch, run `git checkout -b {branch_name}` to create
+        and switch to it. This hook is a defensive fallback only — primary
+        branch creation lives in create-new-feature.ps1 itself (see CLAUDE.md
+        §17 contract). Failure of this hook WILL block /speckit.specify.
 
   # ---------------------------------------------------------------------------
   # /speckit.tasks  — surface the generated tasks.md for review

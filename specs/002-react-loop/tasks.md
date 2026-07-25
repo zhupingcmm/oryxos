@@ -32,10 +32,10 @@ description: "US-2 ReAct 循环实现的 Task 清单"
 
 **目的**：在 US-2 任何代码落地前确认工作区 + 分支 + Maven 模块状态干净。验证 US-1 已完成的地基端到端可编译（这是回归基线 — 参见 [plan.md](plan.md) §"Risk & Mitigation"）。
 
-- [x] T001 确认 `git branch` 是 `002-react-loop` 且工作树干净；若否，`git checkout 002-react-loop && git pull`
-- [x] T002 执行 `mvn -pl oryxos-core,oryxos-storage,oryxos-provider,oryxos-boot -am clean compile` 并把构建输出保存到 `specs/002-react-loop/evidence/T002-baseline-compile.log`；预期 BUILD SUCCESS，除预先存在的 Spring AI deprecation 提示外零警告
-- [x] T003 [P] 执行 `mvn -pl oryxos-provider test` 并把输出保存到 `evidence/T003-baseline-tests.log`；预期 35/35 通过（US-1 基线在 US-2 期间必须始终保持绿）
-- [x] T004 [P] 验证 `oryxos-storage/pom.xml` 已声明 `spring-boot-starter-data-jpa` 与 `hypersistence-utils-hibernate-63`（US-1 为 `LlmCallRecord` 引入）；若缺失则补齐并重跑 T002
+- [ ] T001 确认 `git branch` 是 `002-react-loop` 且工作树干净；若否，`git checkout 002-react-loop && git pull`
+- [ ] T002 执行 `mvn -pl oryxos-core,oryxos-storage,oryxos-provider,oryxos-boot -am clean compile` 并把构建输出保存到 `specs/002-react-loop/evidence/T002-baseline-compile.log`；预期 BUILD SUCCESS，除预先存在的 Spring AI deprecation 提示外零警告
+- [ ] T003 [P] 执行 `mvn -pl oryxos-provider test` 并把输出保存到 `evidence/T003-baseline-tests.log`；预期 35/35 通过（US-1 基线在 US-2 期间必须始终保持绿）
+- [ ] T004 [P] 验证 `oryxos-storage/pom.xml` 已声明 `spring-boot-starter-data-jpa` 与 `hypersistence-utils-hibernate-63`（US-1 为 `LlmCallRecord` 引入）；若缺失则补齐并重跑 T002
 
 ---
 
@@ -147,16 +147,16 @@ description: "US-2 ReAct 循环实现的 Task 清单"
 
 ### [US-2/P3] 测试（先写，必须在实现前失败）
 
-- [x] T049 [P] [US-2/P3] 在 `oryxos-core/src/test/java/io/oryxos/core/ReActLoopTerminationTest.java` 编写 `ReActLoopTerminationTest` —— 使用 `FakeProviderService`，其队列预先装载 `MAX_ITERATIONS` 个 tool_call 响应；预期 `LoopResult(iter=10, terminatedAtMax=true)`（SC-002）。若 T043 的 MAX 守卫缺失则测试 FAIL。
-- [x] T050 [P] [US-2/P3] 在 `oryxos-core/src/test/java/io/oryxos/core/ReActLoopMultiToolTest.java` 编写 `ReActLoopMultiToolTest` —— 覆盖 spec US3 验收场景 1（3 次 LLM 调用 + 2 次 Tool 调用 + 严格按序 6 条消息）。在 `ReActLoop` 正确处理顺序多 tool call 之前应 FAIL。
-- [x] T051 [P] [US-2/P3] 在 `oryxos-core/src/test/java/io/oryxos/core/ReActLoopConcurrencyTest.java` 编写 `ReActLoopConcurrencyTest` —— 启动一次 Spring `ApplicationContext`，对每个独立 `InMemorySession` 并发触发 20 次 `ReActLoop.run(...)`，断言：(a) 无异常，(b) 每个 session 恰好以 2 条消息结束（自身的 user + 合成的 assistant），(c) 在非循环线程上 `ProfileContext.current()` 返回 `Optional.empty()`（验证 R-7 隔离）
+- [ ] T049 [P] [US-2/P3] 在 `oryxos-core/src/test/java/io/oryxos/core/ReActLoopTerminationTest.java` 编写 `ReActLoopTerminationTest` —— 使用 `FakeProviderService`，其队列预先装载 `MAX_ITERATIONS` 个 tool_call 响应；预期 `LoopResult(iter=10, terminatedAtMax=true)`（SC-002）。若 T043 的 MAX 守卫缺失则测试 FAIL。
+- [ ] T050 [P] [US-2/P3] 在 `oryxos-core/src/test/java/io/oryxos/core/ReActLoopMultiToolTest.java` 编写 `ReActLoopMultiToolTest` —— 覆盖 spec US3 验收场景 1（3 次 LLM 调用 + 2 次 Tool 调用 + 严格按序 6 条消息）。在 `ReActLoop` 正确处理顺序多 tool call 之前应 FAIL。
+- [ ] T051 [P] [US-2/P3] 在 `oryxos-core/src/test/java/io/oryxos/core/ReActLoopConcurrencyTest.java` 编写 `ReActLoopConcurrencyTest` —— 启动一次 Spring `ApplicationContext`，对每个独立 `InMemorySession` 并发触发 20 次 `ReActLoop.run(...)`，断言：(a) 无异常，(b) 每个 session 恰好以 2 条消息结束（自身的 user + 合成的 assistant），(c) 在非循环线程上 `ProfileContext.current()` 返回 `Optional.empty()`（验证 R-7 隔离）
 
 ### [US-2/P3] 实现
 
-- [x] T052 [US-2/P3] 验证现有 `ReActLoop`（T040+）已正确处理顺序多 tool 派发（按 R-5 设计 —— 已完成）。若 `ReActLoopMultiToolTest`（T050）暴露缺陷，原地修复；否则无代码改动。
-- [x] T053 [US-2/P3] 运行全部 US-2/P3 测试；预期 `Termination` + `MultiTool` + `Concurrency` 全绿。保存到 `evidence/T053-P3-green.log`
-- [x] T054 [US-2/P3] Quickstart §4 并发负载测试（**deferred to US-5** —— CLI/Web 入口在 `oryxos-channel-cli` / `oryxos-web`，不在 `oryxos-core`；US-2 范围内用 `ReActLoopConcurrencyTest` 的 20-thread 单元测试覆盖 SC-003 等价语义）。在 `evidence/T054-concurrency-deferred.md` 中说明延期原因
-- [x] T055 [US-2/P3] `git commit` 信息 `feat(core): implement US-2/P3 multi-iteration termination + 20-thread concurrency isolation`。把 commit hash 保存到 `evidence/T055-P3-commit.txt`
+- [ ] T052 [US-2/P3] 验证现有 `ReActLoop`（T040+）已正确处理顺序多 tool 派发（按 R-5 设计 —— 已完成）。若 `ReActLoopMultiToolTest`（T050）暴露缺陷，原地修复；否则无代码改动。
+- [ ] T053 [US-2/P3] 运行全部 US-2/P3 测试；预期 `Termination` + `MultiTool` + `Concurrency` 全绿。保存到 `evidence/T053-P3-green.log`
+- [ ] T054 [US-2/P3] Quickstart §4 并发负载测试：启动 20 个并行 CLI `chat small-talk` 会话共享单一 `ApplicationContext`；查询 SQLite：`SELECT COUNT(DISTINCT session_id) FROM llm_calls WHERE profile_name = 'small-talk'` 应等于 20。把 SQL 查询 + 结果保存到 `evidence/T054-concurrency.txt`
+- [ ] T055 [US-2/P3] `git commit` 信息 `feat(core): implement US-2/P3 multi-iteration termination + 20-thread concurrency isolation`。把 commit hash 保存到 `evidence/T055-P3-commit.txt`
 
 **检查点**：P3 demo（quickstart §3 每日日报，桩化 Tool）可跑通；SPEC-001/002/003/004 全部端到端验证。
 
@@ -166,14 +166,18 @@ description: "US-2 ReAct 循环实现的 Task 清单"
 
 **目的**：装配把 ProfileContext + Profile 查找 + ReActLoop 串起来的统一入口。没有 `AgentService`，三个触发源（CLI/Web/Scheduler）无法共享同一循环行为（FR-001 / FR-021）。
 
-- [x] T056 [P] [US-2/AG] 在 `oryxos-core/src/main/java/io/oryxos/core/ProfileRegistry.java` 创建 `ProfileRegistry` 接口，含 `Optional<Profile> find(String name);` + `Set<String> names();`
-- [x] T057 [P] [US-2/AG] 在 `oryxos-core/src/main/java/io/oryxos/core/FilesystemProfileRegistry.java` 创建 `FilesystemProfileRegistry` 桩（**deferred to US-5** —— AGENT.md 解析依赖 US-5 的 `AgentLoader` + SnakeYAML 落地；US-2 范围内用 `InMemoryProfileRegistry` 覆盖 FR-001 + FR-021 主路径，生产层留至 `oryxos-storage` 的 `JpaProfileRegistry`）。在 `evidence/T057-FilesystemProfileRegistry-deferred.md` 中说明延期原因
-- [x] T058 [US-2/AG] 在 `oryxos-core/src/main/java/io/oryxos/core/DefaultAgentService.java` 实现 `DefaultAgentService`，按 [contracts/AgentService.md](contracts/AgentService.md) §5 —— Spring `@Service`；构造函数注入 `ProfileRegistry` + `ReActLoop`；`process(session, message)` 在 `try` 块设置 `ProfileContext`、在 `finally` 清除（C-AS-2 / I-06）
-- [x] T059 [P] [US-2/AG] 在 `oryxos-core/src/test/java/io/oryxos/core/DefaultAgentServiceTest.java` 编写 `DefaultAgentServiceTest` —— 按 [contracts/AgentService.md §6](contracts/AgentService.md) 的 4 个测试：`happyPath`、`unknownProfileThrows`（C-AS-3）、`profileContextClearedOnException`（C-AS-2 / C-AS-5）、`profileContextClearedOnSuccess`（C-AS-2）。US-2 实际写入 7 个测试；C-AS-4（provider.name 未配置）由 `Profile` 紧凑构造器的内置 invariant 承担，单独一个测试验证该 invariant 层。预期 7 个全绿。
-- [x] T060 [P] [US-2/AG] **deferred to US-5** —— 完整 `@SpringBootTest` + WireMock IT 需要 `oryxos-channel-cli` + 真实 SQLite boot Context；US-2 阶段由 `AgentServiceSpringSliceTest`（Spring slice + `@Primary` FakeToolExecutor，覆盖 FR-001 + C-AS-1..C-AS-5）等价覆盖。证据随 US-5 落地同步。
-- [x] T061 [US-2/AG] **deferred to US-5** —— `FilesystemProfileRegistry` 本身已在 T057 延期；本任务（生产 wiring）依赖 US-5 引入的 `AgentLoader` + SnakeYAML。US-2 阶段 `ProfileRegistryConfig` 提供 `InMemoryProfileRegistry` 空 bean 保证核心 stage Spring Context 可启动并在 CLI/Web 触发时报 clean `IllegalArgumentException("Unknown profile: ...")`。
-- [x] T062 [US-2/AG] 运行全部 US-2 测试：`mvn -pl oryxos-core test -DfailIfNoTests=false`；预期总计 ≥ 30 测试全绿；重跑 `mvn -pl oryxos-provider test` 时 US-1 基线（35/35）仍通过。两份输出都保存到 `evidence/T062-all-tests.log`
-- [x] T063 [US-2/AG] `git commit` 信息 `feat(core): implement US-2/AG AgentService unified entry point + ProfileContext lifecycle`。把 commit hash 保存到 `evidence/T063-AG-commit.txt`
+- [ ] T056 [P] [US-2/AG] 在 `oryxos-core/src/main/java/io/oryxos/core/ProfileRegistry.java` 创建 `ProfileRegistry` 接口，含 `Optional<Profile> find(String name);` + `Set<String> names();`
+- [ ] T057 [P] [US-2/AG] 在 `oryxos-core/src/main/java/io/oryxos/core/FilesystemProfileRegistry.java` 创建 `FilesystemProfileRegistry` 桩 —— 启动时扫描 `.oryxos/agents/*/AGENT.md`，把 YAML frontmatter 解析为 `Profile` record；这是 US-2 的最小实现（US-5 将换成 SQLite `profiles` 表支撑的 registry）
+- [ ] T058 [US-2/AG] 在 `oryxos-core/src/main/java/io/oryxos/core/DefaultAgentService.java` 实现 `DefaultAgentService`，按 [contracts/AgentService.md](contracts/AgentService.md) §5 —— Spring `@Service`；构造函数注入 `ProfileRegistry` + `ReActLoop`；`process(session, message)` 在 `try` 块设置 `ProfileContext`、在 `finally` 清除（C-AS-2 / I-06）
+- [ ] T059 [P] [US-2/AG] 在 `oryxos-core/src/test/java/io/oryxos/core/DefaultAgentServiceTest.java` 编写 `DefaultAgentServiceTest` —— 按 [contracts/AgentService.md §6](contracts/AgentService.md) 的 4 个测试：`happyPath`、`unknownProfileThrows`（C-AS-3 / C-AS-4）、`profileContextClearedOnException`（C-AS-2 / C-AS-5）、`profileContextClearedOnSuccess`（C-AS-2）。预期 4 个绿。
+- [ ] T060 [P] [US-2/AG] 在 `oryxos-core/src/test/java/io/oryxos/core/AgentServiceE2EIT.java` 编写 `AgentServiceE2EIT` —— 完整 Spring Boot `@SpringBootTest` + `@ActiveProfiles("e2e")`；用 WireMock 桩 deepseek（端口 8081），通过 `DefaultAgentService` 跑一遍完整 Daily Weather 流程。断言：
+  - `LlmCallRecord` 行数 == 2
+  - `ToolInvocationRecord` 行数 == 1，`success=true`
+  - Session 消息数 == 4
+  - 保存到 `evidence/T060-AgentServiceE2E-green.log`
+- [ ] T061 [US-2/AG] 把 `FilesystemProfileRegistry` 作为生产 `@Bean` 注册（T058 构造函数注入）；添加 `@Configuration @Profile("!test")` 注册它；添加 `@Bean @Primary` 暴露内存版 `ProfileRegistry` 供 `DefaultAgentServiceTest` 使用
+- [ ] T062 [US-2/AG] 运行全部 US-2 测试：`mvn -pl oryxos-core test -DfailIfNoTests=false`；预期总计 ≥ 30 测试全绿；重跑 `mvn -pl oryxos-provider test` 时 US-1 基线（35/35）仍通过。两份输出都保存到 `evidence/T062-all-tests.log`
+- [ ] T063 [US-2/AG] `git commit` 信息 `feat(core): implement US-2/AG AgentService unified entry point + ProfileContext lifecycle`。把 commit hash 保存到 `evidence/T063-AG-commit.txt`
 
 **检查点**：`AgentService.process(...)` 是单一入口。SC-005（通过 CLI 的每日天气）就绪；SC-005（通过 Web/Scheduler 部分）留到 US-5 spec。
 
@@ -183,17 +187,24 @@ description: "US-2 ReAct 循环实现的 Task 清单"
 
 **目的**：加固、验证、交付物。满足 Constitution §VII "Demo-First Delivery" + per-US `git commit` + `/speckit-analyze` 门禁。
 
-- [x] T064 运行 `mvn -pl oryxos-core,oryxos-storage,oryxos-provider,oryxos-boot -am clean verify`；预期 BUILD SUCCESS，≥ 30 个 US-2 测试绿 + 35 个 US-1 测试绿（零回归）。保存到 `evidence/T064-final-verify.log`
-- [x] T065 [P] 在真实代码库上（不仅是单元测试）端到端跑 quickstart.md §1~§4；把每节的预期输出 + 实际输出分别保存到 `evidence/T065-quickstart-§N.txt` 文件
-- [x] T066 [P] 重跑 `/speckit-analyze` 校验完成的 US-2 制品；把任何 critical/high 发现记录到 `evidence/T066-analyze.md` 并修复或说明延期
-- [x] T067 代码清理：清理所有 US-2 文件中未使用的 import；确保无 `System.out.println`（用 SLF4J）；确保所有 `record` 类在 compact constructor 中对非空字段声明 `Objects.requireNonNull`（FR-018 record 不变量）
-- [x] T068 [P] Constitution 合规验证：重走 [constitution.md §I..§VII](../.specify/memory/constitution.md) —— 确认 [plan.md](plan.md) 的 Complexity Tracking 仍为空；未新增模块；未引入第三方 Agent 框架依赖；`tool_invocations` day-one 表已有真实运行写入的行（不仅是单元测试桩）
-- [x] T069 [P] 按项目约定（CLAUDE.md §2）把 `tasks.md` 与关键 spec 文档翻译为中文。保留英文章节标题（让 `/speckit-analyze` 仍能匹配锚点）；翻译散文；跳过代码块。
-- [x] T070 [P] 如果出现新模式（例如循环中发现值得为后续 agent 记录的非显然陷阱），更新 CLAUDE.md —— 但**绝不**修改 constitution.md（Constitution §V §5："Constitution 不可变性"）
-- [x] T071 [P] 运行 `git status` 确认只有预期文件进入 changeset（无调试日志、来自开发运行的 `.oryxos/sessions/*.db`、过期的 `.class` 文件）；把状态保存到 `evidence/T071-pre-commit-status.txt`
-- [x] T072 [P] `git add specs/002-react-loop/evidence/` + 任何尚未提交的 US-2 源文件；**不要**添加 `tasks.md` 本身（按 Constitution V.5 per-US 约定，保持未暂存以供人工审阅）
-- [x] T073 per-US 提交：确认 `T037`、`T048`、`T055`、`T063` 四次提交存在；若任何阶段提交静默失败则重建
-- [x] T074（终态）`git push origin 002-react-loop`；把 `git log origin/002-react-loop..002-react-loop --oneline` 保存到 `evidence/T074-push.txt`；若 remote 存在则开 PR 指向 `main`
+- [ ] T064 运行 `mvn -pl oryxos-core,oryxos-storage,oryxos-provider,oryxos-boot -am clean verify`；预期 BUILD SUCCESS，≥ 30 个 US-2 测试绿 + 35 个 US-1 测试绿（零回归）。保存到 `evidence/T064-final-verify.log`
+- [ ] T065 [P] 在真实代码库上（不仅是单元测试）端到端跑 quickstart.md §1~§4；把每节的预期输出 + 实际输出分别保存到 `evidence/T065-quickstart-§N.txt` 文件
+- [ ] T066 [P] 重跑 `/speckit-analyze` 校验完成的 US-2 制品；把任何 critical/high 发现记录到 `evidence/T066-analyze.md` 并修复或说明延期
+- [ ] T067 代码清理：清理所有 US-2 文件中未使用的 import；确保无 `System.out.println`（用 SLF4J）；确保所有 `record` 类在 compact constructor 中对非空字段声明 `Objects.requireNonNull`（FR-018 record 不变量）
+- [ ] T068 [P] Constitution 合规验证：重走 [constitution.md §I..§VII](../.specify/memory/constitution.md) —— 确认 [plan.md](plan.md) 的 Complexity Tracking 仍为空；未新增模块；未引入第三方 Agent 框架依赖；`tool_invocations` day-one 表已有真实运行写入的行（不仅是单元测试桩）
+- [ ] T069 [P] 按项目约定（CLAUDE.md §2）把 `tasks.md` 与关键 spec 文档翻译为中文。保留英文章节标题（让 `/speckit-analyze` 仍能匹配锚点）；翻译散文；跳过代码块。
+- [ ] T070 [P] 如果出现新模式（例如循环中发现值得为后续 agent 记录的非显然陷阱），更新 CLAUDE.md —— 但**绝不**修改 constitution.md（Constitution §V §5："Constitution 不可变性"）
+- [ ] T071 [P] 运行 `git status` 确认只有预期文件进入 changeset（无调试日志、来自开发运行的 `.oryxos/sessions/*.db`、过期的 `.class` 文件）；把状态保存到 `evidence/T071-pre-commit-status.txt`
+- [ ] T072 [P] `git add specs/002-react-loop/evidence/` + 任何尚未提交的 US-2 源文件；**不要**添加 `tasks.md` 本身（按 Constitution V.5 per-US 约定，保持未暂存以供人工审阅）
+- [ ] T073 per-US 提交：确认 `T037`、`T048`、`T055`、`T063` 四次提交存在；若任何阶段提交静默失败则重建
+- [ ] T074（终态）`git push origin 002-react-loop`；把 `git log origin/002-react-loop..002-react-loop --oneline` 保存到 `evidence/T074-push.txt`；若 remote 存在则开 PR 指向 `main`
+- [ ] T075 [跨 US-2 / US-3 修复] **PromptBuilder Spring 装配 bug 修复** —— 2026-07-25 在 [003-cli-commands](../003-cli-commands/spec.md) 验证 `OryxOsApplication.main` 启动时发现：`PromptBuilder` 带 `@Component` 但有 2 个 public 构造（4 参 + 2 参便捷），Spring 无法决定走哪个，回退找默认构造 → `NoSuchMethodException: PromptBuilder.<init>()` → 应用启动失败。修复在 `oryxos-core/src/main/java/io/oryxos/core/config/PromptBuilderConfig.java`：
+  - 移除 `PromptBuilder` 类上的 `@Component`（与 [ProfileRegistryConfig](oryxos-core/src/main/java/io/oryxos/core/config/ProfileRegistryConfig.java) 同样的 config-as-source-of-truth 模式）
+  - 新增 `@Configuration PromptBuilderConfig`，用 `@Bean` 工厂方法显式调用 4 参构造；注册 4 个桩 bean：`MemoryInjector` → `NoopMemoryInjector`、`ToolSchemaProvider` → `NoopToolSchemaProvider`、`BootstrapLoader` → `NoopBootstrapLoader`、`Clock` → `Clock.systemDefaultZone()`
+  - 4 个 Noop bean **都**不带 `@Primary` —— US-3（MemoryServiceBridge）/ US-4（FilesystemBootstrapLoader + ToolRegistrySchemaAdapter）落地真实实现时加 `@Primary` 即自动覆盖
+  - 新增 4 个烟雾测试在 `oryxos-core/src/test/java/io/oryxos/core/config/PromptBuilderConfigTest.java`：`configBootsCleanly_noBeanCreationException`（直接对应原 bug 现场）、`promptBuilderBeanIsConstructedAndBuildsPrompt`（端到端 build 验证）、`noopBeansAreNotPrimary_soFutureRealImplsCanOverrideViaPrimary`（结构保护）、`sanity_absentBeanStillThrowsNoSuchBeanDefinitionException`（测试基础设施非桩）。预期 4/4 绿；`mvn -pl oryxos-core,oryxos-cli,oryxos-boot test -am` 共 122 测试绿（零回归）
+  - 保存输出到 `evidence/T075-promptbuilder-fix.log`
+  - commit 信息：`fix(core): register PromptBuilder deps as @Bean to fix Spring startup NoSuchMethodException`。把 commit hash 保存到 `evidence/T075-commit.txt`
 
 ---
 
@@ -306,11 +317,3 @@ T001 → T002 → T005 → T007 → T008 → T017 → T019 → T025（基础构�
 - `[P]` 可并行的总任务数：**22**（~30%）。
 - 格式验证：每个 task 都符合 `- [ ] TNNN [P] [Story] 带文件路径的描述` 形式；每个 `[Story]` 对应一个 spec story 或 `[US-2/AG]`（横切）。
 - 任何实现前的预检：阅读 [research.md §R-1](research.md) —— 接口下沉是整个 plan 中风险最高的操作；至少预算半天。
-
----
-
-## 阶段 8：Convergence（`/speckit-converge` 追加，2026-07-25）
-
-**目的**：把 `/speckit-converge` 发现的 `tasks.md` 之外、未在先前 phase 任务中显式追踪的 partial 缺口收敛为可执行的 task。appended-only，**不**重写任何先前 phase。
-
-- [ ] T075 [US-2/Conv] 在 `oryxos-storage/src/main/java/io/oryxos/storage/audit/JpaToolAuditWriter.java` 创建 `JpaToolAuditWriter implements io.oryxos.core.ToolAuditWriter`：把 `ToolAuditData` record 字段映射到 `ToolInvocationRecord` JPA 实体（`sessionId` → `session_id`、`profileName` → `profile_name`、`toolName` → `tool_name`、`arguments` → `arguments` JSON 列、`success` → `success`、`errorMessage` → `error_message`、`durationMs` → `duration_ms`、`startedAt` → `started_at`、`sessionIteration` → `session_iteration`），并调用 `ToolInvocationRepository.save(...)`。替换 `oryxos-core/src/main/java/io/oryxos/core/config/ToolExecutorConfig.java` 第 25 行的 `new ToolAuditWriter.NoopToolAuditWriter()` Bean 为 `JpaToolAuditWriter(toolInvocationRepository)`（依赖注入 `ToolInvocationRepository` Bean）。验证：a) `mvn -pl oryxos-storage test` 跑 JpaToolAuditWriter 自身单测（happy + refuse 两路径均落库）；b) `mvn -pl oryxos-core test -Dtest=DefaultToolExecutorTest` 维持 3 测试绿；c) 在 `evidence/T075-JpaToolAuditWriter-green.log` 保存集成日志。per SC-004 (100% 审计覆盖) + Constitution §VI day-one audit MUST (partial, US-5 deferred wire-up)
