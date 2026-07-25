@@ -198,6 +198,13 @@ description: "US-2 ReAct 循环实现的 Task 清单"
 - [ ] T072 [P] `git add specs/002-react-loop/evidence/` + 任何尚未提交的 US-2 源文件；**不要**添加 `tasks.md` 本身（按 Constitution V.5 per-US 约定，保持未暂存以供人工审阅）
 - [ ] T073 per-US 提交：确认 `T037`、`T048`、`T055`、`T063` 四次提交存在；若任何阶段提交静默失败则重建
 - [ ] T074（终态）`git push origin 002-react-loop`；把 `git log origin/002-react-loop..002-react-loop --oneline` 保存到 `evidence/T074-push.txt`；若 remote 存在则开 PR 指向 `main`
+- [ ] T075 [跨 US-2 / US-3 修复] **PromptBuilder Spring 装配 bug 修复** —— 2026-07-25 在 [003-cli-commands](../003-cli-commands/spec.md) 验证 `OryxOsApplication.main` 启动时发现：`PromptBuilder` 带 `@Component` 但有 2 个 public 构造（4 参 + 2 参便捷），Spring 无法决定走哪个，回退找默认构造 → `NoSuchMethodException: PromptBuilder.<init>()` → 应用启动失败。修复在 `oryxos-core/src/main/java/io/oryxos/core/config/PromptBuilderConfig.java`：
+  - 移除 `PromptBuilder` 类上的 `@Component`（与 [ProfileRegistryConfig](oryxos-core/src/main/java/io/oryxos/core/config/ProfileRegistryConfig.java) 同样的 config-as-source-of-truth 模式）
+  - 新增 `@Configuration PromptBuilderConfig`，用 `@Bean` 工厂方法显式调用 4 参构造；注册 4 个桩 bean：`MemoryInjector` → `NoopMemoryInjector`、`ToolSchemaProvider` → `NoopToolSchemaProvider`、`BootstrapLoader` → `NoopBootstrapLoader`、`Clock` → `Clock.systemDefaultZone()`
+  - 4 个 Noop bean **都**不带 `@Primary` —— US-3（MemoryServiceBridge）/ US-4（FilesystemBootstrapLoader + ToolRegistrySchemaAdapter）落地真实实现时加 `@Primary` 即自动覆盖
+  - 新增 4 个烟雾测试在 `oryxos-core/src/test/java/io/oryxos/core/config/PromptBuilderConfigTest.java`：`configBootsCleanly_noBeanCreationException`（直接对应原 bug 现场）、`promptBuilderBeanIsConstructedAndBuildsPrompt`（端到端 build 验证）、`noopBeansAreNotPrimary_soFutureRealImplsCanOverrideViaPrimary`（结构保护）、`sanity_absentBeanStillThrowsNoSuchBeanDefinitionException`（测试基础设施非桩）。预期 4/4 绿；`mvn -pl oryxos-core,oryxos-cli,oryxos-boot test -am` 共 122 测试绿（零回归）
+  - 保存输出到 `evidence/T075-promptbuilder-fix.log`
+  - commit 信息：`fix(core): register PromptBuilder deps as @Bean to fix Spring startup NoSuchMethodException`。把 commit hash 保存到 `evidence/T075-commit.txt`
 
 ---
 

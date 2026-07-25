@@ -1,7 +1,5 @@
 package io.oryxos.core;
 
-import org.springframework.stereotype.Component;
-
 import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -23,8 +21,12 @@ import java.util.Map;
  *
  * <p>无 AGENT.md 文件系统的当前阶段，所有内容由 {@link BootstrapLoader} 注入；
  * 默认 {@link BootstrapLoader.NoopBootstrapLoader} 返回空内容。
+ *
+ * <p>本类**没有** {@code @Component} —— Spring 装配由
+ * {@link io.oryxos.core.config.PromptBuilderConfig} 显式 {@code @Bean} 方法完成，
+ * 避免"两个 public 构造 + 无默认构造"导致的
+ * {@code NoSuchMethodException: PromptBuilder.&lt;init&gt;()} 启动失败。
  */
-@Component
 public class PromptBuilder {
 
     /** 系统消息的标准 role 标识（OpenAI 兼容）。 */
