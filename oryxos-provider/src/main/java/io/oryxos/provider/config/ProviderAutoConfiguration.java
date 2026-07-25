@@ -1,6 +1,6 @@
 package io.oryxos.provider.config;
 
-import io.oryxos.provider.Provider;
+import io.oryxos.core.Provider;
 import io.oryxos.provider.ProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

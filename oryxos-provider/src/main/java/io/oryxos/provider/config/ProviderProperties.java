@@ -1,6 +1,6 @@
 package io.oryxos.provider.config;
 
-import io.oryxos.provider.Provider;
+import io.oryxos.core.Provider;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;

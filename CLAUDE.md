@@ -355,6 +355,13 @@ settings:
 - ❌ 不要在 Profile YAML 里硬编码 API key（用 `${ENV_VAR}` 占位）
 - ❌ 不要假设 SQLite 的 `hibernate.ddl-auto=update` 能搞定所有表结构演进
 
+### 补充坑（US-2 阶段发现，US-3+ 避免重复掉坑）
+
+| 坑 | 正确做法 |
+|---|---------|
+| 4. **JDK 21 `javac` 在 Windows 上默认读 UTF-8 源文件为 GBK** —— `<encoding>UTF-8</encoding>` 在新 javac API 下被忽略，`native.encoding=GBK` 直接生效，结果：`非法字符: '#'` / `需要 class、interface、enum 或 record` 的报错其实跟 GBK 没关系，是解析问题。修法见 [pom.xml](pom.xml) 同时设置：① `<forceLegacyJavacApi>true</forceLegacyJavacApi>`（让 <encoding> 重新生效）；② surefire `<argLine>-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>`（让测试 JVM 也走 UTF-8） |
+| 5. **Javadoc 里写 `*/` 会被 javac 当成注释结束符** —— 一字面 `*/` 在 Javadoc 注释里立刻终止该注释块；之后的所有字符都被 javac 当 Java 代码解析。常见于 `.oryxos/agents/*/AGENT.md` 这种 file-pattern 描述。规避：用 `{@code * /AGENT.md}`（中间加空格）或 `&#42;/` |
+
 ---
 
 ## 19. 当前阶段的状态

@@ -1,0 +1,2 @@
+e6b8706 feat(core): US-2/P1 Pure Reason Path (single LLM, no tools)
+71c0619 feat(core): US-2 foundation: R-1 interface demotion + core types + JPA audit entities + test fixtures

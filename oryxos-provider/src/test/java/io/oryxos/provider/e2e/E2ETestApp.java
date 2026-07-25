@@ -2,7 +2,7 @@ package io.oryxos.provider.e2e;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import io.oryxos.provider.Provider;
+import io.oryxos.core.Provider;
 import io.oryxos.provider.config.ProviderProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringBootConfiguration;

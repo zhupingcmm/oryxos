@@ -1,4 +1,4 @@
-package io.oryxos.provider;
+package io.oryxos.core;
 
 import java.util.List;
 
