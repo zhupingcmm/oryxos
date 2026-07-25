@@ -1,5 +1,6 @@
 package io.oryxos.provider;
 
+import io.oryxos.core.LlmResponse;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;

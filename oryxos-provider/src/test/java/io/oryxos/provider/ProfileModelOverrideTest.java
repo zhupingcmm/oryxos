@@ -1,5 +1,7 @@
 package io.oryxos.provider;
 
+import io.oryxos.core.LlmRequest;
+import io.oryxos.core.LlmResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

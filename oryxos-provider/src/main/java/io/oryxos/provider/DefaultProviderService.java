@@ -1,5 +1,8 @@
 package io.oryxos.provider;
 
+import io.oryxos.core.LlmRequest;
+import io.oryxos.core.LlmResponse;
+import io.oryxos.core.ProviderService;
 import io.oryxos.provider.exception.LlmInvocationException;
 import io.oryxos.provider.exception.UnknownProviderException;
 import io.oryxos.storage.entity.LlmCallRecord;

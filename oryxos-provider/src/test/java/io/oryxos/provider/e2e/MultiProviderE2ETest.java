@@ -1,9 +1,9 @@
 package io.oryxos.provider.e2e;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import io.oryxos.provider.LlmRequest;
-import io.oryxos.provider.LlmResponse;
-import io.oryxos.provider.ProviderService;
+import io.oryxos.core.LlmRequest;
+import io.oryxos.core.LlmResponse;
+import io.oryxos.core.ProviderService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.DisplayName;

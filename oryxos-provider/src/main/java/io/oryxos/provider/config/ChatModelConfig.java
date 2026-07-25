@@ -1,7 +1,7 @@
 package io.oryxos.provider.config;
 
 import io.oryxos.provider.CredentialResolver;
-import io.oryxos.provider.Provider;
+import io.oryxos.core.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ChatModel;

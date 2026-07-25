@@ -46,6 +46,7 @@
         <hypersistence-utils.version>3.8.3</hypersistence-utils.version>
         <mcp.version>0.10.0</mcp.version>
         <junit.version>5.11.0</junit.version>
+        <assertj.version>3.25.3</assertj.version>
 
         <!-- Spring AI core (compatible with Spring Boot 3.3.x) -->
         <spring-ai.version>1.0.0-M6</spring-ai.version>
@@ -137,6 +138,12 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
                 <scope>test</scope>
             </dependency>
 

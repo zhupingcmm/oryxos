@@ -1,5 +1,6 @@
 package io.oryxos.provider;
 
+import io.oryxos.core.Provider;
 import io.oryxos.provider.exception.UnknownProviderException;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.stereotype.Component;
