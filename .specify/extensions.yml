@@ -1,0 +1,74 @@
+# .specify/extensions.yml
+# OryxOS Spec Kit extension hooks (v0.13.2)
+#
+# Schema reference: each skill (`speckit.constitution`, `speckit.specify`,
+# `speckit.clarify`, `speckit.plan`, `speckit.tasks`, `speckit.analyze`,
+# `speckit.implement`, `speckit.checklist`, `speckit.converge`,
+# `speckit.taskstoissues`) declares a `hooks.before_<name>` and a
+# `hooks.after_<name>` section.
+#
+# Hook fields:
+#   extension: human-readable name
+#   command:   slash command (dots → hyphens, e.g. speckit.git.checkout → /speckit-git-checkout)
+#   enabled:   true | false (default true)
+#   optional:  true = hook failure does NOT block the parent command
+#   description: shown in /speckit permission dialog
+#   prompt:    text sent to the hook agent / command
+#   condition: optional expression (leave evaluation to HookExecutor)
+#
+# The "claude" integration is the only one currently installed (see
+# .specify/integration.json). All PowerShell scripts use hyphen separator.
+
+hooks:
+
+  # ---------------------------------------------------------------------------
+  # /speckit.specify
+  # ---------------------------------------------------------------------------
+
+  before_specify:
+    - extension: speckit.git.checkout
+      command: speckit.git.checkout
+      optional: true
+      enabled: true
+      description: Auto-create and switch to the feature branch emitted by create-new-feature.ps1
+      prompt: >
+        Create and switch to git branch '{branch_name}' based on
+        feature number '{feature_num}' and feature name '{feature_name}'.
+        If the branch already exists locally, just switch to it (do not fail).
+
+  # ---------------------------------------------------------------------------
+  # /speckit.tasks  — surface the generated tasks.md for review
+  # ---------------------------------------------------------------------------
+
+  after_tasks:
+    - extension: speckit.git.stage
+      command: speckit.git.stage
+      optional: true
+      enabled: true
+      description: Stage the generated tasks.md (do NOT auto-commit; leave for human review)
+      prompt: >
+        git add {feature_dir}/tasks.md so the user can review the diff before
+        committing. Do not run git commit.
+
+  # ---------------------------------------------------------------------------
+  # /speckit.constitution  — auto-commit amendments
+  # ---------------------------------------------------------------------------
+
+  after_constitution:
+    - extension: speckit.git.commit
+      command: speckit.git.commit
+      optional: true
+      enabled: true
+      description: Auto-commit the updated constitution.md with a sync impact report footer
+      prompt: >
+        git add .specify/memory/constitution.md
+        git commit -m "docs: amend constitution to v{version}"
+        Do not push.
+
+# Future hooks to consider (commented out — uncomment when needed):
+#
+# after_specify:    stage spec.md
+# after_clarify:    commit spec.md clarifications
+# after_plan:       stage plan.md + research.md + data-model.md + contracts/ + quickstart.md
+# after_implement:  per-US commit (Constitution §III Per-US commit)
+# after_analyze:    record the analyze verdict into specs/<feature>/checklists/analyze.log

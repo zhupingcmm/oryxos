@@ -46,6 +46,17 @@
         <hypersistence-utils.version>3.8.3</hypersistence-utils.version>
         <mcp.version>0.10.0</mcp.version>
         <junit.version>5.11.0</junit.version>
+
+        <!-- Spring AI core (compatible with Spring Boot 3.3.x) -->
+        <spring-ai.version>1.0.0-M6</spring-ai.version>
+
+        <!-- Test framework pinning (Mockito/AssertJ managed by Spring Boot BOM; WireMock not) -->
+        <wiremock.version>3.9.1</wiremock.version>
+
+        <!-- Hibernate community dialects version. Hibernate-core is managed by Spring Boot BOM;
+             community-dialects is NOT included in the BOM and must be pinned explicitly.
+             6.5.3.Final matches Spring Boot 3.3.5's managed hibernate-core version. -->
+        <hibernate-community-dialects.version>6.5.3.Final</hibernate-community-dialects.version>
     </properties>
 
     <dependencyManagement>
@@ -127,6 +138,29 @@
                 <artifactId>junit-jupiter</artifactId>
                 <version>${junit.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <!-- Spring AI BOM (aligns all spring-ai-* artifact versions) -->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- WireMock standalone (NOT managed by Spring Boot BOM) -->
+            <dependency>
+                <groupId>org.wiremock</groupId>
+                <artifactId>wiremock-standalone</artifactId>
+                <version>${wiremock.version}</version>
+            </dependency>
+
+            <!-- Hibernate community dialects (NOT managed by Spring Boot BOM; needed for SQLite dialect) -->
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-community-dialects</artifactId>
+                <version>${hibernate-community-dialects.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

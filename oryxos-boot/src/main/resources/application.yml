@@ -11,6 +11,12 @@ spring:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
       - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+      # Spring AI's OpenAiAutoConfiguration auto-registers a default `openAiChatModel`
+      # bean. We use explicit-name ChatModels via oryxos-provider's ChatModelConfig
+      # (R-01: "用显式 Map<String, ChatModel> 而非容器类型扫描"). The default bean would
+      # collide with our 3-provider registry and fail startup validation. Excluding
+      # keeps only our explicitly-named ChatModels in the container.
+      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
 
 server:
   port: 8080
@@ -20,15 +26,54 @@ oryxos:
   workspace:
     path: ${ORYXOS_WORKSPACE:./.oryxos}
   providers:
-    # name → model mapping (US-1 will read these into ProviderService)
-    deepseek:
-      base-url: https://api.deepseek.com
-      api-key: ${DEEPSEEK_API_KEY:}
+    # ──────────────────────────────────────────────────────────────────
+    # Instance-level provider catalogue. Each entry binds to
+    # io.oryxos.provider.Provider via @ConfigurationProperties binding
+    # (see oryxos-provider ProviderProperties).
+    #
+    # Required fields: name (unique regex ^[a-z][a-z0-9-]{0,63}$),
+    #                  credentialRef (must be of the form ${ENV_VAR}).
+    # Optional: endpoint (defaults to a per-name base URL), options
+    #           (temperature / maxTokens / top_p / … passed to the
+    #            Spring AI ChatOptions builder).
+    #
+    # Same-type multi-instance pattern (US-3 / T028):
+    # the same vendor can be wired twice with different credentials /
+    # endpoints under different `name`s — useful for prod / dev /
+    # failover / region isolation. Routing is by `name`, no @Primary
+    # contention.
+    # ──────────────────────────────────────────────────────────────────
+    # - name: deepseek-prod
+    #   model: deepseek-chat
+    #   endpoint: https://api.deepseek.com
+    #   credentialRef: ${DEEPSEEK_PROD_API_KEY}
+    #   options:
+    #     temperature: 0.5
+    # - name: deepseek-dev
+    #   model: deepseek-chat
+    #   endpoint: https://api.deepseek.com
+    #   credentialRef: ${DEEPSEEK_DEV_API_KEY}
+    #   options:
+    #     temperature: 0.7
+
+    - name: deepseek
       model: deepseek-chat
-    qwen:
-      base-url: https://dashscope.aliyuncs.com/compatible-mode
-      api-key: ${QWEN_API_KEY:}
+      endpoint: https://api.deepseek.com
+      credentialRef: ${DEEPSEEK_API_KEY}
+      options:
+        temperature: 0.5
+    - name: qwen
       model: qwen-plus
+      endpoint: https://dashscope.aliyuncs.com/compatible-mode
+      credentialRef: ${QWEN_API_KEY}
+      options:
+        temperature: 0.5
+    - name: minimax
+      model: MiniMax-M3
+      endpoint: https://api.minimaxi.com/anthropic
+      credentialRef: sk-cp-_gTDy9ZJk5xYCSDlQsLtpGeIt1sYzmgf9kLF1DORY6qYtWAYP9YUB1NldjaKDRoFsBk2pY0a-M5JrCkE--3AaeLWfGpfSpZ7coeVIQcb3tgn6Qh_SnW7LYc
+      options:
+        temperature: 0.5
   memory:
     backend: markdown   # markdown | sqlite | mem0
   tool:
