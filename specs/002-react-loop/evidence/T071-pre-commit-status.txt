@@ -1,0 +1,7 @@
+ M CLAUDE.md
+ M specs/002-react-loop/tasks.md
+?? specs/002-react-loop/evidence/T063-AG-commit.txt
+?? "specs/002-react-loop/evidence/T065-quickstart-\302\2471-\302\2474.txt"
+?? specs/002-react-loop/evidence/T066-analyze.md
+?? specs/002-react-loop/evidence/T069-translation-notes.md
+?? specs/002-react-loop/evidence/T071-pre-commit-status.txt

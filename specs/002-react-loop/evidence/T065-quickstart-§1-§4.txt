@@ -1,0 +1,64 @@
+# T065 - Quickstart §1 to §4 (mock-based coverage)
+
+## Status
+
+Mock-based evidence for US-2's four quickstart scenarios. The full
+end-to-end CLI/SQLite version requires `oryxos-channel-cli` +
+`oryxos-storage` (H2/SQLite) + a real `DEEPSEEK_API_KEY`, which are
+out of `oryxos-core` scope per Constitution §I (this branch is the
+core stage).
+
+## Coverage map
+
+| Quickstart | Spec axis | US-2 unit test that covers the same contract |
+|------------|-----------|----------------------------------------------|
+| §1 - Pure Reason (P1) | single LLM, no tool, 2 messages | `ReActLoopPureReasonTest` (5 tests) |
+| §2 - Single Tool (P2) | 2 LLM + 1 tool + 4 messages | `DailyWeatherSmokeTest.dailyWeather_emitsTwoLlmAndOneToolAudit` |
+| §3 - Multi-Tool chain (P3) | ordered multi tool, 6 messages | `ReActLoopMultiToolTest.specUs3_validationScenario1` |
+| §4 - 20-thread concurrency | SC-003 zero cross-talk | `ReActLoopConcurrencyTest.sc003_concurrentTwentySessions` |
+
+## Evidence
+
+Run output captured at `evidence/T062-all-tests.log`.
+
+```
+[INFO] Running io.oryxos.core.AgentServiceSpringSliceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.DailyWeatherSmokeTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.DefaultAgentServiceTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.DefaultToolExecutorTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.MessageTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.ProfileContextTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.ReActLoopBoundaryTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.ReActLoopConcurrencyTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.ReActLoopMultiToolTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.ReActLoopPureReasonTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.ReActLoopTerminationTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running io.oryxos.core.ReActLoopToolChainTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] Tests run: 53, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 35, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+## When this gets unblocked
+
+US-5 adds:
+- `oryxos-channel-cli` (Picocli-based chat runner) and CLI invocation matches Quickstart §1-§4
+- `oryxos-storage` with SQLite + JPA + `tool_invocations` / `llm_calls` queries
+- Spring Boot `ApplicationContext` shared across CLI / Web / Scheduler trigger sources
+- Real WireMock stubbing for `api.deepseek.com` (no real LLM key required for IT)
+
+When US-5 lands, the same mock-based tests are reused as a smoke-test
+gate before the IT stage runs.
