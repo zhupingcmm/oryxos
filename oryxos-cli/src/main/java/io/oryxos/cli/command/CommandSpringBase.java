@@ -26,6 +26,9 @@ public abstract class CommandSpringBase implements Callable<Integer> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CommandSpringBase.class);
 
+    @CommandLine.Mixin
+    protected WorkspaceOption workspaceOption = new WorkspaceOption();
+
     @CommandLine.Spec
     protected CommandLine.Model.CommandSpec spec;
 

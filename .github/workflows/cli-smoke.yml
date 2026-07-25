@@ -1,0 +1,58 @@
+name: cli-smoke
+
+# Runs the OryxOS CLI end-to-end smoke test on every push and PR.
+# Boots a fresh workspace, exercises init → status → profile CRUD → smoke
+# scenarios, and asserts exit codes per FR-009 / SC-007.
+
+on:
+  push:
+    branches: [main, '001-*', '002-*', '003-*']
+    paths:
+      - 'oryxos-cli/**'
+      - 'scripts/cli-smoke.sh'
+      - 'scripts/cli-smoke/**'
+      - '.github/workflows/cli-smoke.yml'
+  pull_request:
+    paths:
+      - 'oryxos-cli/**'
+      - 'scripts/cli-smoke.sh'
+      - 'scripts/cli-smoke/**'
+      - '.github/workflows/cli-smoke.yml'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        jdk: [21]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.jdk }}
+          distribution: temurin
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-
+
+      - name: Build CLI jar
+        run: mvn -pl oryxos-cli -am package -DskipTests -B
+
+      - name: Run CLI smoke test
+        run: bash scripts/cli-smoke.sh
+
+      - name: Run individual scenario fragments
+        run: |
+          bash scripts/cli-smoke/01-init.sh
+          bash scripts/cli-smoke/02-profile-crud.sh
+          bash scripts/cli-smoke/03-status.sh
+
+      - name: Run unit tests
+        run: mvn -pl oryxos-cli test -B

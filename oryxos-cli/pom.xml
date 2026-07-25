@@ -23,6 +23,15 @@
 
         <dependency>
             <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-provider</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-tool</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.oryxos</groupId>
             <artifactId>oryxos-storage</artifactId>
         </dependency>
 
@@ -62,6 +71,13 @@
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito for SessionListCommandTest (T032). -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

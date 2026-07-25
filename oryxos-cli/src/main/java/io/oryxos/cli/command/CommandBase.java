@@ -32,10 +32,8 @@ public abstract class CommandBase implements Callable<Integer> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CommandBase.class);
 
-    @CommandLine.Option(
-            names = {"-w", "--workspace"},
-            description = "Workspace root directory (containing .oryxos/)")
-    protected Path workspaceOverride;
+    @CommandLine.Mixin
+    protected WorkspaceOption workspaceOption = new WorkspaceOption();
 
     @CommandLine.Spec
     protected CommandLine.Model.CommandSpec spec;
@@ -56,10 +54,21 @@ public abstract class CommandBase implements Callable<Integer> {
         return Sysexits.GENERIC;
     }
 
-    /** Resolve {@code .oryxos/} relative to the workspace override or cwd. */
+    /** Resolve {@code .oryxos/} relative to the workspace override or cwd.
+ * Walks the Picocli parent chain so a {@code --workspace} parsed on the
+ * top-level command is visible to dispatched subcommands too. */
     protected Path workspaceRoot() {
-        Path base = (workspaceOverride != null)
-                ? workspaceOverride
+        Path override = workspaceOption.workspaceOverride;
+        CommandLine.Model.CommandSpec s = spec;
+        while (override == null && s != null) {
+            Object user = s.userObject();
+            if (user instanceof CommandBase cb && cb != this) {
+                override = cb.workspaceOption.workspaceOverride;
+            }
+            s = s.parent();
+        }
+        Path base = (override != null)
+                ? override
                 : Path.of("").toAbsolutePath();
         return base.resolve(".oryxos");
     }

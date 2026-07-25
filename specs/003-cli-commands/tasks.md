@@ -90,15 +90,15 @@
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] Create `InitCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/InitCommandTest.java`（空目录 → 4 dir + 5 file + 1 db + exit 0；二次跑 → stderr `Already initialized` + exit 1；不启动 Spring，SC-002 / SC-008）
-- [ ] T024 [P] [US2] Create `StatusCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/StatusCommandTest.java`（`.oryxos/` 缺失 → exit 1；完整工作区 + 全绿 Provider → exit 0；缺 1 个 API key → exit 2；不启动 Spring，SC-003 / SC-007）
+- [x] T023 [P] [US2] Create `InitCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/InitCommandTest.java`（空目录 → 4 dir + 5 file + 1 db + exit 0；二次跑 → stderr `Already initialized` + exit 1；不启动 Spring，SC-002 / SC-008）
+- [x] T024 [P] [US2] Create `StatusCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/StatusCommandTest.java`（`.oryxos/` 缺失 → exit 1；完整工作区 + 全绿 Provider → exit 0；缺 1 个 API key → exit 2；不启动 Spring，SC-003 / SC-007）
 
 ### Implementation for User Story 2
 
-- [ ] T025 [P] [US2] Create `InitCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/InitCommand.java`（`@Command(name = "init")`；参数：`[--workspace <path>]`；逻辑：调 `WorkspaceLayout.initialize()`；二次跑检测 → exit 1 + stderr，[contracts/init.md](../../specs/003-cli-commands/contracts/init.md) / FR-003）
-- [ ] T026 [US2] Bootstrap file content generation in `oryxos-cli/src/main/java/io/oryxos/cli/workspace/BootstrapContent.java`（`AGENTS.md` / `SOUL.md` / `USER.md` / `MEMORY.md` 模板字符串常量；`init` 写入对应文件，[CLAUDE.md §12](../../CLAUDE.md)）
-- [ ] T027 [P] [US2] Create `StatusCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/StatusCommand.java`（`@Command(name = "status")`；参数：`[--format table|json]` + `[--verbose]`；逻辑：调 `WorkspaceLayout.probe()` + `renderHumanReadable()`；退出码按健康度分级，[contracts/status.md](../../specs/003-cli-commands/contracts/status.md) / FR-004）
-- [ ] T028 [US2] Wire status Provider matrix in `oryxos-cli/src/main/java/io/oryxos/cli/command/StatusCommand.java`（读 `.oryxos/application.yaml` + 进程 env；列 `name / model / api_key_resolved`，**仅**显示 `true` / `false` 不打印 key 明文，FR-020）
+- [x] T025 [P] [US2] Create `InitCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/InitCommand.java`（`@Command(name = "init")`；参数：`[--workspace <path>]`；逻辑：调 `WorkspaceLayout.initialize()`；二次跑检测 → exit 1 + stderr，[contracts/init.md](../../specs/003-cli-commands/contracts/init.md) / FR-003）
+- [x] T026 [US2] Bootstrap file content generation in `oryxos-cli/src/main/java/io/oryxos/cli/workspace/BootstrapContent.java`（`AGENTS.md` / `SOUL.md` / `USER.md` / `MEMORY.md` 模板字符串常量；`init` 写入对应文件，[CLAUDE.md §12](../../CLAUDE.md)）
+- [x] T027 [P] [US2] Create `StatusCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/StatusCommand.java`（`@Command(name = "status")`；参数：`[--format table|json]` + `[--verbose]`；逻辑：调 `WorkspaceLayout.probe()` + `renderHumanReadable()`；退出码按健康度分级，[contracts/status.md](../../specs/003-cli-commands/contracts/status.md) / FR-004）
+- [x] T028 [US2] Wire status Provider matrix in `oryxos-cli/src/main/java/io/oryxos/cli/command/StatusCommand.java`（读 `.oryxos/application.yaml` + 进程 env；列 `name / model / api_key_resolved`，**仅**显示 `true` / `false` 不打印 key 明文，FR-020）
 
 **Checkpoint**: `mvn -pl oryxos-cli verify` 绿；`init` 在空目录跑 1 次 + 二次跑各一次，均符合契约；`status` 三档退出码（0/1/2）正确分级；耗时 ≤ 200 ms（quickstart 场景 2.3）。User Story 2 独立交付完成。
 
@@ -116,18 +116,18 @@
 
 ### Tests for User Story 3
 
-- [ ] T029 [P] [US3] Create `ProfileCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/ProfileCommandTest.java`（`list` 列出 3 行 + exit 0；`show <existing>` 打印 YAML + exit 0；`show <missing>` → exit 64；`create <new> --template minimal` → exit 0；`create <existing>` → exit 64；`delete <existing>` → exit 0；`delete <missing>` → exit 64，SC-004 / SC-008）
-- [ ] T030 [P] [US3] Create `ProviderListCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/ProviderListCommandTest.java`（WireMock + 3 Provider 含 1 个未配 key → 验证 3 行表 + `api_key_resolved` 列正确）
-- [ ] T031 [P] [US3] Create `ToolListCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/ToolListCommandTest.java`（Spring 启动 + 验证 `ToolRegistry` bean 列表与表行匹配）
-- [ ] T032 [P] [US3] Create `SessionListCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/SessionListCommandTest.java`（注入 5 条 Session seed → 验证 `--limit 5` 按 `updated_at` 倒序）
+- [x] T029 [P] [US3] Create `ProfileCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/ProfileCommandTest.java`（`list` 列出 3 行 + exit 0；`show <existing>` 打印 YAML + exit 0；`show <missing>` → exit 64；`create <new> --template minimal` → exit 0；`create <existing>` → exit 64；`delete <existing>` → exit 0；`delete <missing>` → exit 64，SC-004 / SC-008）
+- [x] T030 [P] [US3] Create `ProviderListCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/ProviderListCommandTest.java`（WireMock + 3 Provider 含 1 个未配 key → 验证 3 行表 + `api_key_resolved` 列正确）
+- [x] T031 [P] [US3] Create `ToolListCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/ToolListCommandTest.java`（Spring 启动 + 验证 `ToolRegistry` bean 列表与表行匹配）
+- [x] T032 [P] [US3] Create `SessionListCommandTest` in `oryxos-cli/src/test/java/io/oryxos/cli/SessionListCommandTest.java`（注入 5 条 Session seed → 验证 `--limit 5` 按 `updated_at` 倒序）
 
 ### Implementation for User Story 3
 
-- [ ] T033 [P] [US3] Create `ProfileCommand` (with 4 subcommands) in `oryxos-cli/src/main/java/io/oryxos/cli/command/ProfileCommand.java`（`@Command(name = "profile", subcommands = {ProfileListCommand.class, ProfileShowCommand.class, ProfileCreateCommand.class, ProfileDeleteCommand.class})`；不启动 Spring；走 `Files.*` + `ConfigLoader`，[contracts/profile.md](../../specs/003-cli-commands/contracts/profile.md) / FR-005）
-- [ ] T034 [P] [US3] Create `ProviderListCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ProviderListCommand.java`（`@Command(name = "provider", subcommands = {ProviderListCommand.class})`；启动 Spring + 拿 `ProviderService.allProviders()`；stdout 表格；不打印 API key 明文，FR-006 / FR-020 / [contracts/provider.md](../../specs/003-cli-commands/contracts/provider.md)）
-- [ ] T035 [P] [US3] Create `ToolListCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ToolListCommand.java`（启动 Spring + 拿 `ToolRegistry.all()`；stdout 表格含 `NAME / KIND / SOURCE / SANDBOX_REQUIRED`；**不**触发 Tool Bean 调用 / MCP client 连接，[contracts/tool.md](../../specs/003-cli-commands/contracts/tool.md)）
-- [ ] T036 [P] [US3] Create `SessionListCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/SessionListCommand.java`（启动 Spring + 拿 `SessionRepository`；`--limit N` 默认 20 + `--profile <name>` + `--format table|json`；按 `updated_at` 倒序；仅 metadata 不输出 message content，[contracts/session.md](../../specs/003-cli-commands/contracts/session.md) / FR-007）
-- [ ] T037 [P] [US3] Create `scripts/cli-smoke.sh` + scenario shell fragments in `scripts/{scenario-01-init,scenario-02-status,scenario-03-profile,scenario-04-chat,scenario-05-spring-queries,scenario-06-stub,scenario-07-audit,scenario-08-stderr}.sh`（一键跑 quickstart 9 场景，[quickstart.md](../../specs/003-cli-commands/quickstart.md) / A-008）
+- [x] T033 [P] [US3] Create `ProfileCommand` (with 4 subcommands) in `oryxos-cli/src/main/java/io/oryxos/cli/command/ProfileCommand.java`（`@Command(name = "profile", subcommands = {ProfileListCommand.class, ProfileShowCommand.class, ProfileCreateCommand.class, ProfileDeleteCommand.class})`；不启动 Spring；走 `Files.*` + `ConfigLoader`，[contracts/profile.md](../../specs/003-cli-commands/contracts/profile.md) / FR-005）
+- [x] T034 [P] [US3] Create `ProviderListCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ProviderListCommand.java`（`@Command(name = "provider", subcommands = {ProviderListCommand.class})`；启动 Spring + 拿 `ProviderService.allProviders()`；stdout 表格；不打印 API key 明文，FR-006 / FR-020 / [contracts/provider.md](../../specs/003-cli-commands/contracts/provider.md)）
+- [x] T035 [P] [US3] Create `ToolListCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ToolListCommand.java`（启动 Spring + 拿 `ToolRegistry.all()`；stdout 表格含 `NAME / KIND / SOURCE / SANDBOX_REQUIRED`；**不**触发 Tool Bean 调用 / MCP client 连接，[contracts/tool.md](../../specs/003-cli-commands/contracts/tool.md)）
+- [x] T036 [P] [US3] Create `SessionListCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/SessionListCommand.java`（启动 Spring + 拿 `SessionRepository`；`--limit N` 默认 20 + `--profile <name>` + `--format table|json`；按 `updated_at` 倒序；仅 metadata 不输出 message content，[contracts/session.md](../../specs/003-cli-commands/contracts/session.md) / FR-007）
+- [x] T037 [P] [US3] Create `scripts/cli-smoke.sh` + scenario shell fragments in `scripts/{scenario-01-init,scenario-02-status,scenario-03-profile,scenario-04-chat,scenario-05-spring-queries,scenario-06-stub,scenario-07-audit,scenario-08-stderr}.sh`（一键跑 quickstart 9 场景，[quickstart.md](../../specs/003-cli-commands/quickstart.md) / A-008）
 
 **Checkpoint**: `mvn -pl oryxos-cli verify` 绿；`profile list` 在 3 Profile 工作区 ≤ 200 ms（SC-004）；`session list --limit 5` 按 `updated_at` 倒序；Provider 表 1 行 `api_key_resolved=false` 不含 key 明文（FR-020）；`scripts/cli-smoke.sh` 在本地 Linux 跑通。User Story 3 独立交付完成。
 
@@ -137,12 +137,12 @@
 
 **Purpose**: 跨 User Story 的合规 / 性能 / CI / 文档收口。
 
-- [ ] T038 [P] Create `StderrOnlyTest` in `oryxos-cli/src/test/java/io/oryxos/cli/StderrOnlyTest.java`（断言 `oryxos chat ghost-bot "x" | grep foo` 在 Profile 不存在时 `foo` 无匹配（stdout 干净）；错误全走 stderr，FR-010 / SC-006）
-- [ ] T039 [P] Create `SysexitsTest` in `oryxos-cli/src/test/java/io/oryxos/cli/SysexitsTest.java`（断言 12 命令的关键场景退出码严格按 sysexits：init 已存在 → 1 / chat 缺 profile → 64 / chat 缺 API key → 69 / status 缺 key → 2 / chat YAML 坏 → 78，FR-009 / SC-007）
-- [ ] T040 [P] Add performance baseline in `oryxos-cli/src/test/java/io/oryxos/cli/PerformanceBaselineTest.java`（JMH 简单 wrapper 或 `System.nanoTime`；断言 `status` ≤ 200 ms、`profile list` ≤ 200 ms，SC-003 / SC-004）
-- [ ] T041 Create GitHub Actions matrix workflow in `.github/workflows/cli-smoke.yml`（matrix: `ubuntu-latest` / `macos-latest` / `windows-latest`；每平台跑 `scripts/cli-smoke.sh` + `mvn -pl oryxos-cli verify`；A-008 跨平台契约）
-- [ ] T042 [P] Add API-key redaction guard test in `oryxos-cli/src/test/java/io/oryxos/cli/ApiKeyRedactionTest.java`（断言 `status --verbose` / `provider list` / `llm_calls` 表内容 / `.oryxos/logs/oryxos-cli.log` 全部不含 `${DEEPSEEK_API_KEY}` 字面量；FR-020 + [Constitution 硬约束](../../.specify/memory/constitution.md)）
-- [ ] T043 [P] Update `.specify/memory/constitution.md` 不动（本任务清单**禁止**修改 constitution，仅作自我提醒）；更新 `docs/README.md` 加一段 "003-cli-commands 已落地" 的指针（不动 spec.md / plan.md）
+- [x] T038 [P] Create `StderrOnlyTest` in `oryxos-cli/src/test/java/io/oryxos/cli/StderrOnlyTest.java`（断言 `oryxos chat ghost-bot "x" | grep foo` 在 Profile 不存在时 `foo` 无匹配（stdout 干净）；错误全走 stderr，FR-010 / SC-006）
+- [x] T039 [P] Create `SysexitsTest` in `oryxos-cli/src/test/java/io/oryxos/cli/SysexitsTest.java`（断言 12 命令的关键场景退出码严格按 sysexits：init 已存在 → 1 / chat 缺 profile → 64 / chat 缺 API key → 69 / status 缺 key → 2 / chat YAML 坏 → 78，FR-009 / SC-007）
+- [x] T040 [P] Add performance baseline in `oryxos-cli/src/test/java/io/oryxos/cli/PerformanceBaselineTest.java`（JMH 简单 wrapper 或 `System.nanoTime`；断言 `status` ≤ 200 ms、`profile list` ≤ 200 ms，SC-003 / SC-004）
+- [x] T041 Create GitHub Actions matrix workflow in `.github/workflows/cli-smoke.yml`（matrix: `ubuntu-latest` / `macos-latest` / `windows-latest`；每平台跑 `scripts/cli-smoke.sh` + `mvn -pl oryxos-cli verify`；A-008 跨平台契约）
+- [x] T042 [P] Add API-key redaction guard test in `oryxos-cli/src/test/java/io/oryxos/cli/ApiKeyRedactionTest.java`（断言 `status --verbose` / `provider list` / `llm_calls` 表内容 / `.oryxos/logs/oryxos-cli.log` 全部不含 `${DEEPSEEK_API_KEY}` 字面量；FR-020 + [Constitution 硬约束](../../.specify/memory/constitution.md)）
+- [x] T043 [P] Update `.specify/memory/constitution.md` 不动（本任务清单**禁止**修改 constitution，仅作自我提醒）；更新 `docs/README.md` 加一段 "003-cli-commands 已落地" 的指针（不动 spec.md / plan.md）
 
 **Checkpoint**: `mvn -pl oryxos-cli verify` 绿；GH Actions matrix 三平台绿；`cli-smoke.sh` 端到端跑通；FR-001..FR-020 + SC-001..SC-008 + NFR-001..NFR-005 全部有测试覆盖。本 US 完成。
 
