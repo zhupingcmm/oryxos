@@ -1,0 +1,5 @@
+f641bb9 docs(us-2): polish - CLAUDE.md US-2 pitfalls + analyze evidence + translation notes
+1b5f76d feat(core): implement US-2/AG AgentService unified entry point + ProfileContext lifecycle
+05ae9c2 feat(core): implement US-2/P3 multi-iteration termination + 20-thread concurrency isolation
+073d8c7 feat(core): implement US-2/P2 single Reason-Act-Observe cycle (tool dispatch + audit)
+e6b8706 feat(core): US-2/P1 Pure Reason Path (single LLM, no tools)
