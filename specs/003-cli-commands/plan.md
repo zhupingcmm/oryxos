@@ -31,6 +31,7 @@
 
 - JUnit 5 + AssertJ（既有）
 - WireMock（既有，[SC-008](../003-cli-commands/spec.md) 集成测试）
+- `mockito-core`（T032 `SessionListCommandTest` 用以 mock `SessionRepository.findAll(...)`，避免 H2/Testcontainers 的重型测试装置）
 - `scripts/cli-smoke.sh`（[research.md 决策 8](research.md) 新增 — 端到端冒烟）
 - 不引新测试框架
 
@@ -47,6 +48,7 @@
 - Spring 启动命令 ≤ 5 s 首输出（[FR-013](../003-cli-commands/spec.md)）
 - `chat` 端到端 ≤ 30 s（[SC-001](../003-cli-commands/spec.md)）
 - CLI 不在主路径上做缓存（day-one 不需要）；扩展阶段可加 LLM response 缓存
+- **CI 缓冲**：测试预算用 SC 目标的 10×（SC-003 200 ms → 测 2 000 ms / SC-004 200 ms → 测 2 000 ms / SC-005 2 s → 测 20 s），保证重负载 CI runner 不抖动；想收紧请显式 review 后再改 `PerformanceBaselineTest` 的常量。
 
 **Constraints**:
 
@@ -77,7 +79,7 @@
 |**§II. Core-Stage Scope Discipline (五大核心能力优先)**|✅ PASS|本 US 不碰多租户 / SSO / 完整审计 / Tool Policy / Web 仪表板 / 集群；`serve` / `gateway` 仅做 stub（[FR-008](../003-cli-commands/spec.md)）|
 |**§III. Self-Implemented ReAct Loop**|✅ PASS|`chat` 命令**不**直接持有 `ChatModel` Bean；通过 `AgentService.process()` 间接驱动（[FR-002 / NFR-002](../003-cli-commands/spec.md)）|
 |**§IV. Spring AI Used at Half-Strength**|✅ PASS|① 不引 `picocli-spring-boot-starter`（[research.md 决策 3](research.md)）；② 不启用 Spring AI 自动 tool 执行（[NFR-003](../003-cli-commands/spec.md)）；③ Provider name → `ChatModel` 走显式映射（既有 US-1，本 US 不动）|
-|**§V. Three-Tier Plugin Tooling**|✅ PASS|本 US 不引入 Tool 相关代码（[research.md 决策 9](research.md)）；`tool list` 只**列**已注册的 Tool Bean，**不**实现 / 测试；`AGENT.md` 加载归 `oryxos-core` 的 `ContextLoader`（既有）|
+|**§V. Three-Tier Plugin Tooling**|✅ PASS|本 US 不引入 Tool 相关代码（[research.md 决策 9](research.md)）；`tool list` 只**列**已注册的 Tool Bean，**不**实现 / 测试；`AGENT.md` 加载归 `oryxos-core` 的 `ContextLoader`（既有）。**注**：为了让 `oryxos tool list` 能从 DI 容器拿到 bean，`oryxos-tool/ToolRegistry.java` + `ToolDefinition.java` 作为最小接口已被加进 `oryxos-tool` 模块（不包含任何 Tool 实现）；US-4 阶段填入真实的 9 个 built-in + MCP + SKILL.md 三档工具。|
 |**§VI. SQLite + MEMORY.md with Day-One Audit**|✅ PASS|① 复用 5 张表（[data-model.md §6](data-model.md)），**不**新增；② `CommandInvocation` 仅落日志（[data-model.md §3.2](data-model.md)）；③ `chat` 命令经 `AgentService` 自动写 `sessions` / `llm_calls` / `tool_invocations`|
 |**§VII. Demo-First Delivery**|✅ PASS|[quickstart.md](quickstart.md) 9 场景对应 8 条 SC；`scripts/cli-smoke.sh` 一键跑全平台冒烟（[A-008](../003-cli-commands/spec.md)）|
 |**§硬约束 — SecurityManager**|✅ PASS|不引入；CLI 不调用|
@@ -122,7 +124,7 @@ specs/003-cli-commands/
 oryxos-cli/                                    # 既有模块 — 本 US 增量
 ├── pom.xml                                    # +1 依赖 (picocli + snakeyaml)
 ├── src/main/java/io/oryxos/cli/
-│   ├── Main.java                              # Picocli 根入口；按子命令决定是否启 Spring
+│   ├── OryxOsCli.java                         # Picocli 根入口；按子命令决定是否启 Spring（pom.xml 的 <mainClass> 指这里）
 │   ├── config/
 │   │   ├── ConfigLoader.java                  # YAML + ${ENV_VAR} 替换（决策 4）
 │   │   └── MissingEnvVarException.java
@@ -172,10 +174,16 @@ oryxos-boot/                                   # 既有模块 — 本 US 不动
 └── (OryxosApplication.java 已是 Spring Boot 主类；CLI 复用)
 
 scripts/                                       # 新增
-└── cli-smoke.sh                               # 一键跑 quickstart 9 场景
+├── cli-smoke.sh                               # 一键跑 quickstart 9 场景（1 驱动脚本 6 子场景）
+└── cli-smoke/                                 # 独立片段
+    ├── 01-init.sh                             # 快速 init + 二次跑 + diff
+    ├── 02-profile-crud.sh                     # profile list / show / create / delete
+    └── 03-status.sh                           # status 三档退出码验证
 ```
 
 **Structure Decision**：单 `oryxos-cli` 模块承载全部 CLI 命令；按"零 Spring / 必须 Spring / stub"分三组抽象基类（`CommandBase` / `CommandSpringBase` / `ServeCommand` / `GatewayCommand`）。
+
+**冒烟脚本组织**：`scripts/cli-smoke.sh` 是 1 个驱动脚本（6 个子场景）+ 3 个独立片段（`01-init` / `02-profile-crud` / `03-status`），共 9 条端到端路径，对应 [quickstart.md](quickstart.md) 9 场景；CI matrix 三平台都跑驱动 + 三个片段（见 [`.github/workflows/cli-smoke.yml`](../../../.github/workflows/cli-smoke.yml)）。
 
 ## Complexity Tracking
 

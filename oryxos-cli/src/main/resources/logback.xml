@@ -12,9 +12,10 @@
 -->
 <configuration>
 
-    <!-- Default fallback if .oryxos/logs/ is not yet writable (e.g. running --version
-         outside a workspace): emit to console so the user is never silently blind.
-         (Note: keep XML comments free of double-hyphens; Logback's XML parser rejects them.) -->
+    <!-- Default fallback if .oryxos/logs/ is not yet writable (e.g. running the
+         version subcommand outside a workspace): emit to console so the user is
+         never silently blind. Note: keep XML comments free of double-hyphens;
+         Logback's XML parser rejects them. -->
     <appender name="STDOUT_FALLBACK" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level %logger{20} - %msg%n</pattern>

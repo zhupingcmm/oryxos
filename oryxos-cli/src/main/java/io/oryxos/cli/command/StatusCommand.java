@@ -1,6 +1,7 @@
 package io.oryxos.cli.command;
 
 import io.oryxos.cli.config.ConfigLoader;
+import io.oryxos.cli.diag.ApiKeyMask;
 import io.oryxos.cli.diag.ProviderStatusReport;
 import io.oryxos.cli.exitcode.Sysexits;
 import io.oryxos.cli.workspace.WorkspaceLayout;
@@ -54,8 +55,9 @@ public class StatusCommand extends CommandBase {
 
         WorkspaceLayout layout = WorkspaceLayout.probe(oryxos.getParent());
         List<ProviderStatusReport> providers = readProviderMatrix(oryxos);
+        int mcpServerCount = readMcpServerCount(oryxos);
 
-        renderTableOrJson(layout, providers);
+        renderTableOrJson(layout, providers, mcpServerCount);
 
         // Health grading (FR-004 / SC-007)
         if (providers.stream().anyMatch(p -> !p.apiKeyResolved())) {
@@ -97,12 +99,44 @@ public class StatusCommand extends CommandBase {
         }
     }
 
-    private void renderTableOrJson(WorkspaceLayout layout, List<ProviderStatusReport> providers) {
+    /**
+     * Read {@code .oryxos/mcp_servers.yaml} and return the number of MCP
+     * servers it declares (FR-004). The skeleton produced by
+     * {@code InitCommand} has shape {@code servers: [...]}; we accept both
+     * a list and a map (where keys are server names) for forward
+     * compatibility. Missing file → 0; unparseable file → 0 + a warning to
+     * stderr (status is best-effort).
+     */
+    private int readMcpServerCount(Path oryxos) {
+        Path yaml = oryxos.resolve("mcp_servers.yaml");
+        if (!Files.exists(yaml)) {
+            return 0;
+        }
+        try {
+            Map<String, Object> root = ConfigLoader.loadYaml(yaml);
+            Object servers = root.get("servers");
+            if (servers instanceof List<?> list) {
+                return list.size();
+            }
+            if (servers instanceof Map<?, ?> map) {
+                return map.size();
+            }
+            return 0;
+        } catch (Exception e) {
+            spec.commandLine().getErr().println(
+                    "Warning: could not parse " + yaml + ": " + e.getMessage());
+            return 0;
+        }
+    }
+
+    private void renderTableOrJson(WorkspaceLayout layout, List<ProviderStatusReport> providers,
+                                   int mcpServerCount) {
         if ("json".equalsIgnoreCase(format)) {
             String json = layout.renderJson()
                     + " | providers=" + providers.size()
                     + " | missing_keys=" + providers.stream()
-                            .filter(p -> !p.apiKeyResolved()).count();
+                            .filter(p -> !p.apiKeyResolved()).count()
+                    + " | mcp_servers=" + mcpServerCount;
             spec.commandLine().getOut().println(json);
         } else {
             // Table
@@ -116,9 +150,28 @@ public class StatusCommand extends CommandBase {
             } else {
                 spec.commandLine().getOut().println("Providers: (none configured — no .oryxos/application.yaml)");
             }
+            // MCP server count is part of the FR-004 contract — render it
+            // even when the providers section is empty (the two are independent).
+            spec.commandLine().getOut().println("MCP servers: " + mcpServerCount);
             if (verbose) {
-                spec.commandLine().getOut().println("Verbose: SQLite row counts and profile tool lists");
-                spec.commandLine().getOut().println("  (deferred to US-3 session/profile commands; this stub is intentional)");
+                // FR-020 — `--verbose` MAY display first-four + "..." for
+                // each provider's API key as an ops debug signal. Default
+                // (non-verbose) output never shows any of this. SQLite /
+                // profile tool counts remain deferred to US-3 (kept as
+                // a placeholder so the section header still prints).
+                spec.commandLine().getOut().println("Verbose:");
+                spec.commandLine().getOut().println("  SQLite row counts and profile tool lists");
+                spec.commandLine().getOut().println("    (deferred to US-3 session/profile commands; this stub is intentional)");
+                if (!providers.isEmpty()) {
+                    spec.commandLine().getOut().println("  api_key_masked (first 4 chars only):");
+                    for (ProviderStatusReport p : providers) {
+                        String masked = (p.apiKeyResolved())
+                                ? ApiKeyMask.mask(System.getenv(p.credentialRef()))
+                                : "unresolved";
+                        spec.commandLine().getOut().println("    " + p.name()
+                                + " (" + p.credentialRef() + ") = " + masked);
+                    }
+                }
             }
         }
         spec.commandLine().getOut().flush();

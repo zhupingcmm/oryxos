@@ -120,6 +120,81 @@ class StatusCommandTest {
     }
 
     /**
+     * FR-004 — {@code oryxos status} must report the MCP server count read
+     * from {@code .oryxos/mcp_servers.yaml}. The skeleton produced by
+     * {@code init} has shape {@code servers: [...]}; a populated registry is
+     * a list of three servers here.
+     */
+    @Test
+    void mcpServerCountFromYamlIsReported(@TempDir Path tmp) throws Exception {
+        Path oryxos = tmp.resolve(".oryxos");
+        Files.createDirectories(oryxos.resolve("agents"));
+        Files.createDirectories(oryxos.resolve("memory"));
+        Files.createDirectories(oryxos.resolve("sessions"));
+        Files.createDirectories(oryxos.resolve("logs"));
+        Files.writeString(oryxos.resolve("application.yaml"), """
+                oryxos:
+                  providers: {}
+                """);
+        Files.writeString(oryxos.resolve("AGENTS.md"), "# x");
+        Files.writeString(oryxos.resolve("SOUL.md"), "# x");
+        Files.writeString(oryxos.resolve("USER.md"), "# x");
+        Files.writeString(oryxos.resolve("mcp_servers.yaml"), """
+                servers:
+                  - name: github
+                    command: mcp-github
+                  - name: slack
+                    command: mcp-slack
+                  - name: notion
+                    command: mcp-notion
+                """);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PrintWriter pw = new PrintWriter(out, true, StandardCharsets.UTF_8);
+        int exit = new CommandLine(new StatusCommand())
+                .setOut(pw)
+                .setErr(pw)
+                .execute("--workspace", tmp.toString());
+        pw.flush();
+
+        assertThat(exit).isEqualTo(Sysexits.OK);
+        assertThat(out.toString(StandardCharsets.UTF_8)).contains("MCP servers: 3");
+    }
+
+    /**
+     * FR-004 — when {@code mcp_servers.yaml} is absent the report must
+     * still render {@code MCP servers: 0} without an exception (status is
+     * best-effort).
+     */
+    @Test
+    void missingMcpServersYamlReportsZero(@TempDir Path tmp) throws Exception {
+        Path oryxos = tmp.resolve(".oryxos");
+        Files.createDirectories(oryxos.resolve("agents"));
+        Files.createDirectories(oryxos.resolve("memory"));
+        Files.createDirectories(oryxos.resolve("sessions"));
+        Files.createDirectories(oryxos.resolve("logs"));
+        Files.writeString(oryxos.resolve("application.yaml"), """
+                oryxos:
+                  providers: {}
+                """);
+        Files.writeString(oryxos.resolve("AGENTS.md"), "# x");
+        Files.writeString(oryxos.resolve("SOUL.md"), "# x");
+        Files.writeString(oryxos.resolve("USER.md"), "# x");
+        // No mcp_servers.yaml written.
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PrintWriter pw = new PrintWriter(out, true, StandardCharsets.UTF_8);
+        int exit = new CommandLine(new StatusCommand())
+                .setOut(pw)
+                .setErr(pw)
+                .execute("--workspace", tmp.toString());
+        pw.flush();
+
+        assertThat(exit).isEqualTo(Sysexits.OK);
+        assertThat(out.toString(StandardCharsets.UTF_8)).contains("MCP servers: 0");
+    }
+
+    /**
      * Best-effort: try to set a process env var via reflection on the
      * unmodifiable map returned by {@code System.getenv()}. On many JDKs
      * this is a no-op; the test cases are written to tolerate that.

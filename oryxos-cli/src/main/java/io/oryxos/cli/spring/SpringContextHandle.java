@@ -88,6 +88,25 @@ public final class SpringContextHandle implements AutoCloseable {
         return bootDurationMs;
     }
 
+    /**
+     * Test-only factory: wrap an externally-managed
+     * {@link ConfigurableApplicationContext} (typically an
+     * {@code AnnotationConfigApplicationContext} built inside a unit test)
+     * so a {@code ChatCommand} subclass can override {@code acquireContext(...)}
+     * and inject mocked beans (e.g. Mockito-stubbed {@code AgentService},
+     * {@code SessionRepository}, {@code LlmCallRecordRepository}) without
+     * paying the Spring Boot startup tax.
+     *
+     * <p>Used by {@code ChatCommandAuditGuardTest} to verify the
+     * US1-AC3 / FR-018 fail-fast invariant: when {@code AgentService} throws
+     * before any LLM call, the CLI must exit non-zero with a one-line stderr
+     * message and <em>must not</em> have written an {@code llm_calls} row.
+     */
+    public static SpringContextHandle wrapForTesting(ConfigurableApplicationContext ctx) {
+        Objects.requireNonNull(ctx, "ctx");
+        return new SpringContextHandle(ctx, 0L);
+    }
+
     @Override
     public void close() {
         context.close();

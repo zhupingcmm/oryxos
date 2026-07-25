@@ -86,6 +86,8 @@
 #### 命令集（12 个，[CLAUDE.md §14](../../CLAUDE.md) 全集）
 
 - **FR-001**：系统**必须**暴露 `oryxos` 二进制，根命令由 Picocli 解析；子命令清单 = `{init, status, chat, serve, gateway, profile, provider, tool, session}` 严格按 [CLAUDE.md §14](../../CLAUDE.md) 表中的 12 个落地（`profile` / `provider` / `tool` / `session` 各带子子命令）。
+
+  > **命令数对账（CLAUDE.md §14 表述 ↔ Picocli 落地）**：用户视角的"12 命令" = **5 个根级命令**（`init` / `status` / `chat` / `serve` / `gateway`）+ **7 个子子级命令**（`profile {list, show, create, delete}` 4 个 + `provider list` 1 个 + `tool list` 1 个 + `session list` 1 个）= 12 个用户可见命令点；其中 `profile` / `provider` / `tool` / `session` 4 个根级同时也是"父命令"，自身可省略不调用（直接走 `profile list` 等子子命令）。`@Command` 注解的 Java 类数 = 5（根 + 4 父） + 7（子子）= 12 个 `@Command` 类，与 [CLAUDE.md §14](../../CLAUDE.md) "12 个 Picocli 命令" 表的语义对齐。
 - **FR-002**：`oryxos chat <profile-name> [--message <msg> | stdin]` **必须**启动 Spring Context → 解析 Profile → 调 `AgentService.process(Session, message)` → 把 `LoopResult.finalText()` 打印到 stdout → 优雅关闭 Context → 退出码 0。**禁止**绕过 `AgentService` 直接驱动 `ReActLoop`。
 - **FR-003**：`oryxos init` **不得**启动 Spring Context，仅做文件 IO；**必须**生成完整 `.oryxos/` 树（`agents/` + `memory/` + `mcp_servers.yaml` + `sessions/` + `logs/` + `AGENTS.md` + `SOUL.md` + `USER.md`），并初始化空的 SQLite（`oryxos.db`，schema 走 US-1 既有 `llm_calls` + US-2 day-one `sessions` / `tool_invocations`）。
 - **FR-004**：`oryxos status` **不得**启动 Spring Context；**必须**输出 JVM / JDK / OS 版本、`.oryxos/` realpath、Profile 数、Provider 配置矩阵（含 API key 是否 resolved）、MCP server 数；退出码分级（0/1/2）。
@@ -113,6 +115,8 @@
 - **FR-017**：`oryxos chat` 一次执行 **必须** 产出一条 `react.completed` 结构化日志（[CLAUDE.md §11](../../CLAUDE.md) + spec FR-020 复用）+ N 条 `react.iteration`；日志路径 `.oryxos/logs/oryxos-cli.log`，rotation 走 Logback 默认策略。
 - **FR-018**：所有命令 **必须** 捕获顶层未捕获异常 + 写一条 `cli.command.failed command=<name> exit=<n> duration_ms=<d>` 到 `.oryxos/logs/`，**禁止**让 stack trace 逃到终端（除非 `--debug`）。
 
+  > **日志敏感字段脱敏（与 FR-020 对齐）**：`cli.command.failed` 行只包含 `command` / `exit` / `duration_ms` 三个公开字段 + 异常**类名** + 异常 `message`，**禁止**记录以下敏感字段 ——（a）进程环境变量名 / 值（含 `${ENV_VAR}` 解析结果 / API key 内容）；（b）用户在 stdin / `--message` 输入的原始文本；（c）`--workspace` / `--session-id` 等命令参数的原始值（除 `duration_ms` 外的间接派生值）；（d）`AGENT.md` / Profile YAML 的正文内容。`--debug` 逃生通道**只**把 stack trace 打到 stderr，不放宽日志字段脱敏约束。
+
 #### 安全 / 沙箱（与 Constitution 对齐）
 
 - **FR-019**：CLI **禁止** 使用 `java.lang.SecurityManager`（Constitution 硬约束）；沙箱行为在 Tool 路径由 `Sandbox.enforce` 落地（US-4 拥有）。
@@ -125,6 +129,7 @@
 - **`Profile`**：从 `.oryxos/agents/<name>/AGENT.md` 解析；详见 [data-model.md §3.3](../002-react-loop/data-model.md) + [CLAUDE.md §16](../../CLAUDE.md) YAML schema。
 - **`OryxosApplication`**：Spring Boot 主类；CLI 中"启动 Spring"与"不启动 Spring"两条路径共用，但 init 时机不同。
 - **`ConfigLoader`**：`oryxos-cli` 模块组件；负责 Profile YAML + `${ENV_VAR}` 解析。
+- **`ToolRegistry`**（`oryxos-tool` 模块接口，CLI 借 DI 容器反射拿 Bean）：`oryxos tool list` 用以列出当前生效的内置 + MCP + SKILL.md 三档 Tool Bean（**只列不调**，避免触发实际副作用）；`oryxos-cli` 不持有此接口的实现细节，仅通过 `ApplicationContext.getBean(ToolRegistry.class)` 取只读快照。
 
 ---
 
@@ -147,7 +152,9 @@
 - **NFR-002**：CLI **不得**依赖 Spring AI 的 Agent 抽象（Constitution §III）—— `chat` 仅通过 `AgentService.process(...)` 驱动，**禁止**直接持有 `ChatModel` Bean。
 - **NFR-003**：CLI **不得** 启用 Spring AI 自动 tool 执行（Constitution §IV），即使某条 `oryxos chat` 命令用到了 `MCP`，派发也走 `ReActLoop + ToolExecutor`。
 - **NFR-004**：JDK 21（records / sealed / virtual threads / sequenced collections 全用上）；**禁止**任何 pre-JDK 21 写法（Constitution 硬约束）。
-- **NFR-005**：二进制交付走 `java -jar`（[CLAUDE.md §4](../../CLAUDE.md)）；CLI 主入口 = `oryxos-cli` 模块的 `io.oryxos.cli.Main`（Picocli `CommandLine.execute`）。
+- **NFR-005**：二进制交付走 `java -jar`（[CLAUDE.md §4](../../CLAUDE.md)）；CLI 主入口 = `oryxos-cli` 模块的 `io.oryxos.cli.OryxOsCli`（Picocli `CommandLine.execute`）。`pom.xml` 的 `<mainClass>` 必须与之保持一致；任何后续重命名需同步更新两处。
+
+  > **单一真值源（**A8 落地**）**：`oryxos-cli/pom.xml` 已引入 `<properties><cli.main.class>io.oryxos.cli.OryxOsCli</cli.main.class></properties>`，由 `${cli.main.class}` 同时驱动 `maven-jar-plugin` 的 `<manifest><mainClass>` 与 `exec-maven-plugin` 的 `<mainClass>`，避免任一处漏改造成 `java -jar` 入口不可用。任何重命名此值时只需改一处，CI 阶段可加一个 pom-vs-spec 同步检查兜底（计划项）。
 
 ---
 

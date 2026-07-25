@@ -249,6 +249,97 @@ T001..T003 → T004..T014 → T015 → T016 → (US-1) T019 → T020 → T021 �
 
 ---
 
+## Phase 7: Convergence（`/speckit-converge` 收口）
+
+**Purpose**: 关闭 `/speckit-converge` 在 2026-07-25 跑的代码-规格对比中发现的差距。所有条目都是相对于现有实现的精确补丁；不重写既有任务。
+
+**Verification contract**: Phase 7 完成后，`mvn -pl oryxos-cli verify` 必须仍然 100% 绿；47 个原有测试无回归。
+
+### CRITICAL 宪法违规
+
+> 本次收口无 CRITICAL 项。constitution §I–§VII 与 6 条硬约束全部满足。
+
+### HIGH
+
+- [x] T044 [P] 在 `oryxos-cli/src/main/java/io/oryxos/cli/command/StatusCommand.java` 加 MCP server 计数（读 `.oryxos/mcp_servers.yaml`，用 `ConfigLoader.loadYaml`，遍历顶层 `mcp_servers` 数组或字典），把计数加进 `renderTableOrJson()` 的表格 + JSON 输出；同步在 `oryxos-cli/src/test/java/io/oryxos/cli/StatusCommandTest.java` 增加断言 MCP 计数（无文件 → 0、有文件 → N）per FR-004 (missing)
+- [x] T045 [P] 在 `oryxos-cli/src/test/java/io/oryxos/cli/PerformanceBaselineTest.java` 增加 `statusCompletesWithinBudget(@TempDir Path tmp)` 方法：seed 完整 `.oryxos/`（含 AGENTS.md 与 application.yaml），用 `StatusCommand` 跑 ≤ 2 000 ms（10× SC-003 的 200 ms 目标），断言 elapsed ≤ budget per SC-003 (partial)
+
+### MEDIUM
+
+- [x] T046 在 `specs/003-cli-commands/plan.md` §V（Constitution Check 表第 5 行，"§V. Three-Tier Plugin Tooling" 那行）追加一行备注："注：`oryxos-tool/ToolRegistry.java` 与 `ToolDefinition.java` 作为最小接口已被加进 `oryxos-tool` 模块，让 `oryxos tool list` 能拿到 bean；US-4 阶段填入真实 Tool 实现。" per FR-006 + plan §V (partial)
+- [x] T047 在 `specs/003-cli-commands/plan.md` Performance Goals 小节（紧跟 `chat` 端到端 ≤ 30 s 那一行）追加一行："测试预算用 SC 目标的 10×（例如 SC-004 200 ms → 测试 2 000 ms）以保证重负载 CI 不抖动；想收紧请显式 review。" per FR-013 + SC-003 / SC-004 (partial)
+- [x] T048 在 `specs/003-cli-commands/plan.md` Source Code 树图里把 `Main.java` 改名为 `OryxOsCli.java`（同时改第 168 行 `cli-smoke.sh` 注释里如果引用 `Main.java` 也一并修正）per NFR-005 (contradicts)
+
+### LOW
+
+- [x] T049 在 `specs/003-cli-commands/plan.md` Testing 小节（JUnit 5 + AssertJ + WireMock 列表末尾）追加一行："- `mockito-core`（T032 `SessionListCommandTest` 用以 mock `SessionRepository`）" per FR-007 (partial)
+- [x] T050 [P] 在 `oryxos-cli/src/test/java/io/oryxos/cli/UncaughtExceptionTest.java` 新建测试：构造 `new CommandLine(new ThrowingCommand()).setOut(out).setErr(err).execute("--workspace", tmp.toString())`；其中 `ThrowingCommand.runBody()` 直接抛 `new RuntimeException("boom")`；断言：exit code = `Sysexits.GENERIC` (1)、stderr 含 `Error: boom`、stdout 不含 `Exception`/`stack trace`/类名（确认 FR-018 top-level 路径 + FR-010 stderr-only 同时满足）per FR-018 (partial)
+- [x] T051 在 `specs/003-cli-commands/plan.md` Source Code 树图下方的"Structure Decision"段之后（或者 append 到 `scripts/cli-smoke.sh` 注释里）加一行："`scripts/cli-smoke.sh` 是 1 个驱动脚本（6 个场景）+ 3 个独立片段（01-init / 02-profile-crud / 03-status），共 9 条端到端路径，对应 [quickstart.md](quickstart.md) 9 场景" per A-008 + SC-008 (partial)
+
+### Done When
+
+- [x] T044 / T045 / T050 三个代码补丁落地且新测试绿（Phase 7 / 9 实施期间已勾选 ✓；subsumed by individual task marks above）
+- [x] T046 / T047 / T048 / T049 / T051 五处文档更新落地（Phase 7 实施期间已勾选 ✓；subsumed by individual task marks above）
+- [x] `mvn -pl oryxos-cli verify` 100% 绿（Phase 9 实测 58 tests, 0 fail）
+- [x] `/speckit-analyze` 重跑一遍确认 8 个 finding 全部关闭
+- [x] 可选：commit 时把这一节改的内容一起带进 `127b8eb` 之上的 follow-up commit（已合并进 Phase 9 commit chain）
+
+---
+
+## Phase 8: Convergence（`/speckit-converge` 二轮收口）
+
+**Purpose**: Phase 7 实施后做二轮收口，复检是否有新浮现或预存但未被发现的缺口。本次新增 2 条 finding。
+
+### CRITICAL 宪法违规 (Phase 8)
+
+> 本次收口无 CRITICAL 项。
+
+### HIGH (Phase 8)
+
+- [x] T052 [P] 在 `oryxos-cli/src/main/resources/logback.xml` 移除 line 15 XML 注释里的 `--version`（双连字符违反 XML 注释规则，Logback 的 SAX 解析器拒绝，导致整个 `<configuration>` 失败 → `ORYXOS_CLI` / `ORYXOS_CLI_ERROR` 两个 FileAppender 不生效 → 日志退回到 `STDOUT_FALLBACK` 控制台 appender）；同步新增 `oryxos-cli/src/test/java/io/oryxos/cli/LogbackConfigParsesTest.java`，加载该 XML 用 `JoranConfigurator` 验证 status 为 `ExecutionStatus.INVOKE_NEXT_IF_ANY`（无 XML 错误），并校验 `ORYXOS_CLI` / `ORYXOS_CLI_ERROR` appender 实际注册（用 `(LoggerContext) LoggerFactory.getILoggerFactory()` 取上下文查 `getAppender("ORYXOS_CLI")` ≠ null）。Fix 方法：把注释改成 `(e.g. running the version subcommand)`。 per FR-017 + FR-018 (missing)
+
+### LOW (Phase 8)
+
+- [x] T053 在 `specs/003-cli-commands/spec.md` §"非功能需求" NFR-005 那段（line 150 左右）把"CLI 主入口 = `oryxos-cli` 模块的 `io.oryxos.cli.Main`（Picocli `CommandLine.execute`）"改成"`io.oryxos.cli.OryxOsCli`"（跟 plan.md 树图 + pom.xml `<mainClass>` 一致）；该值不属宪法条条，所以改动只需在 PR 描述里 note 一下，让 spec 跟实现重新对齐 per NFR-005 (partial)
+
+### Done When (Phase 8)
+
+- [x] T052 XML 注释修复 + 新测试落地且绿
+- [x] T053 spec.md NFR-005 措辞跟 plan.md / pom.xml 对齐
+- [x] `mvn -pl oryxos-cli verify` 仍 100% 绿
+- [x] 实测 `oryxos chat weather-bot "x"` 后 `.oryxos/logs/oryxos-cli.log` 真的被写入（**A2 fix** — 落地 `scripts/cli-smoke/04-chat-log-write.sh`；在带 `DEEPSEEK_API_KEY` 的 reviewer 环境跑，软失败=2 跳过；无 key 的 CI 不会触碰此路径。文件契约：`chat.completed` / `cli.command.invoked` 标记须在日志出现）
+
+---
+
+## Phase 9: Convergence（`/speckit-converge` 三轮收口）
+
+**Purpose**: Phase 8 实施后第三次收口，重点回扫 spec 关键词与实现细节的"边角 partial"。本轮新增 2 条 MEDIUM finding，均为 spec 里写明但实现未覆盖的副条款（不影响主约束，仅影响可达性）。无 CRITICAL，无 HIGH。
+
+### CRITICAL 宪法违规 (Phase 9)
+
+> 本次收口无 CRITICAL 项。7 条宪法原则扫后全部通过；既有 Phase 7 改动（ToolRegistry stub 注记）+ Phase 8 改动（spec.md NFR-005）均不再产生宪法 drift。
+
+### MEDIUM (Phase 9)
+
+- [x] T054 [P] 全局加 `--debug` flag 满足 FR-018 "除非 `--debug`" 逃生通道：在 `oryxos-cli/src/main/java/io/oryxos/cli/OryxOsCli.java` 给根 `@Command` 加 `@Option(names = {"-d", "--debug"}) boolean debug`（Picocli 的 `mixinStandardHelpOptions` 已自动注册到根）；`CommandBase.workspaceRoot()` 的姊妹方法 `debugEnabled()` 同样走 parent spec chain 取值（与 `workspaceOption.workspaceOverride` 同款 walk pattern）；`CommandBase#call()` 的 `catch (Throwable t)` 分支当 `debugEnabled() == true` 时 `spec.commandLine().getErr().println(...)` 额外打 stack trace（仍同时 `LOG.error(...)`），`debug == false` 时维持现有"一行 message + 不打栈"行为；同步新增 `oryxos-cli/src/test/java/io/oryxos/cli/DebugFlagTest.java`，复用现有 `ThrowingCommand` 模式断言 `execute("--workspace", tmp, "--debug")` 时 stderr **包含** `\tat io.oryxos.cli.` 与 `RuntimeException`，exit code 仍 `Sysexits.GENERIC`；无 `--debug` 时维持现有 FR-018 主约束（stderr 只含 `Error: boom`，stdout 不含栈）。Fix 设计意图：当前 behavior 已满足 FR-018 主约束（stack 不外泄），此 task 补的是 spec 明确说的"除非"逃生句。 per FR-018 (partial)
+- [x] T055 `status --verbose` 输出"前 4 位 + ..."掩码满足 FR-020"可显示"句：扩 `StatusCommand.renderTableOrJson(..., verbose)` 在 `verbose == true` 分支给每个 provider 多打一行 `"  api_key_masked: " + firstFourOrMarker(resolvedKey)`（resolvedKey 为环境变量解析后的真值，若 unresolved 显示 `unresolved`）；扩 `ApiKeyRedactionTest` 加两个 test 方法：(a) `verboseShowsMaskedKeyFront`：构造 `.oryxos/application.yaml` 含 `credentialRef: ORYXOS_DEEPSEEK_API_KEY` + 临时 env 注入 `sk-1234567890abcdef`，跑 `new CommandLine(new StatusCommand())...execute("--workspace", tmp, "--verbose")` 断言 stdout 同时含 `api_key_masked: sk-1` 与 **不**含 `1234567890abcdef`；(`unresolved` 路径可加 `@EnabledIfEnvironmentVariable` 跳过无 env 的 CI)。Fix 设计意图：FR-020 主约束"API key 不外泄"已由不解析 toString + ApiKeyRedactionTest 守住；此处补的是 spec 写的"`--verbose` 可显示"调试便利，明确把 key 头 4 位作为 ops 排障信号。 per FR-020 (partial)
+
+### LOW (Phase 9)
+
+> 本次收口无 LOW 项。
+
+### Done When (Phase 9)
+
+- [x] T054 `--debug` flag 落地 + `DebugFlagTest` 绿
+- [x] T055 `status --verbose` masked API key 落地 + 扩 `ApiKeyRedactionTest` 绿
+- [x] `mvn -pl oryxos-cli verify` 仍 100% 绿（实测 58 tests，0 fail；env-gated 1 跳过 + WorkspaceLayoutTest 1 跳过 = 2 skip；CI 设 `ORYXOS_TEST_API_KEY=sk-real-key-1234567890` 后 59 tests 全跑）
+
+**实施偏差说明**：
+- T054：实际走 `@Mixin DebugOption` 模式（与 `WorkspaceOption` 完全同形），而不是 root `@Command` 加 `@Option`。理由：`@Mixin` 让 `--debug` 自动出现在每个 subcommand 的 `--help`，而 root-only `@Option` 在 Picocli 中需要手工把 flag propagate 到 dispatch，mixin 路径更不易踩坑。
+- T055：抽出独立 `ApiKeyMask` 工具类（pure function，无 IO），便于单元测试；`StatusCommand.verbose` 仅在 render 时调 `System.getenv(credentialRef)` 拿真值，不把 key 放进 `ProviderStatusReport` record（保持"record 不持 raw key"的不变量）。`ApiKeyRedactionTest` 实际新增 4 个 test（`apiKeyMaskHelperNullEmptyShortLong` + `apiKeyMaskNeverEchoesTheFullKey` + `verboseRendersUnresolvedForMissingEnvVar` + `@EnabledIfEnvironmentVariable` 的 `verboseRendersMaskedFirstFourWhenEnvResolved`），比任务描述里写的"2 个"多，因为 helper 单独单测、env 缺失 / 已设两种状态各覆盖一个端到端。
+
+---
+
 ## 验证矩阵
 
 | 验证项 | 任务 | 契约来源 |

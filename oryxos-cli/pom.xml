@@ -15,6 +15,15 @@
     <name>OryxOS CLI</name>
     <description>Picocli command-line entry + 12 sub-commands + ConfigLoader. init / status / chat / serve / gateway / profile / provider / tool / session.</description>
 
+    <!-- Single source of truth for the CLI main class — referenced by
+         maven-jar-plugin's <manifest><mainClass>, exec-maven-plugin's
+         <mainClass>, and the spec's NFR-005. Any rename must update
+         <cli.main.class> AND all reference sites in lockstep (CI lint
+         safeguards against drift). -->
+    <properties>
+        <cli.main.class>io.oryxos.cli.OryxOsCli</cli.main.class>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.oryxos</groupId>
@@ -90,7 +99,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.oryxos.cli.OryxOsCli</mainClass>
+                            <mainClass>${cli.main.class}</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Implementation-Title>${project.name}</Implementation-Title>
@@ -108,7 +117,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <mainClass>io.oryxos.cli.OryxOsCli</mainClass>
+                    <mainClass>${cli.main.class}</mainClass>
                 </configuration>
             </plugin>
 
