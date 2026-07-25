@@ -48,7 +48,13 @@ public interface ToolAuditWriter {
         }
     }
 
-    /** US-2 桩 —— 不写任何审计；US-4 接入 JpaToolAuditWriter。 */
+    /**
+     * US-2 桩 —— 不写任何审计；US-5 stage 接入 oryxos-storage 的 {@code JpaToolAuditWriter} 完成
+     * day-one 审计闭环（详见
+     * [evidence/T057-FilesystemProfileRegistry-deferred.md](../../../../../specs/002-react-loop/evidence/T057-FilesystemProfileRegistry-deferred.md)
+     * 中 US-5 延期清单）。day-one 表 schema 已就位（{@code tool_invocations}），本桩是
+     * production 路径的合规占位 —— 单元测试不依赖它（{@code FakeToolExecutor} 不调本接口）。
+     */
     final class NoopToolAuditWriter implements ToolAuditWriter {
         @Override
         public void record(ToolAuditData data) {
