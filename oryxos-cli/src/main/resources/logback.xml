@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OryxOS CLI logger configuration.
+
+  Two appenders, both rooted at the workspace-relative .oryxos/logs/ directory
+  (resolved lazily by WorkspaceLayout so this file does not need an absolute path):
+
+    oryxos-cli.log        structured INFO/WARN for every command invocation
+    oryxos-cli-error.log  ERROR-level only, used for stack traces
+
+  See FR-017 (structured logs), FR-018 (stack traces to log only, never stdout).
+-->
+<configuration>
+
+    <!-- Default fallback if .oryxos/logs/ is not yet writable (e.g. running --version
+         outside a workspace): emit to console so the user is never silently blind.
+         (Note: keep XML comments free of double-hyphens; Logback's XML parser rejects them.) -->
+    <appender name="STDOUT_FALLBACK" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{20} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ORYXOS_CLI" class="ch.qos.logback.core.FileAppender">
+        <file>${ORYXOS_LOGS_DIR:-./.oryxos/logs}/oryxos-cli.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ORYXOS_CLI_ERROR" class="ch.qos.logback.core.FileAppender">
+        <file>${ORYXOS_LOGS_DIR:-./.oryxos/logs}/oryxos-cli-error.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n%xException%n</pattern>
+        </encoder>
+        <!-- FR-018: stack traces live here, NOT on stdout. -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!-- OryxOS CLI logger namespace -->
+    <logger name="io.oryxos.cli" level="INFO" additivity="false">
+        <appender-ref ref="ORYXOS_CLI"/>
+        <appender-ref ref="ORYXOS_CLI_ERROR"/>
+    </logger>
+
+    <!-- Spring + Hibernate chatter silenced by default; flip to INFO when debugging. -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT_FALLBACK"/>
+    </root>
+
+</configuration>

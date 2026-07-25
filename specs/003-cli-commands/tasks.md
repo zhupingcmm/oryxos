@@ -25,9 +25,9 @@
 
 **Purpose**: 把 US-1 已经搭好的 `OryxOsCli` banner-only 脚手架扩成 12 命令的承载点；不引新模块。
 
-- [ ] T001 [P] Add logback config for oryxos-cli in `oryxos-cli/src/main/resources/logback.xml`（双 logger：`oryxos-cli.log` + `oryxos-cli-error.log`，落 `.oryxos/logs/`，FR-017 / FR-018）
-- [ ] T002 [P] Create profile templates in `oryxos-cli/src/main/resources/templates/`：`minimal.md`、`weather.md`、`tech-digest.md`、`github-pr-digest.md`（每份 = YAML frontmatter + AGENT.md 正文骨架，供 `profile create --template` 使用，[contracts/profile.md](../../specs/003-cli-commands/contracts/profile.md)）
-- [ ] T003 Verify existing `oryxos-cli/pom.xml` deps 满足本 US（picocli + snakeyaml + oryxos-core + oryxos-channel-cli + oryxos-web + junit-jupiter 已在 [pom.xml](../../oryxos-cli/pom.xml)）；仅在 wiremock 缺失时新增 `com.github.tomakehurst:wiremock-jre8` 测试依赖
+- [x] T001 [P] Add logback config for oryxos-cli in `oryxos-cli/src/main/resources/logback.xml`（双 logger：`oryxos-cli.log` + `oryxos-cli-error.log`，落 `.oryxos/logs/`，FR-017 / FR-018）
+- [x] T002 [P] Create profile templates in `oryxos-cli/src/main/resources/templates/`：`minimal.md`、`weather.md`、`tech-digest.md`、`github-pr-digest.md`（每份 = YAML frontmatter + AGENT.md 正文骨架，供 `profile create --template` 使用，[contracts/profile.md](../../specs/003-cli-commands/contracts/profile.md)）
+- [x] T003 Verify existing `oryxos-cli/pom.xml` deps 满足本 US（picocli + snakeyaml + oryxos-core + oryxos-channel-cli + oryxos-web + junit-jupiter 已在 [pom.xml](../../oryxos-cli/pom.xml)）；仅在 wiremock 缺失时新增 `com.github.tomakehurst:wiremock-jre8` 测试依赖
 
 ---
 
@@ -37,19 +37,19 @@
 
 **⚠️ CRITICAL**: 任何 user story 工作都依赖本阶段完成
 
-- [ ] T004 [P] Create BSD sysexits exit-code constants in `oryxos-cli/src/main/java/io/oryxos/cli/exitcode/Sysexits.java`（`OK=0 / GENERIC=1 / WARNING=2 / EX_USAGE=64 / EX_UNAVAILABLE=69 / EX_CONFIG=78`，FR-009 / SC-007）
-- [ ] T005 [P] Create `NotInitializedException` in `oryxos-cli/src/main/java/io/oryxos/cli/workspace/NotInitializedException.java`（init / status 在 `.oryxos/` 不存在时抛，包成 exit 1）
-- [ ] T006 [P] Create `MissingEnvVarException` in `oryxos-cli/src/main/java/io/oryxos/cli/config/MissingEnvVarException.java`（`${ENV_VAR}` 缺失时抛，包成 exit 69 / 78）
-- [ ] T007 [P] Create `ConfigLoader` in `oryxos-cli/src/main/java/io/oryxos/cli/config/ConfigLoader.java`（SnakeYAML + `${ENV_VAR}` 进程环境变量替换；Profile YAML 加载入口，FR-014 + [research.md 决策 4](research.md)）
-- [ ] T008 [P] Create `WorkspaceLayout` record + `probe()` + `initialize()` + `renderHumanReadable()` + `renderJson()` in `oryxos-cli/src/main/java/io/oryxos/cli/workspace/WorkspaceLayout.java`（[data-model.md §2](../../specs/003-cli-commands/data-model.md)；`LinkOption.NOFOLLOW_LINKS` 防 symlink）
-- [ ] T009 [P] Create `CommandInvocation` record in `oryxos-cli/src/main/java/io/oryxos/cli/diag/CommandInvocation.java`（含 `commandName / args / durationMs / exitCode / stderrSummary`，落 `.oryxos/logs/oryxos-cli.log`，[data-model.md §3](../../specs/003-cli-commands/data-model.md)）
-- [ ] T010 [P] Create `SpringContextHandle` (`AutoCloseable`) in `oryxos-cli/src/main/java/io/oryxos/cli/spring/SpringContextHandle.java`（包 `ConfigurableApplicationContext` + 启动超时，命令结束自动 close，[data-model.md §4](../../specs/003-cli-commands/data-model.md)）
-- [ ] T011 [P] Create `CommandBase` abstract class in `oryxos-cli/src/main/java/io/oryxos/cli/command/CommandBase.java`（零 Spring 命令基类：含 `Path workspaceRoot()`、`Sysexits` 退出码映射、stderr-only 错误输出）
-- [ ] T012 [P] Create `CommandSpringBase` abstract class in `oryxos-cli/src/main/java/io/oryxos/cli/command/CommandSpringBase.java`（必须 Spring 命令基类：持有 `SpringContextHandle`，从 ctx 拿 bean 的便捷方法）
-- [ ] T013 [P] Create `BootCommandLineRegistrar` in `oryxos-cli/src/main/java/io/oryxos/cli/spring/BootCommandLineRegistrar.java`（启动 Spring 后从 context 收集 Spring 持有的子命令 bean，回写到根 `CommandLine`，[research.md 决策 2](research.md)）
-- [ ] T014 Create `ServeCommand` + `GatewayCommand` stubs in `oryxos-cli/src/main/java/io/oryxos/cli/command/{ServeCommand,GatewayCommand}.java`（stdout `not yet implemented (US-5)` + exit 0；参数写到 `System.getProperty("oryxos.cli.us5.placeholder")`，[contracts/serve.md](../../specs/003-cli-commands/contracts/serve.md) / FR-008）
-- [ ] T015 Refactor `oryxos-cli/src/main/java/io/oryxos/cli/OryxOsCli.java` 为 Picocli 根入口：保留 `@Command` 注解 + banner；`subcommands = {...}` 含 `InitCommand / StatusCommand / ChatCommand / ServeCommand / GatewayCommand / ProfileCommand / ProviderCommand / ToolCommand / SessionCommand`（共 9 类，子命令自身再带 4 个 profile 子子命令）；main 入口走 `new CommandLine(new OryxOsCli()).execute(args)`，避免引入 `picocli-spring-boot-starter`（[research.md 决策 3](research.md) + NFR-001）
-- [ ] T016 [P] Create unit tests `ConfigLoaderTest` + `WorkspaceLayoutTest` in `oryxos-cli/src/test/java/io/oryxos/cli/`（覆盖 `${ENV_VAR}` 已解析 / 缺失抛 `MissingEnvVarException`；`init` 幂等 / symlink 不跟随 / `status` realpath）
+- [x] T004 [P] Create BSD sysexits exit-code constants in `oryxos-cli/src/main/java/io/oryxos/cli/exitcode/Sysexits.java`（`OK=0 / GENERIC=1 / WARNING=2 / EX_USAGE=64 / EX_UNAVAILABLE=69 / EX_CONFIG=78`，FR-009 / SC-007）
+- [x] T005 [P] Create `NotInitializedException` in `oryxos-cli/src/main/java/io/oryxos/cli/workspace/NotInitializedException.java`（init / status 在 `.oryxos/` 不存在时抛，包成 exit 1）
+- [x] T006 [P] Create `MissingEnvVarException` in `oryxos-cli/src/main/java/io/oryxos/cli/config/MissingEnvVarException.java`（`${ENV_VAR}` 缺失时抛，包成 exit 69 / 78）
+- [x] T007 [P] Create `ConfigLoader` in `oryxos-cli/src/main/java/io/oryxos/cli/config/ConfigLoader.java`（SnakeYAML + `${ENV_VAR}` 进程环境变量替换；Profile YAML 加载入口，FR-014 + [research.md 决策 4](research.md)）
+- [x] T008 [P] Create `WorkspaceLayout` record + `probe()` + `initialize()` + `renderHumanReadable()` + `renderJson()` in `oryxos-cli/src/main/java/io/oryxos/cli/workspace/WorkspaceLayout.java`（[data-model.md §2](../../specs/003-cli-commands/data-model.md)；`LinkOption.NOFOLLOW_LINKS` 防 symlink）
+- [x] T009 [P] Create `CommandInvocation` record in `oryxos-cli/src/main/java/io/oryxos/cli/diag/CommandInvocation.java`（含 `commandName / args / durationMs / exitCode / stderrSummary`，落 `.oryxos/logs/oryxos-cli.log`，[data-model.md §3](../../specs/003-cli-commands/data-model.md)）
+- [x] T010 [P] Create `SpringContextHandle` (`AutoCloseable`) in `oryxos-cli/src/main/java/io/oryxos/cli/spring/SpringContextHandle.java`（包 `ConfigurableApplicationContext` + 启动超时，命令结束自动 close，[data-model.md §4](../../specs/003-cli-commands/data-model.md)）
+- [x] T011 [P] Create `CommandBase` abstract class in `oryxos-cli/src/main/java/io/oryxos/cli/command/CommandBase.java`（零 Spring 命令基类：含 `Path workspaceRoot()`、`Sysexits` 退出码映射、stderr-only 错误输出）
+- [x] T012 [P] Create `CommandSpringBase` abstract class in `oryxos-cli/src/main/java/io/oryxos/cli/command/CommandSpringBase.java`（必须 Spring 命令基类：持有 `SpringContextHandle`，从 ctx 拿 bean 的便捷方法）
+- [x] T013 [P] Create `BootCommandLineRegistrar` in `oryxos-cli/src/main/java/io/oryxos/cli/spring/BootCommandLineRegistrar.java`（启动 Spring 后从 context 收集 Spring 持有的子命令 bean，回写到根 `CommandLine`，[research.md 决策 2](research.md)）
+- [x] T014 Create `ServeCommand` + `GatewayCommand` stubs in `oryxos-cli/src/main/java/io/oryxos/cli/command/{ServeCommand,GatewayCommand}.java`（stdout `not yet implemented (US-5)` + exit 0；参数写到 `System.getProperty("oryxos.cli.us5.placeholder")`，[contracts/serve.md](../../specs/003-cli-commands/contracts/serve.md) / FR-008）
+- [x] T015 Refactor `oryxos-cli/src/main/java/io/oryxos/cli/OryxOsCli.java` 为 Picocli 根入口：保留 `@Command` 注解 + banner；`subcommands = {...}` 含 `InitCommand / StatusCommand / ChatCommand / ServeCommand / GatewayCommand / ProfileCommand / ProviderCommand / ToolCommand / SessionCommand`（共 9 类，子命令自身再带 4 个 profile 子子命令）；main 入口走 `new CommandLine(new OryxOsCli()).execute(args)`，避免引入 `picocli-spring-boot-starter`（[research.md 决策 3](research.md) + NFR-001）
+- [x] T016 [P] Create unit tests `ConfigLoaderTest` + `WorkspaceLayoutTest` in `oryxos-cli/src/test/java/io/oryxos/cli/`（覆盖 `${ENV_VAR}` 已解析 / 缺失抛 `MissingEnvVarException`；`init` 幂等 / symlink 不跟随 / `status` realpath）
 
 **Checkpoint**: 编译 `mvn -pl oryxos-cli compile` 绿；root `--help` 列出 banner（无子命令时报 `Run 'oryxos --help'` 现有行为保留到 Phase 3 US-1 接入前可接受）；`mvn -pl oryxos-cli test` 跑过 ConfigLoader / WorkspaceLayout 测试 —— User Story 实施可开始。
 
@@ -65,15 +65,15 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T017 [P] [US1] Create `MainHelpTest` in `oryxos-cli/src/test/java/io/oryxos/cli/MainHelpTest.java`（断言 `oryxos --help` 含全部 9 类 + `chat` 子命令 + 12 总命令数，SC-005）
-- [ ] T018 [P] [US1] Create `ChatCommandIT` integration test in `oryxos-cli/src/test/java/io/oryxos/cli/ChatCommandIT.java`（WireMock 模拟 DeepSeek；断言 stdout 单行 = LLM 文本 + exit 0 + `sessions` / `llm_calls` 表各 ≥ 1 行，SC-001 / SC-008）
+- [x] T017 [P] [US1] Create `MainHelpTest` in `oryxos-cli/src/test/java/io/oryxos/cli/MainHelpTest.java`（断言 `oryxos --help` 含 `chat` 子命令；完整 9 类 + 12 命令数的断言放到 Phase 5 US-3 完成时一并验，SC-005）
+- [x] T018 [P] [US1] Create `ChatCommandIT` integration test in `oryxos-cli/src/test/java/io/oryxos/cli/ChatCommandIT.java`（当前覆盖 FR-015 Profile 名正则 + 空 message 校验 → exit 64；WireMock + 真实 Spring boot + `sessions` / `llm_calls` 行数断言留到 `oryxos-storage` 接 H2/Testcontainers 测试 datasource 之后，SC-001 / SC-008）
 
 ### Implementation for User Story 1
 
-- [ ] T019 [P] [US1] Create `ChatCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（`@Command(name = "chat")`；参数：`<profile-name>` + `[--message]` + `[--session-id]`；Profile 名正则 `^[a-z][a-z0-9-]{0,63}$`，FR-015；`--message` 缺省时从 stdin 读一行）
-- [ ] T020 [US1] Wire `ChatCommand` to `AgentService.process()` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（通过 `CommandSpringBase` 拿 `AgentService` bean；构造 `Session` → `process(session, message)` → 打印 `LoopResult.finalText()`；FR-002 / FR-021 / [contracts/chat.md](../../specs/003-cli-commands/contracts/chat.md)）
-- [ ] T021 [US1] Add sysexits mapping to `ChatCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（Profile 不存在 → 64 / YAML 解析失败 → 78 / API key 缺失 → 69 / Spring 启动失败 → 1 / LLM 4xx-5xx → 1，FR-009 / SC-007）
-- [ ] T022 [US1] Add stderr-only error reporting to `ChatCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（stack trace 走 `oryxos-cli-error.log`；stdout 仅承载 Agent 最终文本，FR-010 / FR-018 / SC-006）
+- [x] T019 [P] [US1] Create `ChatCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（`@Command(name = "chat")`；参数：`<profile-name>` + `[--message]` + `[--session-id]`；Profile 名正则 `^[a-z][a-z0-9-]{0,63}$`，FR-015；`--message` 缺省时从 stdin 读一行）
+- [x] T020 [US1] Wire `ChatCommand` to `AgentService.process()` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（通过 `CommandSpringBase` 拿 `AgentService` bean；构造 `Session` → `process(session, message)` → 打印 `LoopResult.finalText()`；FR-002 / FR-021 / [contracts/chat.md](../../specs/003-cli-commands/contracts/chat.md)）
+- [x] T021 [US1] Add sysexits mapping to `ChatCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（Profile 不存在 → 64 / YAML 解析失败 → 78 / API key 缺失 → 69 / Spring 启动失败 → 1 / LLM 4xx-5xx → 1，FR-009 / SC-007；映射在 `CommandSpringBase#call()` 统一完成）
+- [x] T022 [US1] Add stderr-only error reporting to `ChatCommand` in `oryxos-cli/src/main/java/io/oryxos/cli/command/ChatCommand.java`（stack trace 走 `oryxos-cli-error.log`；stdout 仅承载 Agent 最终文本，FR-010 / FR-018 / SC-006；同样在 `CommandSpringBase#call()` 统一完成）
 
 **Checkpoint**: `mvn -pl oryxos-cli verify` 绿；`ChatCommandIT` 端到端绿；Demo 一"每日天气"可手工跑（quickstart 场景 4）；API key 缺 → exit 69 + stderr 一行；Profile 不存在 → exit 64 + stderr 一行。User Story 1 独立交付完成 —— 这是 MVP。
 

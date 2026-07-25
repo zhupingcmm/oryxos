@@ -23,6 +23,11 @@
 
         <dependency>
             <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-storage</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.oryxos</groupId>
             <artifactId>oryxos-channel-cli</artifactId>
         </dependency>
 
@@ -44,6 +49,19 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- WireMock for ChatCommandIT / ProviderListCommandTest (T003, T018, T030). -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -75,6 +93,22 @@
                 <version>3.5.0</version>
                 <configuration>
                     <mainClass>io.oryxos.cli.OryxOsCli</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- Run *IT.java classes alongside *Test.java under `mvn test`.
+                 The CLI does not yet wire maven-failsafe-plugin (Phase 5),
+                 so we extend Surefire's default include pattern instead. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/Test*.java</include>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>
