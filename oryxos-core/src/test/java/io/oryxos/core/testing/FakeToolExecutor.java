@@ -1,8 +1,12 @@
 package io.oryxos.core.testing;
 
 import io.oryxos.core.Profile;
+import io.oryxos.core.ProfileContext;
+import io.oryxos.core.ToolAuditWriter;
 import io.oryxos.core.ToolExecutor;
 import io.oryxos.core.ToolResult;
+
+import java.util.Optional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,31 +32,64 @@ public final class FakeToolExecutor implements ToolExecutor {
 
     private final Map<String, ToolResult> table;
     private final MissingBehavior missingBehavior;
+    private final ToolAuditWriter auditWriter;
     private final List<Call> captured = new ArrayList<>();
 
     public FakeToolExecutor(Map<String, ToolResult> table) {
-        this(table, MissingBehavior.AllowAsError);
+        this(table, MissingBehavior.AllowAsError, new ToolAuditWriter.NoopToolAuditWriter());
     }
 
     public FakeToolExecutor(Map<String, ToolResult> table, MissingBehavior missingBehavior) {
+        this(table, missingBehavior, new ToolAuditWriter.NoopToolAuditWriter());
+    }
+
+    public FakeToolExecutor(Map<String, ToolResult> table, ToolAuditWriter auditWriter) {
+        this(table, MissingBehavior.AllowAsError, auditWriter);
+    }
+
+    public FakeToolExecutor(Map<String, ToolResult> table, MissingBehavior missingBehavior, ToolAuditWriter auditWriter) {
         this.table = table == null ? Map.of() : Map.copyOf(table);
         this.missingBehavior = Objects.requireNonNull(missingBehavior, "missingBehavior");
+        this.auditWriter = auditWriter == null
+            ? new ToolAuditWriter.NoopToolAuditWriter() : auditWriter;
     }
 
     @Override
     public ToolResult invoke(String toolName, Map<String, Object> arguments, Profile profile) {
         captured.add(new Call(toolName, arguments, profile));
         ToolResult result = table.get(toolName);
+        ToolResult actual;
         if (result != null) {
-            return result;
+            actual = result;
+        } else {
+            actual = switch (missingBehavior) {
+                case AllowAsError -> ToolResult.error("tool not in profile: " + toolName);
+                case FailHard -> throw new IllegalStateException(
+                    "FakeToolExecutor: no preset for toolName='" + toolName
+                        + "' (set a Map entry, change to AllowAsError, "
+                        + "or include it in profile.tools())");
+            };
         }
-        return switch (missingBehavior) {
-            case AllowAsError -> ToolResult.error("tool not in profile: " + toolName);
-            case FailHard -> throw new IllegalStateException(
-                "FakeToolExecutor: no preset for toolName='" + toolName
-                    + "' (set a Map entry, change to AllowAsError, "
-                    + "or include it in profile.tools())");
-        };
+        try {
+            Optional<ProfileContext.Snapshot> ctx = ProfileContext.current();
+            java.util.UUID sid = ctx.map(ProfileContext.Snapshot::sessionId).orElse(null);
+            int iter = ctx
+                .map(ProfileContext.Snapshot::currentIteration)
+                .map(java.util.concurrent.atomic.AtomicInteger::get)
+                .orElse(0);
+            auditWriter.record(new ToolAuditWriter.ToolAuditData(
+                sid,
+                profile.name(), toolName, arguments,
+                actual.success(),
+                actual.success() ? null : actual.errorMessage(),
+                0L,
+                java.time.Instant.now(),
+                iter
+            ));
+        } catch (RuntimeException ignore) {
+            // C-TE-9：审计失败不阻塞主流程
+        }
+        return actual;
     }
 
     /** 已发生的调用记录（按调用顺序）。 */

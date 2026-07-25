@@ -197,5 +197,37 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!-- Force UTF-8 source encoding across all modules on every dev/CI platform.
+                 Without this, javac on Windows reads newly written Java files as GBK and any
+                 CJK character or full-width punctuation (even in Javadoc) becomes a fatal
+                 compile error. CLAUDE.md §18 lists this as a pitfall.
+
+                 Two settings here are intentional:
+                 - forceLegacyJavacApi=true: JDK 21's new compiler API ignores the <encoding>
+                   flag and falls back to native.encoding (GBK on this Windows box), so we
+                   pin to the legacy javax.tools.JavaCompiler API which honours <encoding>.
+                 - <encoding>UTF-8</encoding>: also passed to surefire (test JVM) so test-only
+                   sources, fixtures and resource files read consistently. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <release>21</release>
+                    <encoding>UTF-8</encoding>
+                    <parameters>true</parameters>
+                    <forceLegacyJavacApi>true</forceLegacyJavacApi>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>

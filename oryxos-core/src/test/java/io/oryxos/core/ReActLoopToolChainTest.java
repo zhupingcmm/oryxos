@@ -202,8 +202,8 @@ class ReActLoopToolChainTest {
         // LLM 在同一响应里请求两个 tool（spec US3 场景 1 的最小变种）
         LlmResponse twoCalls = new LlmResponse(null,
             List.of(
-                new LlmResponse.ToolCall("c1", "tool_a", "{}"),
-                new LlmResponse.ToolCall("c2", "tool_b", "{}")
+                new LlmResponse.ToolCall("tool_a", "{}", "c1"),
+                new LlmResponse.ToolCall("tool_b", "{}", "c2")
             ),
             null, "tool_calls");
         provider.enqueue(twoCalls);
