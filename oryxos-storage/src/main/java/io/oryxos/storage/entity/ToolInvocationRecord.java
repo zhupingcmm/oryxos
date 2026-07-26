@@ -85,6 +85,12 @@ public class ToolInvocationRecord {
     @Column(name = "notify_status_code")
     private Integer notifyStatusCode;
 
+    // --- US-4 / 005-tool-system 扩展字段（V3 DDL，data-model §7.2） ---
+
+    /** Tool 来源：{@code "builtin"}（内置 9 个 Tool）/ {@code "mcp"}（MCP server 暴露）/ {@code "java_bean"}（用户自定义 {@code @Component}）。V3 新增；详 [research.md R-09](../../../../../specs/005-tool-system/research.md)。 */
+    @Column(name = "source", nullable = false, columnDefinition = "TEXT")
+    private String source;
+
     // --- 构造器 ---
 
     protected ToolInvocationRecord() {
@@ -94,7 +100,8 @@ public class ToolInvocationRecord {
     public ToolInvocationRecord(UUID id, UUID sessionId, String profileName, String toolName,
                                 Map<String, Object> arguments, boolean success, String errorMessage,
                                 long durationMs, Instant startedAt, int sessionIteration,
-                                String channel, Integer notifyStatusCode) {
+                                String channel, Integer notifyStatusCode,
+                                String source) {
         this.id = id;
         this.sessionId = sessionId;
         this.profileName = profileName;
@@ -107,6 +114,7 @@ public class ToolInvocationRecord {
         this.sessionIteration = sessionIteration;
         this.channel = channel;
         this.notifyStatusCode = notifyStatusCode;
+        this.source = source;
 
         validate();
     }
@@ -135,6 +143,11 @@ public class ToolInvocationRecord {
             throw new IllegalArgumentException(
                 "sessionIteration must be >= 0, got " + sessionIteration);
         }
+        if (source == null
+            || !(source.equals("builtin") || source.equals("mcp") || source.equals("java_bean"))) {
+            throw new IllegalArgumentException(
+                "source must be one of builtin/mcp/java_bean, got: " + source);
+        }
     }
 
     // --- getters ---
@@ -151,4 +164,5 @@ public class ToolInvocationRecord {
     public int getSessionIteration()          { return sessionIteration; }
     public String getChannel()                { return channel; }
     public Integer getNotifyStatusCode()      { return notifyStatusCode; }
+    public String getSource()                 { return source; }
 }

@@ -86,7 +86,8 @@ public final class FakeToolExecutor implements ToolExecutor {
                 java.time.Instant.now(),
                 iter,
                 null,            // channel (T024: Notify-specific)
-                null             // notifyStatusCode (T024: Notify-specific)
+                null,            // notifyStatusCode (T024: Notify-specific)
+                "builtin"        // source (T008: FQCN-derived)
             ));
         } catch (RuntimeException ignore) {
             // C-TE-9：审计失败不阻塞主流程

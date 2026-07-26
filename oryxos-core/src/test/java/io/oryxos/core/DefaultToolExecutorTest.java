@@ -2,6 +2,12 @@ package io.oryxos.core;
 
 import io.oryxos.core.testing.FakeToolExecutor;
 import io.oryxos.core.testing.InMemorySession;
+import io.oryxos.core.tool.ToolDefinition;
+import io.oryxos.core.tool.ToolRegistration;
+import io.oryxos.core.tool.ToolRegistry;
+import io.oryxos.tool.StubBuiltinTool;
+import io.oryxos.example.javabean.StubJavaBeanTool;
+import io.oryxos.tool.mcp.StubMcpTool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -102,4 +108,67 @@ class DefaultToolExecutorTest {
         assertThat(result.success()).isFalse();
         assertThat(result.errorMessage()).contains("tool not in profile");
     }
+
+    // ---------------------------------------------------------------------
+    // US-4 / 005-tool-system：resolveSource 推导（spec FR-005 / research.md R-09）
+    // ---------------------------------------------------------------------
+
+    /** 业务内置 Tool（前缀 {@code io.oryxos.tool.*}） → {@code "builtin"}。 */
+    @Test
+    @DisplayName("resolveSource: io.oryxos.tool.* → builtin")
+    void resolveSource_builtin() {
+        assertThat(DefaultToolExecutor.resolveSource(new StubBuiltinTool()))
+            .isEqualTo("builtin");
+    }
+
+    /** MCP Tool（前缀 {@code io.oryxos.tool.mcp.*}） → {@code "mcp"}。 */
+    @Test
+    @DisplayName("resolveSource: io.oryxos.tool.mcp.* → mcp")
+    void resolveSource_mcp() {
+        assertThat(DefaultToolExecutor.resolveSource(new StubMcpTool()))
+            .isEqualTo("mcp");
+    }
+
+    /** 用户自定义 Tool（其他命名空间，如 {@code io.oryxos.tool.javabean.*}） → {@code "java_bean"}。 */
+    @Test
+    @DisplayName("resolveSource: 业务自定义命名空间 → java_bean")
+    void resolveSource_java_bean() {
+        assertThat(DefaultToolExecutor.resolveSource(new StubJavaBeanTool()))
+            .isEqualTo("java_bean");
+    }
+
+    /** Tool 抛 RuntimeException → 兜底返回 ToolResult.error（[tool-executor §3.4]） */
+    @Test
+    @DisplayName("Tool 抛 RuntimeException → ToolResult.error('tool execution failed: ...') + audit success=false")
+    void tool_runtime_exception() {
+        // 注入一个能捕获审计行的 writer，再注册一个会抛 RuntimeException 的 Tool
+        java.util.concurrent.atomic.AtomicReference<ToolAuditWriter.ToolAuditData> captured =
+            new java.util.concurrent.atomic.AtomicReference<>();
+        ToolAuditWriter capturingWriter = data -> captured.set(data);
+        OryxTool thrower = new OryxTool() {
+            @Override public String name() { return "bad-tool"; }
+            @Override public String description() { return "always throws"; }
+            @Override public ToolResult execute(Map<String, Object> args) {
+                throw new RuntimeException("boom");
+            }
+        };
+        ToolRegistry registry = ToolRegistry.of(Map.of(
+            "bad-tool", new ToolRegistration(
+                new ToolDefinition("bad-tool", "always throws", "java_bean"),
+                thrower, "thrower")));
+        DefaultToolExecutor ex = new DefaultToolExecutor(capturingWriter, registry);
+
+        ToolResult r = ex.invoke("bad-tool", Map.of(), profileWithTools(List.of("bad-tool")));
+
+        assertThat(r.success()).isFalse();
+        assertThat(r.errorMessage()).contains("tool execution failed");
+        assertThat(r.errorMessage()).contains("boom");
+        ToolAuditWriter.ToolAuditData audit = captured.get();
+        assertThat(audit).isNotNull();
+        assertThat(audit.success()).isFalse();
+        assertThat(audit.errorMessage()).contains("boom");
+        assertThat(audit.source()).isEqualTo("java_bean");
+    }
+
+    /** 测试 stub —— 见独立文件 {@link StubBuiltinTool} / {@link StubMcpTool} / {@link StubJavaBeanTool}。 */
 }
