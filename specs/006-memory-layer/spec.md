@@ -61,7 +61,7 @@
 1. **假设** Profile `memo.backend=sqlite`，**当** `MemoryService.save(scope=core, content="...", tags=[t1,t2])` 被调用，**那么** SQLite `agent_memories` 表新增一行含 `scope` / `tags` / `content` / `created_at` 字段。
 2. **假设** Profile `memo.backend=sqlite`，**当** `MemoryService.recallByKeyword(query="t1", topK=5)` 被调用，**那么** SQL `WHERE tags LIKE '%t1%'` 命中相关行，按 `created_at DESC` 排序返回前 5 条。
 3. **假设** Profile `memo.backend=mem0`，且本地自托管 Mem0 服务在 `http://localhost:8000`，**当** `MemoryService.save(...)` 被调用，**那么** HTTP `POST /memories` 推送至该服务；返回的 `id` 被回写到本地映射表。
-4. **假设** Profile `memo.backend=mem0`，**当** Mem0 服务不可达，**那么** `MemoryService.save` 不抛异常给调用方（落入"待重试队列"），Tool 层返回 `ToolResult.success=true, metadata={pending:true}` 让 LLM 后续重试。
+4. **假设** Profile `memo.backend=mem0`，**当** Mem0 服务不可达，**那么** `MemoryService.save` 不抛异常给调用方；HTTP 失败 → 静默 fallback 写入本地 `memory_index` 表（day-one 审计完整性兜底，宪法 §VI），Tool 层返回 `ToolResult.success=true`；HTTP 失败且 fallback 也失败时 Tool 层返回 `ToolResult.success=false, errorMessage="memory backend degraded"`（无 stack trace，NFR-004）。
 
 ---
 
@@ -104,7 +104,7 @@ Agent 通过 `save_memory` / `recall_memory` 两个 Tool 调用 `MemoryService`�
 - **MEMORY.md 文件被外部进程修改**（业务方手动编辑 / `git pull` 拉取新版）：下次 save 仍按时间戳顺序追加；不破坏已有结构。若外部删除了 `## Core` 段，下次 save 会重建该段（lenient recovery）。**不**做文件内容冲突检测（不进入合并状态机）。
 - **核心区记录膨胀**：写入超过 1000 条**仍不截断**；读取仍 O(N) 遍历关键字匹配；性能瓶颈放扩展阶段用 SqliteMemoryStore / Mem0MemoryStore 解决。核心阶段 Markdown 后端设计上**接受** N=1000 量级的线性扫描。
 - **SQLite 后端数据库文件被外部进程占用**：启动期用 `SQLITE_BUSY` 重试 3 次（每次 200ms）；3 次后仍 busy → 启动失败 + 明确报错（与 MCP 不可达一致，fail-fast）。
-- **Mem0 自托管服务不可达**（US-3 场景 4）：写动作不阻塞 Agent 循环；记录落"待重试队列"（可选实现，本质是日志 + 定时任务兜底 flush）；Tool 层返回 `ToolResult.success=true, metadata={pending:true}`。读取走本地映射表的最近一次成功快照 + Mem0 客户端 `GET /memories?query=...` 实时查询；两者都失败时返回空 + ToolResult 含 `"memory backend degraded"` 警告。
+- **Mem0 自托管服务不可达**（US-3 场景 4）：写动作不阻塞 Agent 循环；HTTP 失败 → 静默 fallback 写入本地 `memory_index` 表（day-one 审计完整性兜底，宪法 §VI），Tool 层返回 `ToolResult.success=true`；仅在 HTTP + fallback 双失败时 Tool 层返回 `ToolResult.success=false, errorMessage="memory backend degraded"`（无 stack trace，NFR-004）。读取走本地映射表的最近一次成功快照 + Mem0 客户端 `GET /memories?query=...` 实时查询；两者都失败时返回空 + ToolResult 含 `"memory backend degraded"` 警告。
 - **两个不同 Agent 共享同一个 MEMORY.md 文件**：当前 Markdown 后端**不**做并发安全（写多线程会 race）。属于扩展阶段的并发安全边界——核心阶段假定单 Agent 单进程写入。代码路径加 synchronized 块；允许多读单写。
 - **`recallByKeyword` 的 `query` 含特殊字符**（如 SQL LIKE 通配符 `%`、`_`）：Markdown 后端做字面匹配；SQLite 后端做参数化 `LIKE` 查询（自动转义 `%`/`_`）。Mem0 后端调 Mem0 服务的全文检索接口。
 - **Tool 调用期间 Profile 切换 / MemoryService 重启**：调用返回的 `ToolResult` 已被 ReAct 捕获；后续重启不破坏已完成轮次的 session 对话历史（与宪法 §VI "Session JSON 持久化"对接）。
@@ -117,9 +117,9 @@ Agent 通过 `save_memory` / `recall_memory` 两个 Tool 调用 `MemoryService`�
 
 ### 功能需求
 
-- **FR-001**：系统 MUST 提供 `MemoryService` 统一门面（位于 `oryxos-memory` 模块），对 ReAct 暴露 `save` / `recallByKeyword` / `recallByScope` / `delete` 四类操作；该门面 MUST 内部委派给 `SessionManager`（会话层）+ `LongTermMemoryStore`（长期层）两路实现。
+- **FR-001**：系统 MUST 提供 `MemoryService` 统一门面（位于 `oryxos-memory` 模块），对 ReAct 暴露 `save` / `recallByKeyword` / `recallByScope` / `delete` / `clear(scope)` 五类操作；该门面 MUST 内部委派给 `SessionManager`（会话层）+ `LongTermMemoryStore`（长期层）两路实现。`clear(CORE)` MUST 抛 `IllegalStateException`（与 `LongTermMemoryStore` 接口契约一致，[CLAUDE.md §9.6](../CLAUDE.md) 契约 ②）。
 - **FR-002**：会话层 `SessionManager` MUST 维护**当前 Session 内**的所有对话消息 + Agent 临时状态；存储路径用宪法 §VI 既有的 `sessions` 表（不新增表）；Session 结束**不**自动写入长期层。
-- **FR-003**：长期层 MUST 通过 `LongTermMemoryStore` 接口（`save` / `recallByKeyword` / `recallByScope` / `delete` 四方法）暴露给 `MemoryService`；接口实现 MUST 可插拔（3 个 builtin 实现：`MarkdownMemoryStore` / `SqliteMemoryStore` / `Mem0MemoryStore`），由 Profile YAML `memo.backend` 字段选择。
+- **FR-003**：长期层 MUST 通过 `LongTermMemoryStore` 接口（`save` / `recallByKeyword` / `recallByScope` / `delete` / `clear(scope)` 五方法，与 `MemoryService` 一一对应）暴露给 `MemoryService`；接口实现 MUST 可插拔（3 个 builtin 实现：`MarkdownMemoryStore` / `SqliteMemoryStore` / `Mem0MemoryStore`），由 Profile YAML `memo.backend` 字段选择。
 - **FR-004**：默认长期层实现 MUST 是 `MarkdownMemoryStore`，落 `.oryxos/memory/MEMORY.md` 文件；该文件 MUST 含 `## Core`（核心区，永不被截断）+ `## Archive`（归档区，可被容量上限裁剪）两个一级 heading。
 - **FR-005**：`MarkdownMemoryStore` 写入 MUST 按**追加方式**（不重写已有内容）；读 MUST 按字面 keyword 匹配（不引入正则）；对空 query MUST 返回空集合（不抛异常）。
 - **FR-006**：`MemoryService.recallByKeyword(query, topK, scopeFilter?)` MUST 在指定 scopeFilter（默认不限定）下，按 `keyword` 子串匹配 `content` 字段、按 `created_at DESC` 排序、返回前 `topK` 条；该方法的 backend 实现细节 MUST 不暴露给调用方。
@@ -135,7 +135,7 @@ Agent 通过 `save_memory` / `recall_memory` 两个 Tool 调用 `MemoryService`�
 
 ### 非功能需求
 
-- **NFR-001**：`MemoryService` 单次 `save` / `recallByKeyword` 的 wall-time MUST ≤ 200ms（健康依赖场景下）；Markdown 后端实测 O(file_size)；SQLite + Mem0 后端走各自 SDK 的同步客户端。
+- **NFR-001**：`MemoryService` 单次 `save` / `recallByKeyword` 的 wall-time MUST ≤ 200ms；**健康依赖场景** = 单后端本地 IO（H2 in-memory 模拟 SQLite / 本地文件 / 不含 Mem0 网络），Markdown 后端实测 O(file_size)；SQLite 后端走 JPA 同步客户端；Mem0 后端因依赖外部 HTTP 服务不纳入本指标（其 wall-time 由 NFR-001 的本地后端保证 + Mem0 客户端 SLA 共同决定）。
 - **NFR-002**：`MemoryService` MUST 不持有任何进程级缓存 / 内存索引（[CLAUDE.md §9.6](../CLAUDE.md) 契约 ①）；每次 read MUST 直读后端，可保证"刚写的立刻能读到"（read-after-write 一致性）。
 - **NFR-003**：默认 `MarkdownMemoryStore` 的文件 IO MUST 不持有文件句柄（每次 read/write 立即 close）；进程崩溃 MUST 不损坏 MEMORY.md（写采用 `Files.writeString` + atomic rename 兜底）。
 - **NFR-004**：Memory 相关错误信息 MUST 对 LLM 友好（[CLAUDE.md §13](../CLAUDE.md) "ToolResult.errorMessage MUST 不含 stack trace"）；stack trace MUST 进 `.oryxos/logs/oryxos-cli-error.log`。
@@ -159,15 +159,15 @@ Agent 通过 `save_memory` / `recall_memory` 两个 Tool 调用 `MemoryService`�
 
 ### 可测量结果
 
-- **SC-001**："每日科技日报" Demo（[CLAUDE.md §11](../CLAUDE.md)）端到端跑通：跑两次独立 Session，第一次 LLM 通过 `save_memory(scope=core)` 记录偏好 "只看 zhupingcmm 组织、PR 标签 = bug+enhancement"；第二次 Session 启动后 LLM 通过 `recall_memory` 命中前次记录，不再追问用户。
+- **SC-001**："每日科技日报"端到端能力由 `scripts/memory-smoke.sh`（6 场景）+ `MemoryAuditRestoreIT`（5 维审计还原）+ 跨 Session 召回 IT（N=100, 100%）共同覆盖；完整三 Demo（CLAUDE.md §11）放扩展阶段验证，本 spec 验收以 smoke + IT 全绿为准。
 - **SC-002**：100% 跨 Session recall 命中：N=100 次 save（每次新 Session 重启进程）→ 后续 recall MUST 100% 命中；不允许 "save 之后重启进程就丢" 的丢失。
 - **SC-003**：`core` 区 100% 永不被截断：连续写 1500 条 `scope=core` → 重启 → recall 全部 1500 条命中。
 - **SC-004**：Memory 切换后端 MUST 0 业务中断：Profile 从 markdown 切换到 sqlite（或反之）→ 既有记录 100% 通过迁移脚本迁移成功；切换过程中 LLM ReAct 循环不报错。
 - **SC-005**：`save_memory` / `recall_memory` Tool 调用 100% 写入 `tool_invocations` 审计行（`tool_name` / `source='builtin'` / `success`），与宪法 §VI + 005-tool-system SC-002 一致。
-- **SC-006**：Memory 相关错误 0% 进入 LLM 上下文：ToolResult.errorMessage 不含 `at io.oryxos.*` / `Exception:` 模式；stack trace 100% 进 `.oryxos/logs/oryxos-cli-error.log`。
+- **SC-006**：Memory 相关错误 0% 进入 LLM 上下文（= NFR-004 的可测断言）：ToolResult.errorMessage 不含 `at io.oryxos.*` / `Exception:` 模式；stack trace 100% 进 `.oryxos/logs/oryxos-cli-error.log`。
 - **SC-007**：集成测试 100% 通过：`mvn verify` 全绿（继承 005-tool-system + 本 spec 新增 Memory 集成测试）。
 - **SC-008**：单次 save/recall wall-time P95 ≤ 200ms（NFR-001）；Markdown 后端实测见 `MemoryBenchIT`。
-- **SC-009**：Mem0 不可达场景下 `save` MUST 不阻塞 Agent 循环：该 record 标记 `pending=true` 落入待重试队列；ToolResult 返回 `success=true, metadata={pending:true}`。
+- **SC-009**：Mem0 不可达场景下 `save` MUST 不阻塞 Agent 循环：HTTP 失败 → 静默 fallback 写入本地 `memory_index` 表（day-one 审计完整性兜底，宪法 §VI），ToolResult 返回 `success=true`；仅 fallback 失败时返回 `success=false` 含 `memory backend degraded` 警告（无 stack trace，NFR-004）。
 
 ### 业务结果
 

@@ -415,3 +415,15 @@ This delivers:
 - `mvn verify` 全绿 + 跨 Session 召回 100% + Markdown 文件可见
 
 **Defer to post-MVP**: US-3（SQLite + Mem0 可插拔后端）/ US-5（Memory Tool 接入验证）。这两部分是 P2 切换选项，核心阶段先保证基础设施就绪 + 默认 Markdown 能跑。
+
+---
+
+## Phase 9: Spec Remediation（analyze F1-F5）
+
+来源：[`/speckit-analyze` 报告](checklists/analyze.log) on 2026-07-27 — 1 MEDIUM + 4 LOW findings，全部 spec.md 文字层修补，不影响 Java 代码与测试。
+
+- [x] T061 [US3] 修正 spec.md US-3 验收场景 4 Mem0 不可达行为描述：从「待重试队列 + metadata={pending:true}」改为「HTTP 失败 → 静默 fallback 写入本地 `memory_index`（day-one 审计完整性兜底，宪法 §VI）；fallback 也失败时返回 success=false 含 `memory backend degraded`」（F1 MEDIUM）
+- [x] T062 [US3] 修正 spec.md 边界情况「Mem0 自托管服务不可达」段落措辞，与 US-3 验收场景 4 对齐；并显式声明 NFR-004 兜底（F1 MEDIUM）
+- [x] T063 [US3] 修正 spec.md SC-009 措辞：从「pending=true 落入待重试队列」改为「fallback 写入 memory_index + NFR-004 错误兜底」（F1 MEDIUM）
+- [x] T064 [US1] spec.md FR-001 / FR-003 增加第 5 个方法 `clear(scope)`（与 `LongTermMemoryStore` 接口对齐）；FR-001 显式声明 `clear(CORE)` MUST 抛 `IllegalStateException`（CLAUDE.md §9.6 契约 ②，F2 LOW）
+- [x] T065 spec.md SC-006 增加「= NFR-004 可测断言」溯源标注（F3 LOW）；SC-001 验收标准改为 smoke + IT 全绿，完整 3 Demo 放扩展阶段（F4 LOW）；NFR-001 显式定义「健康依赖场景」= 单后端本地 IO 不含 Mem0 网络（F5 LOW）
