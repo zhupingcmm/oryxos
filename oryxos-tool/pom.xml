@@ -21,6 +21,12 @@
             <artifactId>oryxos-core</artifactId>
         </dependency>
 
+        <!-- oryxos-memory：MemoryService 门面（M5 / save_memory Tool 使用） -->
+        <dependency>
+            <groupId>io.oryxos</groupId>
+            <artifactId>oryxos-memory</artifactId>
+        </dependency>
+
         <!-- Spring Boot starter：带 spring-boot-autoconfigure（@ConfigurationProperties / @EnableConfigurationProperties
              等注解处理）+ jackson + spring-core。版本由父 pom 的 spring-boot-dependencies BOM 管理 -->
         <dependency>
@@ -64,5 +70,13 @@
             <version>3.5.4</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+
+        <!-- Spring Boot Test：@SpringBootTest / @TestPropertySource 等 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        </dependencies>
 </project>

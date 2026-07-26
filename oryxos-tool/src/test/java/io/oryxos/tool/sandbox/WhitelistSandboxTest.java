@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -84,5 +85,34 @@ class WhitelistSandboxTest {
             ActionType.FILE_READ, "/etc/passwd")));
         assertDoesNotThrow(() -> sandbox.enforce(new SandboxAction(
             ActionType.SHELL_COMMAND, "rm -rf /")));
+    }
+
+    // T041 / contracts/sandbox.md §3.1 step 1：scheme 必须 http / https
+    @Test
+    void rejectsFileScheme() {
+        SandboxViolationException ex = assertThrows(SandboxViolationException.class,
+            () -> sandbox.enforce(new SandboxAction(
+                ActionType.HTTP_REQUEST, "file:///etc/passwd")));
+        String msg = ex.getMessage();
+        assertThat(msg.contains("unsupported scheme")).as("message: %s", msg).isTrue();
+        assertThat(msg.contains("file")).as("message: %s", msg).isTrue();
+    }
+
+    @Test
+    void rejectsGopherScheme() {
+        assertThrows(SandboxViolationException.class, () -> sandbox.enforce(new SandboxAction(
+            ActionType.HTTP_REQUEST, "gopher://example.com/")));
+    }
+
+    @Test
+    void rejectsFtpScheme() {
+        assertThrows(SandboxViolationException.class, () -> sandbox.enforce(new SandboxAction(
+            ActionType.HTTP_REQUEST, "ftp://example.com/secret")));
+    }
+
+    @Test
+    void acceptsHttpsScheme() {
+        assertDoesNotThrow(() -> sandbox.enforce(new SandboxAction(
+            ActionType.HTTP_REQUEST, "https://qyapi.weixin.qq.com/hook")));
     }
 }

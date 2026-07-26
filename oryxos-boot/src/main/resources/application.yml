@@ -88,6 +88,21 @@ oryxos:
           - echo
           - python
           - git
+        # 黑名单（research.md R-03）：即使被合法路径包住也直接拒。先于 sandbox 校验。
+        # 默认覆盖破坏性命令（rm/mkfs/dd/shutdown/reboot）+ 网络下载链（wget/curl）+
+        # 文件所有权/权限变更（chmod/chown）+ 隐式重命名/复制（mv/cp）。
+        dangerous-commands:
+          - rm
+          - mkfs
+          - dd
+          - shutdown
+          - reboot
+          - wget
+          - curl
+          - chmod
+          - chown
+          - mv
+          - cp
       http:
         allowed-domains:
           - api.github.com

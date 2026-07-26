@@ -44,7 +44,11 @@ public interface ToolAuditWriter {
         // --- US-4 Notify 扩展字段（T024）---
         // notify 工具专用；其他工具为 null。广播场景下 channel 用 ";" 分隔。
         String channel,
-        Integer notifyStatusCode
+        Integer notifyStatusCode,
+        // --- US-4 / 005-tool-system 扩展字段（V3 DDL, spec FR-005）---
+        // Tool 来源：{@code "builtin"} / {@code "mcp"} / {@code "java_bean"}。
+        // 由 {@code DefaultToolExecutor.resolveSource()} 推导。
+        String source
     ) {
         public ToolAuditData {
             // 不可变；null 视为空

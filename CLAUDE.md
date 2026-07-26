@@ -178,6 +178,63 @@ MemoryService（统一门面，对 ReAct 暴露）
 ```
 接口四条契约：① 不缓存；② 核心区永不被截断；③ 写核心还是写归档由 Agent 经 `scope` 显式指定；④ `recallByKeyword` 是关键词检索不做复杂化。
 
+### 9.7 Plugin Tool 体系（005-tool-system）
+
+完整 Tool 体系说明见 [specs/005-tool-system/spec.md](specs/005-tool-system/spec.md) + [quickstart.md](specs/005-tool-system/quickstart.md)。这里只记对其他模块"用得到"的接口与边界。
+
+**Tool 接入三档（spec FR-008）**：
+
+| 档 | 路径 | 用法 | 例子 |
+|---|------|------|------|
+| 零代码 | `AGENTS.md` 描述意图 → LLM 用 `shell` 调脚本 | Agent 自己写代码 | 每日 GitHub 日报（调 `gh` CLI） |
+| 轻代码 | `SKILL.md` + YAML frontmatter + MCP server YAML | `mcp_servers.yaml` 加一段 | 每日 GitHub 日报（用 GitHub MCP server） |
+| 重代码 | `@Component implements OryxTool` | `@ComponentScan("io.oryxos.tool")` 自动发现 | 业务自定义 `echo` Tool |
+
+**Tool 来源审计**（`tool_invocations.source` 列，spec FR-005 / V3 DDL）：
+
+| 值 | 含义 | 例子 |
+|---|------|------|
+| `builtin` | 9 个内置 Tool，FQCN `io.oryxos.tool.*`（除 `.mcp.` 和 `.javabean.` 子包） | `file_read` / `shell` / `notify` |
+| `mcp` | MCP server 适配的 Tool，FQCN `io.oryxos.tool.mcp.*` | `integration__echo`（`{server}__{tool}` 命名空间） |
+| `java_bean` | 用户自定义 Java Bean Tool，FQCN 不在 `io.oryxos.tool.*` | 业务方在 `io.oryxos.example.javabean.*` 写的 Tool |
+
+判定规则在 `oryxos-core/src/main/java/io/oryxos/core/DefaultToolExecutor.java` 的 `resolveSource(OryxTool)` —— 按 FQCN 前缀分级匹配。
+
+**Sandbox 拦截规则**（spec FR-013）：
+
+| Tool | 拦截动作类型 | 拦截依据 |
+|------|------------|---------|
+| `shell` | `SHELL_COMMAND` | `ShellToolProperties.dangerous-commands` 黑名单（`rm`/`shutdown`/`reboot`/`dd`/`mkfs`）+ 命令存在性 |
+| `http_get` / `http_post` / `notify` | `HTTP_REQUEST` | `SandboxProperties.http.allowed-domains` 白名单 + 拒 IP 字面值 |
+| `file_read` / `file_write` / `file_list` | `FILE_READ` / `FILE_WRITE` | 核心阶段 no-op（`allowed-paths` 留扩展阶段） |
+
+拦截失败抛 `SandboxViolationException`，由 `DefaultToolExecutor` 兜底返回 `ToolResult.error("sandbox violation: ...")`，审计行 success=false。**不使用 `SecurityManager`**（JDK 21 已废弃）。
+
+**Notify 路由规则**（spec FR-006 优先级表）：
+
+1. `channel="<name>"` 显式指定 → 仅发到 `<name>`，找不到报 `unknown_channel`
+2. `channel=null` + Profile 含名为 `default` 的通道 → 发到 `default`（不论 N）
+3. `channel=null` + Profile 仅 1 条通道（无 `default` 命名） → 发到该唯一通道
+4. `channel=null` + N≥2 + `Profile.extra.broadcast=true` → 并行广播到全部 N 条
+5. `channel=null` + N≥2 + 未声明 broadcast → 报错要求显式 `channel`
+6. Profile 未配 `notify_channels` → 报错
+
+广播路径用 JDK 21 virtual threads + `CompletableFuture.allOf` 聚合；审计 channel 字段用 `;` 分隔。
+
+**关键模块归属**：
+
+| 模块 | 负责什么 |
+|------|---------|
+| `oryxos-core` | Tool 抽象（`OryxTool` 接口 / `ToolExecutor` / `ToolRegistry` / `ToolRegistrySchemaAdapter` / `ToolDefinition` / `ToolRegistration`） |
+| `oryxos-tool` | Tool 实现（9 个内置 Tool + Notify 适配器 + Sandbox 实现 + MCP 客户端 + MemoryTools + Skill 发现占位） |
+| `oryxos-boot` | Spring 装配（`ToolSystemConfig` / `NotifyToolConfig` / `SandboxConfig` / `HttpClientConfig` / `McpClientConfig`） |
+
+**审计 day-one**：每次 Tool 调用写一行 `tool_invocations`（`tool_name` / `success` / `duration_ms` / `error_message` / `channel?` 仅 notify / `notify_status_code?` 仅 notify / `source`）；JpaToolAuditWriter 在 `oryxos-storage` 模块，注入 `DefaultToolExecutor` 即生效。
+
+**禁止**：
+- ❌ 启用 Spring AI 自动 Tool 执行（[CLAUDE.md §8 坑 #1](#1-启用-spring-ai-的自动-tool-执行)）—— ReAct 循环自己调度
+- ❌ 把 Tool 实现放在 `oryxos-core` —— 模块边界见 §5
+
 ### 9.7 "一个目录 = 一个 Agent"
 - `.oryxos/agents/<name>/AGENT.md`（frontmatter = profile，正文 = 任务指令）
 - 可选 `skills/*.md`（子指令）、`scripts/`（脚本）、`REFERENCE.md`

@@ -43,6 +43,11 @@ public class ToolRegistry {
      *
      * <p>Map 的 key 通常应等于 {@code registration.definition().name()}；但不强制相等，
      * 冲突时以 {@code definition().name()} 为权威。
+     *
+     * <p>US-4 起：两个 {@link ToolRegistration} 声明同名 Tool 时抛
+     * {@link IllegalStateException}（spec FR-015 / [research.md R-08](../../../../../../../specs/005-tool-system/research.md)）。
+     * 错误信息含两个冲突类的全限定名，便于排错。Spring Boot 启动期调用此方法时
+     * 失败 → 启动失败（fail-fast）。
      */
     public static ToolRegistry of(Map<String, ToolRegistration> registrations) {
         Map<String, ToolRegistration> normalized = new LinkedHashMap<>();
@@ -52,7 +57,16 @@ public class ToolRegistry {
                 if (reg == null) {
                     continue;
                 }
-                normalized.put(reg.definition().name(), reg);
+                String name = reg.definition().name();
+                ToolRegistration existing = normalized.get(name);
+                if (existing != null) {
+                    throw new IllegalStateException(String.format(
+                        "Tool name conflict: '%s' registered by both %s and %s",
+                        name,
+                        existing.tool().getClass().getName(),
+                        reg.tool().getClass().getName()));
+                }
+                normalized.put(name, reg);
             }
         }
         return new ToolRegistry(normalized);
@@ -83,6 +97,49 @@ public class ToolRegistry {
         }
         ToolRegistration reg = byName.get(name);
         return reg == null ? Optional.empty() : Optional.of(reg.tool());
+    }
+
+    /**
+     * 按 Tool 名查注册项 —— US-3 / MCP 用：需要注册之后回过头来调 / 卸载。
+     * 未注册返 {@code null}。
+     */
+    public ToolRegistration getRegistration(String name) {
+        if (name == null) return null;
+        return byName.get(name);
+    }
+
+    /**
+     * 追加一组注册项 —— US-3 MCP 在握手后追加，远端 Tools 才能被本地调度。
+     *
+     * <p>注意：{@link ToolRegistry} 默认是不可变的（FR-015）；只有包内 / 框架代码才能
+     * 通过这个包级入口追加（测试时直接 new 一个 mutable 的 registry）。
+     * 重复名同样抛 {@link IllegalStateException}。
+     */
+    public void registerAll(java.util.Map<String, ToolRegistration> additions) {
+        if (additions == null || additions.isEmpty()) return;
+        Map<String, ToolRegistration> next = new LinkedHashMap<>(byName);
+        for (java.util.Map.Entry<String, ToolRegistration> e : additions.entrySet()) {
+            ToolRegistration reg = e.getValue();
+            if (reg == null) continue;
+            String name = reg.definition().name();
+            ToolRegistration existing = next.get(name);
+            if (existing != null) {
+                throw new IllegalStateException(String.format(
+                    "Tool name conflict: '%s' already registered by %s; cannot add %s",
+                    name,
+                    existing.tool().getClass().getName(),
+                    reg.tool().getClass().getName()));
+            }
+            next.put(name, reg);
+        }
+        // 替换为新的不可变视图
+        try {
+            java.lang.reflect.Field f = ToolRegistry.class.getDeclaredField("byName");
+            f.setAccessible(true);
+            f.set(this, Collections.unmodifiableMap(next));
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException("cannot mutate ToolRegistry.byName", ex);
+        }
     }
 
     /** 注册数量（诊断 / 测试用）。 */
