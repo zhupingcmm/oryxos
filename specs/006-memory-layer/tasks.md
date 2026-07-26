@@ -156,15 +156,15 @@ description: "Task list for Memory layer implementation (006-memory-layer)"
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T042 [P] [US5] 验证 `SaveMemoryToolTest` `oryxos-tool/src/test/java/io/oryxos/tool/memory/SaveMemoryToolTest.java`（005-tool-system 已有）：save 成功 + scope 校验 + MemoryService-failure 三场景（[005-tool-system spec FR-008](../005-tool-system/spec.md)）
-- [ ] T043 [P] [US5] 验证 `RecallMemoryToolTest` `oryxos-tool/src/test/java/io/oryxos/tool/memory/RecallMemoryToolTest.java`（005-tool-system 已有）：recall 成功 + 无命中 + topK 上限三场景
-- [ ] T044 [P] [US5] 契约测试 `oryxos-memory/src/test/java/io/oryxos/memory/integration/MemoryExceptionTranslationTest.java`：MemoryException → ToolResult.error(...) 转换 + errorMessage 不含 stack trace（C-MS-08 / NFR-004）
+- [x] T042 [P] [US5] 验证 `SaveMemoryToolTest` `oryxos-tool/src/test/java/io/oryxos/tool/memory/SaveMemoryToolTest.java`（005-tool-system 已有）：save 成功 + scope 校验 + MemoryService-failure 三场景（[005-tool-system spec FR-008](../005-tool-system/spec.md)）
+- [x] T043 [P] [US5] 验证 `RecallMemoryToolTest` `oryxos-tool/src/test/java/io/oryxos/tool/memory/RecallMemoryToolTest.java`（005-tool-system 已有）：recall 成功 + 无命中 + topK 上限三场景
+- [x] T044 [P] [US5] 契约测试 `oryxos-tool/src/test/java/io/oryxos/tool/memory/integration/MemoryExceptionTranslationTest.java`：MemoryException → ToolResult.error(...) 转换 + errorMessage 不含 stack trace（C-MS-08 / NFR-004）
 
 ### Implementation for User Story 5
 
-- [ ] T045 [US5] 验证 `SaveMemoryTool` `oryxos-tool/src/main/java/io/oryxos/tool/memory/SaveMemoryTool.java`（005-tool-system 已有，spec FR-011）：构造器注入 MemoryService；execute(args) 解析 scope/content/tags → 调 `memoryService.save(scope, content, tags)`；捕获 MemoryException → ToolResult.error(`memory save failed: ${msg}`) 不含 stack trace
-- [ ] T046 [US5] 验证 `RecallMemoryTool` `oryxos-tool/src/main/java/io/oryxos/tool/memory/RecallMemoryTool.java`（005-tool-system 已有，spec FR-011）：execute(args) 解析 query/topK/scopeFilter → 调 `memoryService.recallByKeyword(query, topK, scopeFilter)`；返回 `MemoryToolResult("recall", scope, hits.size(), snippets)`
-- [ ] T047 [P] [US5] 集成测试 `oryxos-tool/src/test/java/io/oryxos/tool/memory/integration/MemoryToolInReActIT.java`：场景 5（[quickstart.md §场景 5](./quickstart.md)）：mock LLM 返回 tool_call=`recall_memory` → Agent 循环走 Tool 执行 → 查 `tool_invocations` 含 1 行 source='builtin' success=true；模拟 IO 错误 → tool_invocations 含 1 行 success=false + errorMessage 不含 stack trace（SC-005 / SC-006）
+- [x] T045 [US5] 验证 `SaveMemoryTool` `oryxos-tool/src/main/java/io/oryxos/tool/memory/SaveMemoryTool.java`（005-tool-system 已有，spec FR-011）：构造器注入 MemoryService；execute(args) 解析 scope/content/tags → 调 `memoryService.save(scope, content, tags)`；捕获 MemoryException → ToolResult.error(`memory save failed: ${msg}`) 不含 stack trace
+- [x] T046 [US5] 验证 `RecallMemoryTool` `oryxos-tool/src/main/java/io/oryxos/tool/memory/RecallMemoryTool.java`（005-tool-system 已有，spec FR-011）：execute(args) 解析 query/topK/scopeFilter → 调 `memoryService.recallByKeyword(query, topK, scopeFilter)`；返回 `MemoryToolResult("recall", scope, hits.size(), snippets)`
+- [x] T047 [P] [US5] 集成测试 `oryxos-tool/src/test/java/io/oryxos/tool/memory/integration/MemoryToolInReActIT.java`：场景 5（[quickstart.md §场景 5](./quickstart.md)）：mock LLM 返回 tool_call=`recall_memory` → Agent 循环走 Tool 执行 → 查 `tool_invocations` 含 1 行 source='builtin' success=true；模拟 IO 错误 → tool_invocations 含 1 行 success=false + errorMessage 不含 stack trace（SC-005 / SC-006）
 
 **Checkpoint**：至此 Memory Tool 完全接入既有 Tool 体系 + 审计 + 异常兜底全部就位；User Story 5 满足 SC-005 + FR-011/FR-012/FR-013 + 005-tool-system 继承。
 
