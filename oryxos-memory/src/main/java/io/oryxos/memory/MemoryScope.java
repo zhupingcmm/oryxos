@@ -27,5 +27,18 @@ public enum MemoryScope {
             default -> throw new IllegalArgumentException("Unknown memory scope: " + s);
         };
     }
+
+    /**
+     * 校验字符串是否为合法 scope（spec FR-008 配套工具；不抛异常版本）。
+     *
+     * <p>大小写不敏感；null / blank → false；非 {@code core} / {@code archive} → false。
+     */
+    public static boolean isValid(String s) {
+        if (s == null || s.isBlank()) {
+            return false;
+        }
+        String t = s.trim().toLowerCase(java.util.Locale.ROOT);
+        return "core".equals(t) || "archive".equals(t);
+    }
 }
 

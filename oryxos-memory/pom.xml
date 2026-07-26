@@ -21,9 +21,29 @@
             <artifactId>oryxos-core</artifactId>
         </dependency>
 
+        <!-- 006-memory-layer: SqliteMemoryStore + MemoryEntryEntity + JPA Repository（spec FR-014 / plan §2） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 006-memory-layer: 契约测试 / 集成测试断言（assertj.version 在父 pom 管理） -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 006-memory-layer: Mem0 HTTP 客户端契约测试用（wiremock.version 在父 pom 管理） -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

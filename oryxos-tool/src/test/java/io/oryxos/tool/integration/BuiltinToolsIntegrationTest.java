@@ -7,7 +7,9 @@ import io.oryxos.core.ToolResult;
 import io.oryxos.core.tool.ToolDefinition;
 import io.oryxos.core.tool.ToolRegistration;
 import io.oryxos.core.tool.ToolRegistry;
-import io.oryxos.memory.MarkdownMemoryStore;
+import io.oryxos.memory.DefaultMemoryService;
+import io.oryxos.memory.MemoryService;
+import io.oryxos.memory.backend.MarkdownMemoryStore;
 import io.oryxos.memory.MemoryScope;
 import io.oryxos.tool.file.FileListTool;
 import io.oryxos.tool.file.FileReadTool;
@@ -129,8 +131,9 @@ class BuiltinToolsIntegrationTest {
         }
 
         @Bean
-        public io.oryxos.memory.MemoryService memoryService(MarkdownMemoryStore store) {
-            return store;
+        @Primary
+        public MemoryService memoryService(MarkdownMemoryStore store) {
+            return new DefaultMemoryService(store);
         }
 
         @Bean
