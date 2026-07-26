@@ -177,7 +177,7 @@ description: "Notify 出站推送（US-4 子能力）的实现任务列表"
 - [x] T056 [P] 更新 `docs/AiProgrammingGuide.md`（如存在 Notify 章节缺失则补，否则跳过）
 - [x] T057 跑 `/speckit-analyze` 对 specs/004-notify-channel/ 做交叉一致性分析；记录 verdict 到 `specs/004-notify-channel/evidence/analyze.log`
 - [ ] T058 [P] Per-US commit：每个 User Story 完成后打一个独立 commit（4 个 commit），commit message 遵循 `feat(tool): ...` / `fix(tool): ...` 格式
-- [ ] T059 跑 `/speckit-converge`：扫描仓库当前实现与 spec/plan/tasks 的 gap；如有遗漏则追加新 task 到本 tasks.md 并实施
+- [x] T059 跑 `/speckit-converge`：扫描仓库当前实现与 spec/plan/tasks 的 gap；如有遗漏则追加新 task 到本 tasks.md 并实施
 - [x] T060 [P] 显式验证 FR-011"核心阶段 MUST NOT 重试"：在 `oryxos-tool/src/test/java/io/oryxos/tool/notify/NoRetrySemanticsTest.java` 新增负向测试——mock `HttpClient` 让其第一次返回 500；调 `NotifyTool.execute` 一次；断言 `HttpClient.send` 被调**恰好 1 次**（不是 2/3/N 次）；若实现里以后误加重试逻辑本测试会失败
 - [x] T061 [P] 显式验证 FR-014"Notify 全部代码 MUST 落在 oryxos-tool 模块内"：在 `scripts/check-notify-module-boundary.sh` 新增检查脚本——`grep -rn "io.oryxos.tool.notify" oryxos-core oryxos-storage oryxos-cli oryxos-provider oryxos-memory oryxos-web oryxos-channel-cli` 必须为 0 行（oryxos-boot 例外，因 Spring DI 装配需要引用 `@Bean`）；脚本纳入 `scripts/notify-smoke.sh` 步骤 0 的前置检查
 
@@ -286,3 +286,25 @@ Task: "T032 - NotifyResult record"
 - **T061 完成**：新增 `scripts/check-notify-module-boundary.sh`（FR-014 单测脚本，与 `notify-smoke.sh` 内嵌检查解耦）；grep 模式从"任意文本出现 `io.oryxos.tool.notify`"收紧为"`import` / `package` 声明"，避免误抓 `DefaultToolExecutor` 的 Javadoc `{@link ...}` 与 `core.tool/package-info.java` 的纯文档引用（CLAUDE.md §5 §V 边界澄清：core 类允许在 Javadoc 里提及 Notify 实现以描述审计契约）；同时收紧 `notify-smoke.sh` 内嵌的 `check_module_boundary` 函数。T052 在 a55d052 实现里写的 grep 是宽口径，本轮一并收紧。
 - **T058 N/A 维持**：per-US commit 在历史已合并的 a55d052 中无法回溯（重写历史会破坏其他 reviewer 的 blame）；不勾选 + 不重写是当前唯一可行路径。
 - **T059 维持 [ ]**：由独立调用 `/speckit-converge` 收口；本次 analyze 已确认无残余 gap 需要追加 task，converge 调用本身仍属约定流程。
+
+### Convergence Pass (2026-07-26)
+
+本节由 `/speckit-converge` 独立调用追加 —— 重新审视代码后发现 `previous analyze verdict` (T057) 漏掉一个真实 partial gap：
+
+- **F1 (HIGH)**：spec [FR-006](../spec.md#L107-L112) 优先级表第 1 条"MUST：若 Profile 的 `notify_channels` 中存在名为 `default` 的通道 → 路由到 `default` 通道（FR-006 主语义）"**未实现**。当前 `NotifyTool.routeAndSend` 仅以 `channels.size()==1` 作为"单通道默认"判定（[NotifyTool.java:163-167](oryxos-tool/src/main/java/io/oryxos/tool/notify/NotifyTool.java)），导致"N≥2 + 含 `default` 通道 + `broadcast=false`"场景错误返回 `channel 不能省略`，而 spec 应路由到名为 `default` 的那条通道。`contracts/notify-tool.md §3` 行 1 与 spec 一致；`NotifyToolMultiChannelTest#multiProfileWithoutChannelNameFailsExplicitly` (T040) 反而固化了这个 spec 偏离行为并被 T057 错误计为通过。
+- **其余 25 个 FR/SC + 全部 NFR + 全部 Constitution 原则**：无变化，全部 PASS。
+- **T058 / T059**：维持原状态。
+
+## Phase 8: Convergence（`/speckit-converge` 追加）
+
+**目的**：闭合 `/speckit-converge` 在 2026-07-26 识别出的真实 partial gap（F1）。
+
+- [x] T062 在 `oryxos-tool/src/main/java/io/oryxos/tool/notify/NotifyTool.java` 的 `routeAndSend` 方法里、`channels.isEmpty()` 检查之后、`channels.size()==1` 短路之前，插入优先级 #1 分支：`NotifyChannelConfig defaultChannel = findByName(channels, "default"); if (defaultChannel != null) { /* 路由到 defaultChannel 并 toSingleToolResult(...) */ }`；保证 broadcast 路径仍由后续 `isBroadcast(profile)` 判定（broadcast=true 时显式声明优先于命名约定）；同步更新 description 字符串追加"(a) channel 缺省 + Profile 含名为 default 的通道 → 发到 default（不论 N）"；使 NotifyToolMultiChannelTest 中 `multiProfileWithoutChannelNameFailsExplicitly` 改为"含 default 通道 → 路由到 default"的正向断言（T040 留名复用，行号更新）；per FR-006 priority #1 (partial)
+
+### Phase 8 Closure (2026-07-26)
+
+本节由 `/speckit-implement` Phase 8 收口一次性更新：
+
+- **T062 完成**：`NotifyTool.routeAndSend` 新增 `DEFAULT_CHANNEL_NAME` 常量 + 优先级 #1 分支；`description()` 同步追加 case (a)；`NotifyToolMultiChannelTest` 中 `multiProfileWithoutChannelNameFailsExplicitly` 拆分为 `multiProfileWithNamedDefaultRoutesToDefault`（正向断言 default 路由）+ `multiProfileWithoutDefaultAndBroadcastFalseFailsExplicitly`（无 default + broadcast=false 报错，对齐 spec FR-006 #4）；`NotifyToolSingleChannelTest` 中 `multipleChannelsWithoutExplicitNameReturnsError` 同样拆分为 `multiChannelWithNamedDefaultRoutesToDefault` + `multiChannelWithoutDefaultAndBroadcastFalseReturnsError`，并补 `import static ...Mockito.never`。
+- **验证**：`mvn -pl oryxos-tool,oryxos-core,oryxos-storage,oryxos-cli -am verify` BUILD SUCCESS（74 core + 56 tool = 130 测试通过，含 2 skipped）；`scripts/notify-smoke.sh --all` 端到端通过（WireMock stubs + JUnit 56/56 + T061 模块边界 PASS）。
+- **T059 完成**：`/speckit-converge` 收口（finding F1 已闭合），标记 `[x]`。

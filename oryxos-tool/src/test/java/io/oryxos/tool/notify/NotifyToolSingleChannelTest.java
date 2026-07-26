@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -232,7 +233,11 @@ class NotifyToolSingleChannelTest {
     }
 
     @Test
-    void multipleChannelsWithoutExplicitNameReturnsError() {
+    void multiChannelWithNamedDefaultRoutesToDefault() {
+        // spec FR-006 优先级 #1（T062 阶段补；原 test 名
+        // multipleChannelsWithoutExplicitNameReturnsError 断言的是 spec 偏离行为）：
+        // N>=2 + 含名为 default 的通道 + channel=null → 路由到 default，
+        // 不再走 N>=2 + 未声明 broadcast 的"channel 不能省略"报错路径。
         Profile multiProfile = new Profile("default-agent",
             new Provider("deepseek", "deepseek-chat", null, "DEEPSEEK_API_KEY", Map.of("temperature", 0.7f)),
             List.of("notify"), List.of(), List.of(), List.of(),
@@ -243,10 +248,40 @@ class NotifyToolSingleChannelTest {
         registry = InMemoryProfileRegistry.of(multiProfile);
         tool = new NotifyTool(adapter, registry);
 
+        when(adapter.send(any(NotifyChannelConfig.class), eq("hi")))
+            .thenAnswer(inv -> {
+                NotifyChannelConfig c = inv.getArgument(0);
+                return new NotifyResult(c.name(), true, 200, null, 100L,
+                    "http://localhost:9999/" + c.name());
+            });
+
+        ToolResult result = tool.execute(Map.of("content", "hi"));
+
+        // 关键：含名为 default 的通道 → 路由到 default；feishu 零 HTTP 调用
+        assertThat(result.success()).isTrue();
+        assertThat(result.payload()).containsEntry("channel", "default");
+        verify(adapter).send(any(NotifyChannelConfig.class), eq("hi"));
+    }
+
+    @Test
+    void multiChannelWithoutDefaultAndBroadcastFalseReturnsError() {
+        // spec FR-006 #4：N>=2 + 无 default 通道 + broadcast 未声明 → "channel 不能省略" 报错
+        // （T062 阶段补；与原 multipleChannelsWithoutExplicitNameReturnsError 同义但用无 default Profile）
+        Profile multiProfile = new Profile("default-agent",
+            new Provider("deepseek", "deepseek-chat", null, "DEEPSEEK_API_KEY", Map.of("temperature", 0.7f)),
+            List.of("notify"), List.of(), List.of(), List.of(),
+            Profile.Settings.defaults(), Map.of(),
+            List.of(
+                new NotifyChannelConfig("ops", "webhook", "http://localhost:9999/ops", null),
+                new NotifyChannelConfig("sre", "webhook", "http://localhost:9999/sre", null)));
+        registry = InMemoryProfileRegistry.of(multiProfile);
+        tool = new NotifyTool(adapter, registry);
+
         ToolResult result = tool.execute(Map.of("content", "hi"));
 
         assertThat(result.success()).isFalse();
         assertThat(result.errorMessage()).contains("channel 不能省略");
+        verify(adapter, never()).send(any(NotifyChannelConfig.class), any());
     }
 
     @Test
