@@ -173,10 +173,20 @@ MemoryService（统一门面，对 ReAct 暴露）
   ├─ SessionManager（会话记忆，SQLite）
   └─ LongTermMemoryStore（接口，可插拔后端）
        ├─ MarkdownMemoryStore（默认，.oryxos/memory/MEMORY.md，分核心/归档两个分区）
-       ├─ SqliteMemoryStore（memory_entries 表，结构化查询）
-       └─ Mem0MemoryStore（自托管 Mem0，语义检索）
+       ├─ SqliteMemoryStore（agent_memories 表，结构化查询；archive lazy trim 上限 = MemoryProperties.archiveMaxEntries 默认 1000）
+       └─ Mem0MemoryStore（自托管 Mem0 HTTP + 本地 memory_index fallback 表）
 ```
-接口四条契约：① 不缓存；② 核心区永不被截断；③ 写核心还是写归档由 Agent 经 `scope` 显式指定；④ `recallByKeyword` 是关键词检索不做复杂化。
+接口四条契约：① 不缓存；② 核心区永不被截断（任何后端 clear(CORE) MUST 抛 IllegalStateException，C-LT-05 硬约束）；③ 写核心还是写归档由 Agent 经 `scope` 显式指定（scope=null 抛 IllegalArgumentException）；④ `recallByKeyword` 是关键词检索不做复杂化。
+
+**006-memory-layer 落地状态**（Phase 1—8 已全部完成）：
+- 3 后端 × 4 契约 100% 覆盖（C-MD 9 条 / C-SQ 10 条 / C-M0 10 条 / C-MS 8 条）
+- 跨 Session 召回（SC-002）、后端切换零内核（SC-010）、审计还原 5 维（SC-011）、Scope 隔离 1500 条（SC-003）端到端跑通
+- Tool 集成：`SaveMemoryTool` / `RecallMemoryTool`（005-tool-system 继承）→ SC-005 100% 审计 + SC-006 错误兜底（errorMessage 不含 stack trace）
+- 迁移脚本：`scripts/migrate-markdown-to-sqlite.sh` + `scripts/migrate-sqlite-to-markdown.sh`（NFR-005，幂等，UTF-8）
+- 冒烟脚本：`scripts/memory-smoke.sh`（6 场景）+ `scripts/memory-audit-restore-test.sh`（SC-011）
+- 性能：Markdown + Sqlite 后端 N=100 save/recall P95 ≤ 200ms（NFR-001，详见 `MemoryPerformanceIT` + `SqlitePerfIT`）
+- 详细契约：见 [specs/006-memory-layer/contracts/](../specs/006-memory-layer/contracts/)（`memory-service.md` / `long-term-store.md` / `markdown-backend.md` / `sqlite-backend.md` / `mem0-backend.md` / `migration-scripts.md`）
+- 5 场景端到端用例：见 [specs/006-memory-layer/quickstart.md](../specs/006-memory-layer/quickstart.md)
 
 ### 9.7 Plugin Tool 体系（005-tool-system）
 

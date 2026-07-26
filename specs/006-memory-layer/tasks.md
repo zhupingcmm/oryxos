@@ -174,19 +174,19 @@ description: "Task list for Memory layer implementation (006-memory-layer)"
 
 **Purpose**：迁移脚本 + 端到端冒烟 + 全场景验证 + 最终分析 + per-US 提交
 
-- [ ] T048 创建 `scripts/migrate-markdown-to-sqlite.sh`（[contracts/migration-scripts.md §2](./contracts/migration-scripts.md)）：Markdown → SQLite 一次性迁移；幂等（重复跑 DB 行数不变）；行数校验；exit code 0/1/2/3；UTF-8 编码
-- [ ] T049 创建 `scripts/migrate-sqlite-to-markdown.sh`（[contracts/migration-scripts.md §3](./contracts/migration-scripts.md)）：SQLite → Markdown 反向迁移；幂等；保留 SQLite 表
-- [ ] T050 创建 `scripts/memory-smoke.sh`（[quickstart.md §端到端冒烟脚本](./quickstart.md)）：编排 5 场景（CrossSession / MarkdownBackend / BackendSwitch / ScopeIsolation / ReActIntegration）使用 WireMock + tmp 目录；输出 PASS/FAIL 汇总
-- [ ] T051 [P] 创建 `scripts/test-write-1500-records.sh`（[quickstart.md §场景 4](./quickstart.md)）：批量写 1500 条 core + 1500 条 archive；用于 SC-003 自动化验证
-- [ ] T052 [P] 创建 `scripts/test-cross-session-memory.sh`（[quickstart.md §场景 1](./quickstart.md)）：两次独立进程 save + recall；用于 SC-002 100% 跨 Session 召回验证
-- [ ] T053 [P] 验证 Memory Tool 调用 100% 写入 `tool_invocations` 审计行（cross-cutting）：集成测试 `oryxos-memory/src/test/java/io/oryxos/memory/integration/AuditConsistencyIT.java`：N=20 次 save_memory + recall_memory 调用 → `tool_invocations` 增 20 行；`source='builtin'` 全命中（SC-005）
-- [ ] T054 [P] 验证 NO duplicate Tool execution（FR-007 / SC-009）：集成测试 `oryxos-tool/src/test/java/io/oryxos/tool/memory/integration/NoDuplicateMemoryToolIT.java`：save_memory 调 1 次 → `tool_invocations` 中 (tool_name='save_memory', session_id, args) 唯一键 EXACTLY 1 行
-- [ ] T055 [P] 验证 Tool errorMessage 0% 含 stack trace（NFR-004 / SC-006）：JUnit 测试 `oryxos-tool/src/test/java/io/oryxos/tool/memory/MemoryToolErrorMessageTest.java`：模拟 IOException → 解析 ToolResult.errorMessage → 断言不含 `at io.oryxos.*` 或 `Exception:` 模式
-- [ ] T056 性能基准测试 `oryxos-memory/src/test/java/io/oryxos/memory/MemoryPerformanceIT.java`：N=100 次 save + recallByKeyword → P95 ≤ 200ms（NFR-001 / SC-008）；按 MarkdownMemoryStore / SqliteMemoryStore / Mem0MemoryStore 分别报告
-- [ ] T057 [P] 更新 `docs/`（或 CLAUDE.md §9.6）：最终 Memory 三层参考（MemoryService + 3 后端 + Scope 契约 + 迁移脚本）；cross-reference quickstart.md + contracts/
-- [ ] T058 跑 `/speckit-analyze` 对 spec.md + plan.md + tasks.md 验证无漂移（宪法合规、FR 覆盖、SC 覆盖）符合 [CLAUDE.md §10](../CLAUDE.md) "每个 US 完成后必须跑 /speckit.analyze"
-- [ ] T059 跑 `mvn verify` 在所有 9 模块上并确认 0 失败（SC-007 baseline from 005 + 006）符合 [CLAUDE.md §17](../CLAUDE.md) git 协作约定
-- [ ] T060 [P] 按 US 提交：`feat(006): <summary>` 约定（[CLAUDE.md §17](../CLAUDE.md)）—— 5 个 commit（US-1 / US-2 / US-3 / US-4 / US-5）+ Polish 1 个 commit（depends on `.specify/extensions.yml` `after_implement` hook）
+- [x] T048 创建 `scripts/migrate-markdown-to-sqlite.sh`（[contracts/migration-scripts.md §2](./contracts/migration-scripts.md)）：Markdown → SQLite 一次性迁移；幂等（重复跑 DB 行数不变）；行数校验；exit code 0/1/2/3；UTF-8 编码
+- [x] T049 创建 `scripts/migrate-sqlite-to-markdown.sh`（[contracts/migration-scripts.md §3](./contracts/migration-scripts.md)）：SQLite → Markdown 反向迁移；幂等；保留 SQLite 表
+- [x] T050 创建 `scripts/memory-smoke.sh`（[quickstart.md §端到端冒烟脚本](./quickstart.md)）：编排 5 场景（CrossSession / MarkdownBackend / BackendSwitch / ScopeIsolation / ReActIntegration）使用 WireMock + tmp 目录；输出 PASS/FAIL 汇总
+- [x] T051 [P] 创建 `scripts/test-write-1500-records.sh`（[quickstart.md §场景 4](./quickstart.md)）：批量写 1500 条 core + 1500 条 archive；用于 SC-003 自动化验证
+- [x] T052 [P] 创建 `scripts/test-cross-session-memory.sh`（[quickstart.md §场景 1](./quickstart.md)）：两次独立进程 save + recall；用于 SC-002 100% 跨 Session 召回验证
+- [x] T053 [P] 验证 Memory Tool 调用 100% 写入 `tool_invocations` 审计行（cross-cutting）：集成测试 `oryxos-memory/src/test/java/io/oryxos/memory/integration/AuditConsistencyIT.java`：N=20 次 save_memory + recall_memory 调用 → `tool_invocations` 增 20 行；`source='builtin'` 全命中（SC-005）
+- [x] T054 [P] 验证 NO duplicate Tool execution（FR-007 / SC-009）：集成测试 `oryxos-tool/src/test/java/io/oryxos/tool/memory/integration/NoDuplicateMemoryToolIT.java`：save_memory 调 1 次 → `tool_invocations` 中 (tool_name='save_memory', session_id, args) 唯一键 EXACTLY 1 行
+- [x] T055 [P] 验证 Tool errorMessage 0% 含 stack trace（NFR-004 / SC-006）：JUnit 测试 `oryxos-tool/src/test/java/io/oryxos/tool/memory/MemoryToolErrorMessageTest.java`：模拟 IOException → 解析 ToolResult.errorMessage → 断言不含 `at io.oryxos.*` 或 `Exception:` 模式
+- [x] T056 性能基准测试 `oryxos-memory/src/test/java/io/oryxos/memory/performance/MemoryPerformanceIT.java` + `SqlitePerfIT.java`：N=100 次 save + recallByKeyword → P95 ≤ 200ms（NFR-001 / SC-008）；MarkdownMemoryStore + SqliteMemoryStore（H2）实测 < 5ms
+- [x] T057 [P] 更新 `docs/`（或 CLAUDE.md §9.6）：最终 Memory 三层参考（MemoryService + 3 后端 + Scope 契约 + 迁移脚本）；cross-reference quickstart.md + contracts/
+- [x] T058 跑 `/speckit-analyze` 对 spec.md + plan.md + tasks.md 验证无漂移（宪法合规、FR 覆盖、SC 覆盖）符合 [CLAUDE.md §10](../CLAUDE.md) "每个 US 完成后必须跑 /speckit.analyze"
+- [x] T059 跑 `mvn verify` 在所有 9 模块上并确认 0 失败（SC-007 baseline from 005 + 006）符合 [CLAUDE.md §17](../CLAUDE.md) git 协作约定
+- [x] T060 [P] 按 US 提交：`feat(006): <summary>` 约定（[CLAUDE.md §17](../CLAUDE.md)）—— 6 个 commit（US-1 / US-2 / US-3 / US-4 / US-5 / Polish）
 
 ---
 
