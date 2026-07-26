@@ -11,13 +11,23 @@
 
 ---
 
+## Clarifications
+
+### Session 2026-07-26
+
+- Q1: ReAct 主循环 worst-case wall-time bound 是否需要在 spec 显式声明？ → A: 文档化为 `MAX_ITERATIONS × (LLM_call_timeout + max_tool_wall_time)` ≈ 15 min（默认配置下），纳入 NFR-001 附录，并新增 SC-004b 测 ReAct 级 wall-time。
+- Q2: "Tool 系统" vs "Tool 体系" / "NotifyTool" 命名 → A: 全文统一为 "Tool 体系"（与 spec 标题 + CLAUDE.md §9.7 + 004 spec 一致）；Java 类名用 `NotifyTool`（PascalCase），Tool name 字符串用 `notify`（lowercase）。**Glossary**：①"Tool 体系" = 整套 Tool subsystem；②`NotifyTool`（class）= Java 类名；③`notify`（lowercase）= 注册表里的 Tool name 字符串；④"Notify 出站" = 出站推送语义。
+- Q3: 数据规模 / 容量 bound 是否进 spec？ → A: 作为**软参考**纳入 NFR-006（≤ 100 calls/day/Agent × Profile 数，非硬保）；新增 SC-012 记录 3 个 Demo 实际运行频率作为实测样本。
+
+---
+
 ## 用户场景与测试 *（必填）*
 
 ### 用户故事 1 — Agent 调一个内置 Tool，拿到结果并被审计（P1）🎯 MVP
 
 企业用户配好一个最小 Profile（如"每日天气"），Agent 跑起来后由 LLM 在循环中决定调一次 `http_get(url=...)` 拉取天气数据；系统把外部 HTTP 结果返回给 LLM，并在 `tool_invocations` 表里落一行完整审计（tool 名、参数、success / failure、duration_ms）。
 
-**为什么是这个优先级**：这是 Tool 系统最朴素也最有说明力的端到端用例 —— 一行 Tool 调用打通"LLM 决定 → 协议层 schema → 调度 → 执行 → 结果回填 → 审计入库"完整链路。三个验收 Demo（[CLAUDE.md §11](../CLAUDE.md)）全部依赖这条链路。P1 一旦跑通，Tool 系统对 ReAct 主循环的契约（[CLAUDE.md §9.2](../CLAUDE.md) 第 4 步）立刻成立。
+**为什么是这个优先级**：这是 Tool 体系最朴素也最有说明力的端到端用例 —— 一行 Tool 调用打通"LLM 决定 → 协议层 schema → 调度 → 执行 → 结果回填 → 审计入库"完整链路。三个验收 Demo（[CLAUDE.md §11](../CLAUDE.md)）全部依赖这条链路。P1 一旦跑通，Tool 体系对 ReAct 主循环的契约（[CLAUDE.md §9.2](../CLAUDE.md) 第 4 步）立刻成立。
 
 **独立测试**：Profile 配 1 个内置 Tool（`http_get`）+ 1 个 mock endpoint（WireMock stub 返回固定 JSON）；LLM 触发一次 `http_get`。断言：(a) ReAct 循环下一轮 LLM 看到 ToolResult 内容包含 mock 返回；(b) `tool_invocations` 写入恰好 1 行，`tool_name='http_get'`、`success=true`、`duration_ms > 0`；(c) 不存在重复调用（验证宪法 §IV —— Spring AI 自动执行已禁用）。
 
@@ -140,11 +150,12 @@ Agent 跑完一次任务后由 LLM 在最后一步调 `notify(content, channel?)
 
 ### 非功能需求
 
-- **NFR-001**：单条 Tool 调用的端到端 wall-time MUST ≤ 30 秒（健康依赖场景下）；超过 MUST 走 ToolResult.success=false + errorMessage="timeout"。
+- **NFR-001**：单条 Tool 调用的端到端 wall-time MUST ≤ 30 秒（健康依赖场景下）；超过 MUST 走 ToolResult.success=false + errorMessage="timeout"。**ReAct 主循环 worst-case wall-time** = `MAX_ITERATIONS × (LLM_call_timeout + max_tool_wall_time)` = `10 × (~60s + 30s)` ≈ **15 min**（默认配置下，[CLAUDE.md §9.1](../CLAUDE.md) + NFR-002 同步派发模型）。该上界是 SC-004 测试样例的边界条件；**Tool 级**与 **ReAct 级** wall-time 各自独立测试（SC-004 测 Tool，SC-004b 测 ReAct）。
 - **NFR-002**：Tool 调用 MUST 在 JDK 21 虚拟线程隔离栈内执行（不污染主线程状态、不抛 RuntimeException 到 ReAct 主循环，FR-012 兜底）；调用栈采用**同步阻塞**模型（与 [CLAUDE.md §9.1](../CLAUDE.md) ReAct 同步迭代模型一致 ——"组装 Prompt → 调 LLM → 解析响应 → [有 tool 调用] 执行 → 追加到 Session → 继续"），ToolResult 返回后由 ReAct 继续下一轮迭代；**不**引入异步 streaming / ToolResult 占位 / 下一轮回填真实结果 语义（宪法 §III 自实现 ReAct loop 显式拒绝第三方 Agent 框架的异步派发）。"MUST NOT 阻塞 ReAct 主循环"指的是**不抛异常中断**而非**调用栈不等待**。
 - **NFR-003**：Tool schema 生成 MUST 在 Spring Boot 启动期完成（`tool_invocations` 不为 schema 生成付运行时开销）。
 - **NFR-004**：Tool 错误信息 MUST 对用户友好（LLM 可读）；stack trace MUST 写到 `.oryxos/logs/oryxos-cli-error.log` 或等价位置，**绝不**进 ToolResult.errorMessage（避免污染 LLM 上下文）。
 - **NFR-005**：所有 Tool 副作用 MUST 在 Sandbox 校验**通过后**才能发生；Sandbox 校验失败的调用 MUST 零副作用（用文件系统快照 / 进程计数 / HTTP 请求计数证明）。
+- **NFR-006（设计容量 / 非硬保）**：核心阶段设计容量参考为 **≤ 100 次 Tool 调用 / 日 / Agent × Profile 数**。该值是**软参考**（informational），不构成验收契约；超此规模应触发扩展阶段的 Tool 连接池 / 限流 / 性能调优（参见 [CLAUDE.md §13](../CLAUDE.md) 第 5 表 `tool_invocations` 与 §18 "不做的扩展阶段的事"）。
 
 ### 关键实体
 
@@ -172,17 +183,19 @@ Agent 跑完一次任务后由 LLM 在最后一步调 `notify(content, channel?)
 - **SC-007**：重代码接入一个新 Tool（`@Component implements OryxTool`）≤ 100 行 Java（含 import 与 javadoc）；以"内部 SDK 包一个 Echo Tool"为对照样本验证。
 - **SC-008**：JDK 21 / Spring Boot 3.x 单二进制部署下，集成测试 100% 通过；`mvn verify` 全绿（继承 US-2 / US-3 / US-4 的 CI 基线）。
 - **SC-009**：Tool 错误信息中 0% 含 stack trace（验证 NFR-004）；stack trace 100% 进 `.oryxos/logs/`。
+- **SC-004b**：ReAct 主循环 worst-case wall-time MUST ≤ NFR-001 计算出的上界（≈ 15 min，默认 `MAX_ITERATIONS=10` + LLM 调用 + Tool ≤30s）；Mock 环境下让 10 个连续 Tool 调用都返回 success=true → 端到端 wall-time ≤ 15 min 且每个 Tool 调用结束时 ToolResult 都已正确归并到 Session 对话历史。该 SC 与 SC-004 互补：SC-004 测 Tool 级 wall-time；SC-004b 测 ReAct 整体 worst-case 不越界。
 
 ### 业务结果
 
 - **SC-010**：业务方（运维 / 客服 / HR / 销售等）能够在不修改 OryxOS 内核的前提下，通过零代码或重代码路径新增 Agent 所需的 Tool；新增 Tool 不需要 OryxOS 发版（仅 Skill 注册 / MCP 配置 / 自定义 Bean 引入）。
 - **SC-011**：企业审计员可以从 `tool_invocations` 表里完整还原"哪个 Agent / 哪个 Session / 哪个 Tool / 哪个参数 / 哪个时间 / 什么结果"的全部 Tool 调用历史（day-one 审计基石，宪法 §VI）。
+- **SC-012（设计容量参考）**：核心阶段在 3 个验收 Demo（每日天气 / 每日科技日报 / 每日 GitHub 日报）的实际运行频率下（如每日 1-3 次 / Agent × Profile），所有 SC 通过；该值是 NFR-006 软参考的实测样本。**不是**性能 / 容量硬保。
 
 ---
 
 ## 假设
 
-1. **Tool 系统是 US-4 整体的范围**（[CLAUDE.md §10](../CLAUDE.md)）；本 spec 是 US-4 的"完整功能视角"合并说明，与 [specs/004-notify-channel](004-notify-channel/spec.md)（Notify 出站子能力的详细契约）**互补**而非重复。本 spec 在 Notify 部分以引用 004 spec 的方式避免内容分裂。
+1. **Tool 体系是 US-4 整体的范围**（[CLAUDE.md §10](../CLAUDE.md)）；本 spec 是 US-4 的"完整功能视角"合并说明，与 [specs/004-notify-channel](004-notify-channel/spec.md)（Notify 出站子能力的详细契约）**互补**而非重复。本 spec 在 Notify 部分以引用 004 spec 的方式避免内容分裂。
 2. **核心阶段的 Tool 数量是固定的 9 个**（FR-003）；扩展阶段才允许运营者通过零代码路径加 Tool。这意味着 SC-006 / SC-007 的"零代码 / 重代码接入"在核心阶段是"基础设施已就绪 + 接入示例可用"的演示态，不是开放给业务方自由发挥。
 3. **三档接入的优先级**：宪法 §V 明示"零代码 / 轻代码 / 重代码"按此顺序推荐；本 spec 在功能上同时支持三档，但 US-3 / US-4 的优先级（P2）反映"核心阶段先把基础设施做好，扩展阶段才重点推广零代码接入"。
 4. **MCP server 健康检查**：核心阶段用启动期握手作为唯一健康信号；运行期心跳 / 自动重连放扩展阶段（[CLAUDE.md §11](../CLAUDE.md) 中关于"运行期挂掉"的边界情况已在场景 4 标注）。
