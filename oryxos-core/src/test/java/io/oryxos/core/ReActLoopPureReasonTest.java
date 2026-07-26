@@ -59,7 +59,8 @@ class ReActLoopPureReasonTest {
             bootstrap,
             List.of(),
             new Profile.Settings(maxIterations, 20),
-            Map.of()
+            Map.of(),
+            List.of()
         );
     }
 

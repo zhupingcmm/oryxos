@@ -92,6 +92,13 @@ oryxos:
         allowed-domains:
           - api.github.com
           - api.openweathermap.org
+          # 004-notify-channel (US-3 T045) — 本地 quickstart + 群机器人 webhook 默认放行
+          # 注意: WhitelistSandbox 强制拒 IP 字面值 (spec FR-008)，所以 127.0.0.1 / ::1
+          # 必须用 hostname `localhost` 或真实域名访问；不能放 IP 进白名单。
+          - localhost
+          - qyapi.weixin.qq.com
+          - open.feishu.cn
+          - oapi.dingtalk.com
 
 logging:
   level:

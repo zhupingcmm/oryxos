@@ -67,7 +67,8 @@ class DefaultAgentServiceTest {
             List.of(),
             List.of(), List.of(), List.of(),
             new Profile.Settings(10, 20),
-            Map.of()
+            Map.of(),
+            List.of()
         );
     }
 
@@ -115,7 +116,8 @@ class DefaultAgentServiceTest {
             List.of(),
             List.of(), List.of(), List.of(),
             new Profile.Settings(10, 20),
-            Map.of()
+            Map.of(),
+            List.of()
         )).isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("provider.name must not be blank");
     }

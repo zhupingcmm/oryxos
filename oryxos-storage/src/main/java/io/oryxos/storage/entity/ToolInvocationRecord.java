@@ -75,6 +75,16 @@ public class ToolInvocationRecord {
     @Column(name = "session_iteration", nullable = false)
     private int sessionIteration;
 
+    // --- US-4 Notify 扩展字段（V2 DDL，data-model §8） ---
+
+    /** notify 专用：单条通道名；广播场景下用 {@code ";"} 分隔多条。其他工具为 null。 */
+    @Column(name = "channel", columnDefinition = "TEXT")
+    private String channel;
+
+    /** notify 专用：HTTP 状态码（2xx/4xx/5xx）；网络错误（超时 / ConnectException）时 null；广播时按"最差"规则取。 */
+    @Column(name = "notify_status_code")
+    private Integer notifyStatusCode;
+
     // --- 构造器 ---
 
     protected ToolInvocationRecord() {
@@ -83,7 +93,8 @@ public class ToolInvocationRecord {
 
     public ToolInvocationRecord(UUID id, UUID sessionId, String profileName, String toolName,
                                 Map<String, Object> arguments, boolean success, String errorMessage,
-                                long durationMs, Instant startedAt, int sessionIteration) {
+                                long durationMs, Instant startedAt, int sessionIteration,
+                                String channel, Integer notifyStatusCode) {
         this.id = id;
         this.sessionId = sessionId;
         this.profileName = profileName;
@@ -94,6 +105,8 @@ public class ToolInvocationRecord {
         this.durationMs = durationMs;
         this.startedAt = startedAt;
         this.sessionIteration = sessionIteration;
+        this.channel = channel;
+        this.notifyStatusCode = notifyStatusCode;
 
         validate();
     }
@@ -136,4 +149,6 @@ public class ToolInvocationRecord {
     public long getDurationMs()               { return durationMs; }
     public Instant getStartedAt()             { return startedAt; }
     public int getSessionIteration()          { return sessionIteration; }
+    public String getChannel()                { return channel; }
+    public Integer getNotifyStatusCode()      { return notifyStatusCode; }
 }

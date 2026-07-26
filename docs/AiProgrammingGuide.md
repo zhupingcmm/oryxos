@@ -319,6 +319,43 @@ US-3 实施完成后跑 `/speckit.analyze`。
   - stdio MCP Client 建议拆几个子 task：连接管理、`tools/list`、`tool/call`、错误恢复
 - **`SandboxChecker` 完整版**（从 US-2 的简化版扩展到完整版：文件路径白名单 + Shell 命令白名单 + HTTP 域名白名单，建议拆 3 个子 task）
 
+#### 4.4.1 Notify 出站推送子能力（已落地 004-notify-channel）
+
+US-4 在 2026-07 落地了一个对外可演示的子能力切片：**Notify 出站推送**
+（[specs/004-notify-channel/](specs/004-notify-channel/)，分支 `004-notify-channel`）。
+它演示了 US-4 的"对称补"——消息怎么出去。
+
+**为什么单独成 spec 而不是 US-4 的子任务**：Notify 是 US-4 子能力 demo 的最小切片，
+需要独立跑通 Spec-Kit 流程（specify → plan → tasks → analyze → implement）作为
+后续增量子能力的模板。它也驱动了 `ToolRegistry` 接 `OryxTool` 实现的骨架。
+
+**实现要点**（节选自 [specs/004-notify-channel/spec.md §3-§7](../specs/004-notify-channel/spec.md)）：
+
+| 子能力 | 路由规则 | 关键约束 |
+| ------ | ------ | ------ |
+| 单通道默认推送（P1） | LLM 不传 `channel` + Profile 仅 1 条通道 → 发到该唯一通道 | FR-006 优先级表 |
+| 多通道按名路由（P2） | `channel="<name>"` → 仅发到名为 `<name>` 的通道 | FR-007（不匹配直接报错，不静默） |
+| Sandbox 域名白名单拦截（P2） | 每次出站 HTTP 前过 `Sandbox.enforce(HTTP_REQUEST, url)` | FR-004（拦截在请求**前**） |
+| 多通道并发广播（P3） | LLM 不传 `channel` + Profile 配 N 条 + `Profile.extra.broadcast=true` → 并行发到 N 条 | FR-008（三个条件**同时**满足才走广播） |
+| 不重试（FR-011） | 失败立即返回给 LLM，LLM 决定是否重试 | 核心阶段拒绝指数退避 |
+| webhook URL 脱敏（FR-013） | `?key=` / `?access_token=` / `?secret=` 值打码成 `***` | 日志 + 审计行都脱敏 |
+| 模块边界（FR-014） | Notify 全部代码 MUST 落在 `oryxos-tool`（+ `oryxos-boot` DI 例外） | 单测脚本：`scripts/check-notify-module-boundary.sh` |
+
+**架构层面增量**：
+
+- `NotifyTool` 注册为 `OryxTool` 实现（`@Component`），通过 `ToolRegistry` 被 ReAct 循环消费
+- `WebhookNotifyAdapter` 是 `NotifyChannelAdapter` 的核心阶段唯一实现（FR-002：覆盖企业微信/飞书/钉钉 webhook 形态）
+- 广播用 **JDK 21 virtual threads** + `CompletableFuture.allOf` 聚合（NFR-002：N 通道 wall-time 不随 N 线性增长）
+- 审计行通过 `ToolResult.payload` 扩展字段（`channel`、`status_code`）落到 `tool_invocations.channel` + `notify_status_code`（DDL V2 增量）
+- `DefaultToolExecutor` 在 Javadoc 里描述该契约（CLAUDE.md §5 §V：core 类可在 javadoc 里提及 Notify 实现以描述审计契约，但不实际 import）
+
+**协作模式经验**：
+
+- **A1 路径修复**：分析阶段发现 tasks.md 把 Tool 抽象（`ToolRegistration`/`ToolRegistry`）路径写到了 `oryxos-tool` 下，但根据 CLAUDE.md §5 §V 边界澄清，Tool 抽象应归 `oryxos-core/tool/` 子包——修后落地
+- **A2 spec↔impl 跑偏**：发现 spec FR-008 写"三条件"但实现只检查 `extra.broadcast=true`——最小闭环修复，把 spec 改为"单条件 + 显式 N≥2 上下文"
+- **A3 tasks.md cleanup**：53 个已实现 task 一次性 `[x]`，7 个 `[ ]` 含 N/A 注释
+- **T061 单测脚本独立化**：`scripts/check-notify-module-boundary.sh` 与 `scripts/notify-smoke.sh` 解耦，CI 可单独跑 FR-014
+
 US-4 实施完成后跑 `/speckit.analyze`。
 
 **验收 Demo 三**：零代码 PR digest

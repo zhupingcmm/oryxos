@@ -89,7 +89,8 @@ class ReActLoopConcurrencyTest {
                         "weather-bot", PROVIDER, List.of(),
                         List.of(), List.of(), List.of(),
                         new Profile.Settings(10, 20),
-                        Map.of()
+                        Map.of(),
+            List.of()
                     );
 
                     // 同步闸门 —— 20 个线程同时启动
@@ -187,7 +188,8 @@ class ReActLoopConcurrencyTest {
             "bot", PROVIDER, List.of(),
             List.of(), List.of(), List.of(),
             new Profile.Settings(10, 20),
-            Map.of()
+            Map.of(),
+            List.of()
         );
 
         UUID sid = UUID.fromString("00000000-0000-0000-0000-000000000501");

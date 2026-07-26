@@ -22,6 +22,17 @@ public interface OryxTool {
     String name();
 
     /**
+     * Tool 一句话描述 —— 用于 LLM Function Calling schema 生成与 CLI {@code oryxos tool list} 展示。
+     *
+     * <p>默认空串；具体 Tool 实现 MUST override 提供非空描述（spec FR-001）。
+     *
+     * @return 单行人类可读描述（打印安全）
+     */
+    default String description() {
+        return "";
+    }
+
+    /**
      * 执行 Tool。
      *
      * @param arguments LLM 解析后的 JSON 参数 map（按 Tool schema 校验后传入）

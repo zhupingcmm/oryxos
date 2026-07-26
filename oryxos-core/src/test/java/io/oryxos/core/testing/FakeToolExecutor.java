@@ -84,7 +84,9 @@ public final class FakeToolExecutor implements ToolExecutor {
                 actual.success() ? null : actual.errorMessage(),
                 0L,
                 java.time.Instant.now(),
-                iter
+                iter,
+                null,            // channel (T024: Notify-specific)
+                null             // notifyStatusCode (T024: Notify-specific)
             ));
         } catch (RuntimeException ignore) {
             // C-TE-9：审计失败不阻塞主流程

@@ -29,7 +29,8 @@ public record Profile(
     List<String> bootstrap,
     List<String> skills,
     Settings settings,
-    Map<String, Object> extra
+    Map<String, Object> extra,
+    List<NotifyChannelConfig> notifyChannels
 ) {
 
     private static final Pattern NAME_PATTERN =
@@ -79,5 +80,6 @@ public record Profile(
         bootstrap = bootstrap == null ? List.of() : List.copyOf(bootstrap);
         skills = skills == null ? List.of() : List.copyOf(skills);
         extra = extra == null ? Map.of() : Map.copyOf(extra);
+        notifyChannels = notifyChannels == null ? List.of() : List.copyOf(notifyChannels);
     }
 }

@@ -66,6 +66,21 @@ JDK 21 + Spring Boot 3.x + Spring AI Alibaba（只取一半）
 - `AGENT.md` 加载归 `oryxos-core` 的 `ContextLoader`，**不是** Tool
 - 任何 agent 想在核心阶段新增第 10 个模块 → 停下来讨论，这是结构性调整
 
+> **§V 与 §5 的边界澄清**（回应 004-notify-channel analyze 的 C1 finding）：
+> constitution §V「all Tool-related code MUST live in the oryxos-tool module only」的**意图**
+> 是阻止把 Tool 拆成 `builtin-tools` / `skill-tools` / `mcp-tools` 子模块；
+> 不是说 `oryxos-core` 不能有任何 Tool 概念。
+>
+> 实际边界：
+>
+> | 类型 | 归属 | 例子 |
+> |------|------|------|
+> | Tool **抽象**（接口、注册表门面、调度框架、Schema 翻译） | `oryxos-core` | `OryxTool`、`ToolExecutor`、`ToolSchemaProvider`、`PromptBuilder`（吃 Tool 列表）、`ToolRegistry` / `ToolRegistration` / `ToolDefinition`（门面 + record） |
+> | Tool **实现** + 支持基础设施（具体 Tool、适配器、SDK 包装、Sandbox、Notify 适配器） | `oryxos-tool` | `NotifyTool`、`WebhookNotifyAdapter`、`McpToolAdapter`、`WhitelistSandbox`、`FileTools` 等 9 个内置 Tool |
+> | 注册中心装配（Spring `@Bean` 拼装 `ToolRegistry`） | `oryxos-boot` | `NotifyToolConfig` 显式 `@Primary @Bean ToolRegistry` |
+>
+> 判定标准：**如果一个类被 `oryxos-core` 的调度框架（ReAct / PromptBuilder / DefaultToolExecutor）直接 import 当 API 消费，就归 core；只是 Tool 的"实现者"或"基础设施"，归 tool。**
+
 ---
 
 ## 6. 五大核心能力

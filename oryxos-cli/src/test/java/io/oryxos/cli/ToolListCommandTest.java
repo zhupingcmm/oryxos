@@ -1,8 +1,11 @@
 package io.oryxos.cli;
 
 import io.oryxos.cli.exitcode.Sysexits;
-import io.oryxos.tool.ToolDefinition;
-import io.oryxos.tool.ToolRegistry;
+import io.oryxos.core.OryxTool;
+import io.oryxos.core.ToolResult;
+import io.oryxos.core.tool.ToolDefinition;
+import io.oryxos.core.tool.ToolRegistration;
+import io.oryxos.core.tool.ToolRegistry;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
@@ -25,15 +28,25 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class ToolListCommandTest {
 
+    /** 构造一个最小 {@link ToolRegistration} —— 给 CLI display 用，execute 不被调到。 */
+    private static ToolRegistration reg(String name, String desc, String origin) {
+        ToolDefinition def = new ToolDefinition(name, desc, origin);
+        OryxTool stub = new OryxTool() {
+            @Override public String name() { return def.name(); }
+            @Override public String description() { return def.description(); }
+            @Override public ToolResult execute(Map<String, Object> arguments) {
+                return ToolResult.ok(Map.of("status", "stub"));
+            }
+        };
+        return new ToolRegistration(def, stub, "test-stub");
+    }
+
     @Test
     void listsSeededTools() {
-        Map<String, ToolDefinition> tools = new LinkedHashMap<>();
-        tools.put("read_file", new ToolDefinition(
-                "read_file", "Read a file from the workspace.", "builtin"));
-        tools.put("shell", new ToolDefinition(
-                "shell", "Run a shell command (sandboxed).", "builtin"));
-        tools.put("notify", new ToolDefinition(
-                "notify", "Push a message to a webhook.", "builtin"));
+        Map<String, ToolRegistration> tools = new LinkedHashMap<>();
+        tools.put("read_file", reg("read_file", "Read a file from the workspace.", "builtin"));
+        tools.put("shell",     reg("shell", "Run a shell command (sandboxed).", "builtin"));
+        tools.put("notify",    reg("notify", "Push a message to a webhook.", "builtin"));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintWriter pw = new PrintWriter(out, true, StandardCharsets.UTF_8);

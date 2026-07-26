@@ -59,7 +59,8 @@ class ReActLoopBoundaryTest {
             "weather-bot", PROVIDER, List.of("http_get"),
             List.of(), List.of(), List.of(),
             new Profile.Settings(maxIterations, 20),
-            Map.of()
+            Map.of(),
+            List.of()
         );
     }
 

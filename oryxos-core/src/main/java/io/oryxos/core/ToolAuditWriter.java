@@ -40,7 +40,11 @@ public interface ToolAuditWriter {
         String errorMessage,
         long durationMs,
         Instant startedAt,
-        int sessionIteration
+        int sessionIteration,
+        // --- US-4 Notify 扩展字段（T024）---
+        // notify 工具专用；其他工具为 null。广播场景下 channel 用 ";" 分隔。
+        String channel,
+        Integer notifyStatusCode
     ) {
         public ToolAuditData {
             // 不可变；null 视为空

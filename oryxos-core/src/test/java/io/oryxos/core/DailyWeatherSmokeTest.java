@@ -74,7 +74,8 @@ class DailyWeatherSmokeTest {
             "weather-bot", PROVIDER, tools,
             List.of(), List.of(), List.of(),
             new Profile.Settings(maxIterations, 20),
-            Map.of()
+            Map.of(),
+            List.of()
         );
     }
 
