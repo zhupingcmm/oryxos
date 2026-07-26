@@ -85,8 +85,8 @@ public class Mem0MemoryStore implements LongTermMemoryStore {
         this.httpClient = HttpClient.newBuilder().connectTimeout(this.timeout).build();
     }
 
-    /** 包级别可见的注入工厂（让测试能注入 WireMock URL）。 */
-    static Mem0MemoryStore forTest(
+    /** 测试可见的注入工厂（让 WireMock 测试能注入 baseUrl）。 */
+    public static Mem0MemoryStore forTest(
         MemoryEntryIndexRepository repo, ObjectMapper mapper, String baseUrl, int timeoutSeconds
     ) {
         return new Mem0MemoryStore(repo, mapper, baseUrl, timeoutSeconds);

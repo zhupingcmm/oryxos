@@ -79,9 +79,11 @@ class MarkdownMemoryStoreTest {
 
     @Test
     @DisplayName("C-MD-02 literal-keyword-match：recallByKeyword 按 content 字面子串匹配（大小写不敏感）")
-    void literal_substring_match_case_insensitive() {
+    void literal_substring_match_case_insensitive() throws InterruptedException {
         store.save(MemoryScope.CORE, "User prefers tabs over spaces", List.of());
+        Thread.sleep(5);
         store.save(MemoryScope.CORE, "Project uses Tabs indentation", List.of());
+        Thread.sleep(5);
         store.save(MemoryScope.CORE, "Build tool is Maven", List.of());
 
         List<MemoryEntry> hits = store.recallByKeyword("tabs", 10, null);
