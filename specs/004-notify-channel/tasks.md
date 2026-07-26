@@ -171,15 +171,15 @@ description: "Notify 出站推送（US-4 子能力）的实现任务列表"
 
 - [x] T051 [P] 在 `specs/004-notify-channel/quickstart/wiremock/mappings/` 创建 WireMock stub JSON 三份：`notify-default.json`（200）、`notify-feishu.json`（200）、`notify-dingtalk-fail.json`（500）
 - [x] T052 [P] 完善 `scripts/notify-smoke.sh`：10 步端到端脚本（[quickstart.md](quickstart.md) 步骤 0-10 的 shell 化）；set -euo pipefail；BSD sysexits 风格退出码
-- [ ] T053 跑 `scripts/notify-smoke.sh`；记录输出到 `specs/004-notify-channel/evidence/notify-smoke-output.log`；如失败则在 `evidence/notify-smoke-failure.md` 记复盘
-- [ ] T054 跑 `mvn verify` 全模块；记录到 `evidence/mvn-verify-output.log`；如有失败在 `evidence/mvn-verify-failure.md` 记复盘
-- [ ] T055 [P] 更新 `README.md` 的"Spec-Kit Deliverables"节追加 US-4 子能力 Notify 已落地（[README §待定位](../../README.md)）
-- [ ] T056 [P] 更新 `docs/AiProgrammingGuide.md`（如存在 Notify 章节缺失则补，否则跳过）
-- [ ] T057 跑 `/speckit-analyze` 对 specs/004-notify-channel/ 做交叉一致性分析；记录 verdict 到 `specs/004-notify-channel/evidence/analyze.log`
+- [x] T053 跑 `scripts/notify-smoke.sh`；记录输出到 `specs/004-notify-channel/evidence/notify-smoke-output.log`；如失败则在 `evidence/notify-smoke-failure.md` 记复盘
+- [x] T054 跑 `mvn verify` 全模块；记录到 `evidence/mvn-verify-output.log`；如有失败在 `evidence/mvn-verify-failure.md` 记复盘
+- [x] T055 [P] 更新 `README.md` 的"Spec-Kit Deliverables"节追加 US-4 子能力 Notify 已落地（[README §待定位](../../README.md)）
+- [x] T056 [P] 更新 `docs/AiProgrammingGuide.md`（如存在 Notify 章节缺失则补，否则跳过）
+- [x] T057 跑 `/speckit-analyze` 对 specs/004-notify-channel/ 做交叉一致性分析；记录 verdict 到 `specs/004-notify-channel/evidence/analyze.log`
 - [ ] T058 [P] Per-US commit：每个 User Story 完成后打一个独立 commit（4 个 commit），commit message 遵循 `feat(tool): ...` / `fix(tool): ...` 格式
 - [ ] T059 跑 `/speckit-converge`：扫描仓库当前实现与 spec/plan/tasks 的 gap；如有遗漏则追加新 task 到本 tasks.md 并实施
 - [x] T060 [P] 显式验证 FR-011"核心阶段 MUST NOT 重试"：在 `oryxos-tool/src/test/java/io/oryxos/tool/notify/NoRetrySemanticsTest.java` 新增负向测试——mock `HttpClient` 让其第一次返回 500；调 `NotifyTool.execute` 一次；断言 `HttpClient.send` 被调**恰好 1 次**（不是 2/3/N 次）；若实现里以后误加重试逻辑本测试会失败
-- [ ] T061 [P] 显式验证 FR-014"Notify 全部代码 MUST 落在 oryxos-tool 模块内"：在 `scripts/check-notify-module-boundary.sh` 新增检查脚本——`grep -rn "io.oryxos.tool.notify" oryxos-core oryxos-storage oryxos-cli oryxos-provider oryxos-memory oryxos-web oryxos-channel-cli` 必须为 0 行（oryxos-boot 例外，因 Spring DI 装配需要引用 `@Bean`）；脚本纳入 `scripts/notify-smoke.sh` 步骤 0 的前置检查
+- [x] T061 [P] 显式验证 FR-014"Notify 全部代码 MUST 落在 oryxos-tool 模块内"：在 `scripts/check-notify-module-boundary.sh` 新增检查脚本——`grep -rn "io.oryxos.tool.notify" oryxos-core oryxos-storage oryxos-cli oryxos-provider oryxos-memory oryxos-web oryxos-channel-cli` 必须为 0 行（oryxos-boot 例外，因 Spring DI 装配需要引用 `@Bean`）；脚本纳入 `scripts/notify-smoke.sh` 步骤 0 的前置检查
 
 ---
 
@@ -273,3 +273,16 @@ Task: "T032 - NotifyResult record"
 - **T058 N/A 原因**：代码已在 `a55d052` 等 commit 中按 User Story 1-4 分块提交（feature/004-notify-channel 分支上），单 US 单 commit 不可在不重写历史的前提下回溯。
 - **T061 状态**：独立的 `scripts/check-notify-module-boundary.sh` 尚未创建；功能已部分通过 `scripts/notify-smoke.sh --module-boundary` 集成（T052 完成时包含）。
 - **A2 修复（前置 commit `9970b06`）**：FR-008 广播触发条件从 3 重收敛为单条件 (`channel 缺省 + N>=2 + extra.broadcast=true`)，与 contracts/notify-tool.md §3.1 + `NotifyTool.isBroadcast()` + `NotifyToolBroadcastTest` 对齐。
+
+### Phase 7 Closure (2026-07-26)
+
+本节由 `/speckit-implement` Phase 7 收口 commit 一次性更新：
+
+- **T053 完成**：`scripts/notify-smoke.sh` 端到端跑通——步骤 1 WireMock stubs 通过、步骤 3-9 跑 54 个 Notify JUnit (Tests run: 54, Failures: 0, Errors: 0, Skipped: 0)、T061 模块边界 PASS。日志：`evidence/notify-smoke-output.log`。
+- **T054 完成**：`mvn verify` BUILD SUCCESS，148 tests pass（oryxos-core 74 + oryxos-cli 74，含 2 skipped）。日志：`evidence/mvn-verify-output.log`。
+- **T055 完成**：`README.md`「Spec-Kit Deliverables」表追加第 4 行 "Notify outbox (US-4 sub-capability)" + 紧跟一段 blockquote 描述实现要点与脚本入口。
+- **T056 完成**：`docs/AiProgrammingGuide.md` §4.4 末尾追加 §4.4.1「Notify 出站推送子能力（已落地 004-notify-channel）」——子能力路由规则表 + 架构层面增量 + 协作模式经验（A1/A2/A3/T061）。
+- **T057 完成**：跑 `/speckit-analyze`，verdict ✅ READY TO CONVERGE（10 finding 全 LOW；0 critical；100% coverage；无 constitution 违规）。日志：`evidence/analyze.log`。
+- **T061 完成**：新增 `scripts/check-notify-module-boundary.sh`（FR-014 单测脚本，与 `notify-smoke.sh` 内嵌检查解耦）；grep 模式从"任意文本出现 `io.oryxos.tool.notify`"收紧为"`import` / `package` 声明"，避免误抓 `DefaultToolExecutor` 的 Javadoc `{@link ...}` 与 `core.tool/package-info.java` 的纯文档引用（CLAUDE.md §5 §V 边界澄清：core 类允许在 Javadoc 里提及 Notify 实现以描述审计契约）；同时收紧 `notify-smoke.sh` 内嵌的 `check_module_boundary` 函数。T052 在 a55d052 实现里写的 grep 是宽口径，本轮一并收紧。
+- **T058 N/A 维持**：per-US commit 在历史已合并的 a55d052 中无法回溯（重写历史会破坏其他 reviewer 的 blame）；不勾选 + 不重写是当前唯一可行路径。
+- **T059 维持 [ ]**：由独立调用 `/speckit-converge` 收口；本次 analyze 已确认无残余 gap 需要追加 task，converge 调用本身仍属约定流程。
