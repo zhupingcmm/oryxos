@@ -67,21 +67,18 @@ public interface MemoryEntryRepository extends JpaRepository<MemoryEntryEntity, 
     List<MemoryEntryEntity> findByTag(@Param("tag") String tag, Pageable pageable);
 
     /**
-     * archive lazy trim（research R-06）：保留最新 maxEntries 条；其余按 created_at ASC 删除。
-     * 在同一 @Transactional 内（C-SQ-08 数据一致性）。
+     * archive lazy trim 查 oldest IDs（research R-06）：保留最新 maxEntries 条；其余按 created_at ASC 删最旧。
+     * 调用方拿 IDs 后用 EntityManager.remove（同一事务内原子删除 —— C-SQ-08）。
+     * 用 {@code LOWER(scope) = 'archive'} 而不是字面 {@code 'archive'} —— DB 存的是枚举名大写（{@code ARCHIVE}），
+     * H2 默认 case-sensitive 比较，literal lowercase 永远 0 行。
      */
-    @Modifying
     @Query(value = """
-        DELETE FROM agent_memories
-        WHERE scope = 'archive'
-          AND id NOT IN (
-            SELECT id FROM agent_memories
-            WHERE scope = 'archive'
-            ORDER BY created_at DESC
-            LIMIT :maxEntries
-          )
+        SELECT id FROM agent_memories
+        WHERE LOWER(scope) = 'archive'
+        ORDER BY created_at ASC
+        LIMIT :toDelete
         """, nativeQuery = true)
-    int trimArchive(@Param("maxEntries") int maxEntries);
+    List<String> findOldestArchiveIds(@Param("toDelete") int toDelete);
 
     /**
      * 统计指定 scope 的总条数（trim 触发判断 + 审计用）。
