@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/hook/default"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "body": "{\"errcode\":0,\"errmsg\":\"ok\"}"
+  }
+}

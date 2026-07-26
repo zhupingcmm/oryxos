@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/hook/dingtalk-fail"
+  },
+  "response": {
+    "status": 500,
+    "headers": { "Content-Type": "application/json" },
+    "body": "{\"errcode\":50000,\"errmsg\":\"internal error\"}"
+  }
+}
