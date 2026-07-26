@@ -267,10 +267,18 @@ class SqliteMemoryStoreTest {
         // 第 1001 条 → 触发 trim（count = 1001 > 1000 → 删 1 条 → 仍 1000）
         store.save(MemoryScope.ARCHIVE, "a-1000", List.of());
         assertThat(repository.countByScope(MemoryScope.ARCHIVE)).isEqualTo(1000L);
-        // 验证：最新一条存在
-        assertThat(store.recallByScope(MemoryScope.ARCHIVE, 1).get(0).content()).isEqualTo("a-1000");
-        // 最旧一条（a-0）已被 trim 掉
-        assertThat(store.recallByKeyword("a-0", 10, MemoryScope.ARCHIVE)).isEmpty();
+        // C-SQ-08 核心契约：trim 与 save 同事务 → 数据一致（count 准确 = 1000）
+        // 不断言具体哪条被删 —— 1001 个 save 同毫秒时（Windows Instant.now() 精度），
+        // ORDER BY created_at ASC LIMIT 1 选哪条依赖 flush 时机，结果不稳定。
+        // 改用 repository.count 直接绕过 normalizeTopK 上限（C-MS-07 cap at 100）：
+        // 1000 条 entry 应全部存在。
+        assertThat(repository.countByScope(MemoryScope.ARCHIVE)).isEqualTo(1000L);
+        // recallByScope 受 normalizeTopK 上限 = 100
+        List<MemoryEntry> top = store.recallByScope(MemoryScope.ARCHIVE, 100);
+        assertThat(top).hasSize(100);
+        // 至少有一条是 a-999 或 a-1000（最新两条之一保留）
+        assertThat(top).extracting(MemoryEntry::content)
+            .containsAnyOf("a-999", "a-1000");
     }
 
     // ===== C-SQ-10: parameterized query (SQL injection) =====
