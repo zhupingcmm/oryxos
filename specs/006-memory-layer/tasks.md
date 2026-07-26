@@ -84,15 +84,15 @@ description: "Task list for Memory layer implementation (006-memory-layer)"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T020 [P] [US2] 契约测试 `oryxos-memory/src/test/java/io/oryxos/memory/backend/MarkdownMemoryStoreTest.java`：覆盖 9 条 C-MD 条款（[contracts/markdown-backend.md §3](./contracts/markdown-backend.md)）：append-mode / literal-keyword-match / empty-query / atomic-move / sync-serialization / tags-informational / lenient-recovery / archive-no-trim / core-1000-records
-- [ ] T021 [P] [US2] 契约测试 `oryxos-memory/src/test/java/io/oryxos/memory/backend/MarkdownFileStructureTest.java`：验证文件结构契约（[contracts/markdown-backend.md §2](./contracts/markdown-backend.md)）：含 `# MEMORY` 顶层标题 + `## Core` / `## Archive` 两段；行格式 `- [<ISO-8601>] [<UUID>] <content> [#tags=tag1,tag2]`
+- [X] T020 [P] [US2] 契约测试 `oryxos-memory/src/test/java/io/oryxos/memory/backend/MarkdownMemoryStoreTest.java`：覆盖 9 条 C-MD 条款（[contracts/markdown-backend.md §3](./contracts/markdown-backend.md)）：append-mode / literal-keyword-match / empty-query / atomic-move / sync-serialization / tags-informational / lenient-recovery / archive-no-trim / core-1000-records
+- [X] T021 [P] [US2] 契约测试 `oryxos-memory/src/test/java/io/oryxos/memory/backend/MarkdownFileStructureTest.java`：验证文件结构契约（[contracts/markdown-backend.md §2](./contracts/markdown-backend.md)）：含 `# MEMORY` 顶层标题 + `## Core` / `## Archive` 两段；行格式 `- [<ISO-8601>] [<UUID>] <content> [#tags=tag1,tag2]`
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] 验证或创建 `MarkdownMemoryStore` `@Component("markdownMemoryStore")` `oryxos-memory/src/main/java/io/oryxos/memory/backend/MarkdownMemoryStore.java`（[contracts/markdown-backend.md §1](./contracts/markdown-backend.md)）：实现 `LongTermMemoryStore` 6 个方法；构造器注入 `@Value("${oryxos.memory.markdown.path:.oryxos/memory/MEMORY.md}")`；`synchronized (writeLock)` 块串行化写；`Files.move(tmp, target, ATOMIC_MOVE)` 写文件（research R-04）
-- [ ] T023 [P] [US2] 实现 `MarkdownMemoryStore.formatLine` / `appendLine` / `parseSection` 私有方法：`formatLine(entryId, scope, content, tags, createdAt)` 生成行格式；`appendLine(scope, line)` 读全文 + 找段尾 + append + 写回；`parseSection(scope)` 读全文解析为 List<MemoryEntry>（按 created_at DESC 排序）
-- [ ] T024 [P] [US2] 集成测试 `oryxos-memory/src/test/java/io/oryxos/memory/backend/integration/MarkdownBackendIT.java`：使用 `@SpringBootTest` + 真实文件系统（tmp 目录）；场景 2（[quickstart.md §场景 2](./quickstart.md)）：save 3 条 → 读全文验证含 ## Core + ## Archive 两段 + 3 行；手动删除 ## Core → save 1 条 → 文件重建 ## Core 段（C-MD-08）；N=10 线程并发 save 100 次 → 最终 100 行（C-MD-06）
-- [ ] T025 [P] [US2] 在 `oryxos-boot/src/main/resources/application.yaml` 设置默认 `oryxos.memory.backend: markdown`（[research R-08](./research.md)）+ 默认 markdown.path / mem0.base-url / archive.max-entries 配置
+- [X] T022 [P] [US2] 验证或创建 `MarkdownMemoryStore` `@Component("markdownMemoryStore")` `oryxos-memory/src/main/java/io/oryxos/memory/backend/MarkdownMemoryStore.java`（[contracts/markdown-backend.md §1](./contracts/markdown-backend.md)）：实现 `LongTermMemoryStore` 6 个方法；构造器注入 `@Value("${oryxos.memory.markdown.path:.oryxos/memory/MEMORY.md}")`；`synchronized (writeLock)` 块串行化写；`Files.move(tmp, target, ATOMIC_MOVE)` 写文件（research R-04）
+- [X] T023 [P] [US2] 实现 `MarkdownMemoryStore.formatLine` / `appendLine` / `parseSection` 私有方法：`formatLine(entryId, scope, content, tags, createdAt)` 生成行格式；`appendLine(scope, line)` 读全文 + 找段尾 + append + 写回；`parseSection(scope)` 读全文解析为 List<MemoryEntry>（按 created_at DESC 排序）
+- [X] T024 [P] [US2] 集成测试 `oryxos-memory/src/test/java/io/oryxos/memory/backend/integration/MarkdownBackendIT.java`：使用 `@SpringBootTest` + 真实文件系统（tmp 目录）；场景 2（[quickstart.md §场景 2](./quickstart.md)）：save 3 条 → 读全文验证含 ## Core + ## Archive 两段 + 3 行；手动删除 ## Core → save 1 条 → 文件重建 ## Core 段（C-MD-08）；N=10 线程并发 save 100 次 → 最终 100 行（C-MD-06）
+- [X] T025 [P] [US2] 在 `oryxos-boot/src/main/resources/application.yaml` 设置默认 `oryxos.memory.backend: markdown`（[research R-08](./research.md)）+ 默认 markdown.path / mem0.base-url / archive.max-entries 配置
 
 **Checkpoint**：至此 Markdown 后端完整可独立测试；User Story 2 满足 SC-005 + FR-004 + FR-005 + 9 条 C-MD 条款。
 

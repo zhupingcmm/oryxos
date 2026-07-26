@@ -76,6 +76,21 @@ oryxos:
         temperature: 0.5
   memory:
     backend: markdown   # markdown | sqlite | mem0
+    markdown:
+      # MarkdownMemoryStore 文件路径（[contracts/markdown-backend.md §2](../../specs/006-memory-layer/contracts/markdown-backend.md)）。
+      # 相对路径相对 working dir；绝对路径直写。占位符 ${ORYXOS_WORKSPACE:./.oryxos}
+      # 是项目工作区默认位置。
+      path: ${ORYXOS_WORKSPACE:./.oryxos}/memory/MEMORY.md
+      # C-MD-09 archive 不主动 trim —— 此字段仅用于诊断输出，**不**触发裁剪。
+      # Markdown 后端契约上 MUST NOT 做 archive 容量裁剪；core 永不被截断。
+      max-entries: 100000
+    # 以下为预留后端配置（US-3/US-4 扩展阶段启用，核心阶段不装配）。
+    # sqlite:
+    #   jdbc-url: jdbc:sqlite:${ORYXOS_WORKSPACE:./.oryxos}/oryxos.db
+    #   archive-trim-threshold: 5000
+    # mem0:
+    #   endpoint: http://localhost:8000
+    #   api-key: ${MEM0_API_KEY}
   tool:
     sandbox:
       file:

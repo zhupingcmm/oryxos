@@ -56,8 +56,9 @@ public class MarkdownMemoryStore implements LongTermMemoryStore {
     private static final Pattern LINE_PATTERN = Pattern.compile(
         "^-\\s+\\[([^\\]]+)\\]\\s+\\[([^\\]]+)\\]\\s+(.*?)(?:\\s+\\[#tags=(.*?)\\])?\\s*$");
 
-    /** 段标题识别。 */
-    private static final Pattern SECTION_PATTERN = Pattern.compile("^##\\s+(core|archive)\\s*$");
+    /** 段标题识别 —— 大小写不敏感（契约文件结构用 `## Core` / `## Archive` 首字母大写）。 */
+    private static final Pattern SECTION_PATTERN = Pattern.compile(
+        "^##\\s+(?i:(core|archive))\\s*$");
 
     /** 文件路径 —— 非 final 以支持测试 setFilePathForTest 重绑（005-tool-system 集成测试用）。 */
     private Path filePath;
@@ -108,11 +109,23 @@ public class MarkdownMemoryStore implements LongTermMemoryStore {
             try {
                 Files.createDirectories(filePath.getParent());
                 if (Files.notExists(filePath)) {
-                    Files.writeString(filePath, "# MEMORY\n\n## core\n\n## archive\n",
+                    // 契约 §2 文件结构：# MEMORY + ## Core + ## Archive
+                    Files.writeString(filePath, "# MEMORY\n\n## Core\n\n## Archive\n",
                         StandardCharsets.UTF_8);
                 }
                 List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
                 int sectionStart = findSectionStart(lines, scope);
+                boolean needReinsertHeader = (sectionStart == lines.size());
+                if (needReinsertHeader) {
+                    // C-MD-08 lenient-recovery：段被外部删了 → 重建段头在末尾
+                    String header = "## " + scope.name();
+                    if (!lines.isEmpty() && !lines.get(lines.size() - 1).isEmpty()) {
+                        lines.add(""); // 段标题前留一个空行
+                    }
+                    lines.add(header);
+                    lines.add(""); // 段标题后留空行
+                    sectionStart = lines.size() - 2; // 段标题所在行
+                }
                 int sectionEnd = findSectionEnd(lines, sectionStart, scope);
                 List<String> updated = new ArrayList<>(lines);
                 updated.add(sectionEnd, line);
@@ -142,8 +155,12 @@ public class MarkdownMemoryStore implements LongTermMemoryStore {
                 hits.add(e);
             }
         }
-        // 按 createdAt DESC（C-MS-07 / FR-006）
-        hits.sort((a, b) -> b.createdAt().compareTo(a.createdAt()));
+        // 按 createdAt DESC（C-MS-07 / FR-006）；id 作 tiebreaker 避免同毫秒乱序
+        //（Windows Instant.now() 精度仅毫秒，连续 save 会出现同 createdAt）
+        hits.sort((a, b) -> {
+            int c = b.createdAt().compareTo(a.createdAt());
+            return c != 0 ? c : b.id().compareTo(a.id());
+        });
         if (hits.size() > limit) {
             return hits.subList(0, limit);
         }
@@ -161,7 +178,10 @@ public class MarkdownMemoryStore implements LongTermMemoryStore {
         for (MemoryEntry e : all) {
             if (e.scope() == scope) hits.add(e);
         }
-        hits.sort((a, b) -> b.createdAt().compareTo(a.createdAt()));
+        hits.sort((a, b) -> {
+            int c = b.createdAt().compareTo(a.createdAt());
+            return c != 0 ? c : b.id().compareTo(a.id());
+        });
         if (hits.size() > limit) {
             return hits.subList(0, limit);
         }
@@ -358,7 +378,10 @@ public class MarkdownMemoryStore implements LongTermMemoryStore {
                     result.add(p.toEntry(currentScope));
                 }
             }
-            result.sort((a, b) -> b.createdAt().compareTo(a.createdAt()));
+            result.sort((a, b) -> {
+                int c = b.createdAt().compareTo(a.createdAt());
+                return c != 0 ? c : b.id().compareTo(a.id());
+            });
             return result;
         }
     }
