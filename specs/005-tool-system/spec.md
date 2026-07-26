@@ -99,7 +99,7 @@ Agent 跑完一次任务后由 LLM 在最后一步调 `notify(content, channel?)
 ### 边界情况
 
 - **Tool 调用超时**（HTTP 5 秒 / shell 30 秒等）：到时间后 `ToolExecutor` 强制中断，ToolResult.success=false，errorMessage="timeout"，**并且** 审计行写入 timeout 分类，duration_ms 为实际等待时间。
-- **Tool 调用被中断**（Agent 循环达到 `MAX_ITERATIONS` 上限）：在途 Tool 调用仍走完（不强制 kill），但结果不再返回给 LLM；审计行正常写入但标注 `orphaned=true`。
+- **Tool 调用被中断**（Agent 循环达到 `MAX_ITERATIONS` 上限）：核心阶段未实现"在途 Tool 强制 kill"语义；`MAX_ITERATIONS` 只控制 ReAct 主循环的迭代次数，**不**影响已发起的 Tool 调用。该边界情况放扩展阶段跟踪。
 - **同一个 Profile 配了 20 个 Tool**：LLM 列出 Tool schema 时返回全部 20 个；不做截断（宪法 §IV 的 function-calling schema 必须完整，截断会让 LLM 误判工具可用性）。
 - **Tool schema 冲突**（两个 Tool 同名）：启动期 `ToolRegistry` 检测冲突并抛 `IllegalStateException`，Spring Boot 启动失败（fail-fast，不静默选一个）。
 - **Tool 实现持有外部连接**（数据库连接池、HTTP 客户端）：Tool 自身负责连接生命周期；Agent OS 不提供连接池（核心阶段不引入 Tool-as-a-Service 抽象）。
@@ -124,7 +124,7 @@ Agent 跑完一次任务后由 LLM 在最后一步调 `notify(content, channel?)
   - `save_memory` / `recall_memory`（Memory 工具，由 [specs/003-cli-commands](003-cli-commands/spec.md) 描述）
 - **FR-004**：所有 Tool 在执行副作用前 MUST 调用 `Sandbox.enforce(SandboxAction)`（[CLAUDE.md §9.4](../CLAUDE.md)）；未通过 MUST 抛 `SandboxViolationException`，由 `ToolExecutor` 包装为 ToolResult.success=false 返回给 LLM，**绝不**让越界副作用落到真实环境。
 - **FR-005**：每次 Tool 调用 MUST 在 `tool_invocations` 表里落一行审计（宪法 §VI）；审计字段 MUST 包含 `tool_name` / `success` / `duration_ms` / `error_message?` / `channel?`（仅 notify）/ `source`（`builtin` / `mcp` / `java_bean` 三选一）。
-- **FR-006**：Function Calling schema MUST 由 Spring AI 的 `@Tool` 注解生成（宪法 §IV —— 只用 Spring AI 的 schema 生成能力，**不**用其自动执行能力）。
+- **FR-006**：Function Calling schema MUST 由 `ToolRegistrySchemaAdapter`（位于 `oryxos-core`）从 `ToolRegistry` 手动物化为 OpenAI Function Calling JSON 格式（`{type:"function", function:{name, description, parameters}}`）。遵循宪法 §IV —— 只用协议转换（构造 schema），**不**用 Spring AI 的自动执行能力（避免 tool 被调两次，[CLAUDE.md §8 坑 #1](../CLAUDE.md)）。schema 物化在 Spring Boot 启动期完成（与 NFR-003 一致）。
 - **FR-007**：Spring AI 的自动 Tool 执行 MUST 被禁用（宪法 §IV）；Tool 调度 MUST 完全由 `ReActLoop` + `ToolExecutor` 控制。**症状**：若违反则同一 Tool 被调两次。
 - **FR-008**：系统 MUST 支持三档 Tool 接入（宪法 §V）：
   1. **零代码**：`AGENT.md` + `SKILL.md` + MCP server config（无需 Java 代码）。
@@ -134,7 +134,7 @@ Agent 跑完一次任务后由 LLM 在最后一步调 `notify(content, channel?)
 - **FR-010**：Notify 出站 MUST 通过 `NotifyChannelAdapter` 接口实现；核心阶段唯一实现是 `WebhookNotifyAdapter`（基于 HTTP POST + JSON payload，覆盖企业微信 / 飞书 / 钉钉群机器人通用 webhook 形态）。Notify 的全部契约见 [specs/004-notify-channel](004-notify-channel/spec.md)。
 - **FR-011**：Profile MUST 通过 `tools: [string]` 字段限定该 Agent 可用的 Tool 列表；未列入的 Tool MUST NOT 出现在 PromptBuilder 的可用 Tool 列表里，LLM 看不到也调不到。
 - **FR-012**：Tool 调用失败 MUST 以 `ToolResult.success=false, errorMessage=<原因>` 的形式返回给 LLM，**不**抛 RuntimeException 到 ReAct 主循环（保留 LLM 决策权）。
-- **FR-013**：Tool 相关代码 MUST 全部落在 `oryxos-tool` 模块（宪法 §I / §V）；**不**拆出 `builtin-tools` / `skill-tools` / `mcp-tools` 子模块。
+- **FR-013**：Tool **实现**（具体 Tool、适配器、SDK 包装、Notify 适配器、Sandbox 实现）MUST 全部落在 `oryxos-tool` 模块（宪法 §I / §V）；**不**拆出 `builtin-tools` / `skill-tools` / `mcp-tools` 子模块。Tool **抽象**（`OryxTool` 接口、`ToolRegistry` / `ToolRegistration` / `ToolDefinition` 门面、`ToolExecutor` 派发接口、`ToolRegistrySchemaAdapter` schema 物化）MAY 落在 `oryxos-core` —— 判定标准：该类被 `ReActLoop` / `PromptBuilder` / `DefaultToolExecutor` 直接 import 当 API 消费。本边界是 [CLAUDE.md §5 "§V 边界澄清"](../CLAUDE.md) 的硬约束，不是 §V 的宽松解读。
 - **FR-014**：Tool 调度 MUST 配合 `MAX_ITERATIONS`（默认 10，[CLAUDE.md §9.1](../CLAUDE.md)）；同一时刻只跑一个 Tool（串行语义）；不并发触发同一 Profile 内的多个 Tool。
 - **FR-015**：Tool 注册表 MUST 在启动期检测 Tool name 冲突；冲突时 MUST 抛 `IllegalStateException` 并阻止 Spring Boot 启动（fail-fast）。
 
@@ -207,4 +207,3 @@ Agent 跑完一次任务后由 LLM 在最后一步调 `notify(content, channel?)
 - ❌ 多租户级别的 Tool 配额 / 限流 —— 宪法 §II 明示放扩展阶段
 - ❌ Notify 之外的非 Tool 通道（SMTP / Slack native / Teams native / 短信）—— [specs/004-notify-channel](004-notify-channel/spec.md) §"不在范围内"已明确
 - ❌ Tool 调用在分布式集群下的协同 —— 扩展阶段
-
