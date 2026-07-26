@@ -53,10 +53,10 @@ class ToolRegistryTest {
         OryxTool toolA = new Alpha();
         OryxTool toolB = new Beta();
 
-        ToolRegistry registry = ToolRegistry.of(Map.of(
-            "alpha", new ToolRegistration(defA, toolA, "alphaBean"),
-            "beta", new ToolRegistration(defB, toolB, "betaBean")
-        ));
+        java.util.LinkedHashMap<String, ToolRegistration> orderedMap = new java.util.LinkedHashMap<>();
+        orderedMap.put("alpha", new ToolRegistration(defA, toolA, "alphaBean"));
+        orderedMap.put("beta",  new ToolRegistration(defB, toolB, "betaBean"));
+        ToolRegistry registry = ToolRegistry.of(orderedMap);
 
         assertThat(registry.names()).containsExactly("alpha", "beta");
         assertThat(registry.size()).isEqualTo(2);

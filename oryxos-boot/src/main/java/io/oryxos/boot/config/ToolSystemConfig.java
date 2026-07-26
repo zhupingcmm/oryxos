@@ -3,6 +3,8 @@ package io.oryxos.boot.config;
 import io.oryxos.core.tool.ToolDefinition;
 import io.oryxos.core.tool.ToolRegistration;
 import io.oryxos.core.tool.ToolRegistry;
+import io.oryxos.core.tool.ToolRegistrySchemaAdapter;
+import io.oryxos.core.ToolSchemaProvider;
 import io.oryxos.memory.MemoryService;
 import io.oryxos.tool.file.FileListTool;
 import io.oryxos.tool.file.FileReadTool;
@@ -157,5 +159,17 @@ public class ToolSystemConfig {
     private static void put(Map<String, ToolRegistration> map, ToolRegistration reg) {
         if (reg == null) return;
         map.put(reg.definition().name(), reg);
+    }
+
+    /**
+     * 真实 {@link ToolSchemaProvider} 实现 —— 从 {@link ToolRegistry} 抽取 Profile 可见 Tool
+     * 的 Function Calling schema（spec FR-011 / US-5 场景 2 + [CLAUDE.md §V 边界澄清]）。
+     *
+     * <p>{@code @Primary} 覆盖 {@code PromptBuilderConfig.toolSchemaProvider()} 的 Noop 实现。
+     */
+    @Bean
+    @Primary
+    public ToolSchemaProvider toolSchemaProvider(ToolRegistry registry) {
+        return new ToolRegistrySchemaAdapter(registry);
     }
 }
