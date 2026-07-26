@@ -76,7 +76,7 @@ Notify 的每次 HTTP 出站请求都必须先过 [CLAUDE.md §9.4](../CLAUDE.md
 2. **假设** Profile 配 3 条 channel，1 条返回 500，**当** LLM 调"广播"语义，**那么** 2 条成功、1 条失败，`ToolResult.success=true` 但 `errorMessage` 列出失败通道与状态码，3 条审计行分别记 success / failure。
 3. **假设** Profile 配 3 条 channel，全部失败（连接超时 / DNS 失败 / 5xx），**当** LLM 调"广播"语义，**那么** `ToolResult.success=false`，3 条审计行 `success=false`，LLM 收到错误明细后可重试或放弃。
 
-> **设计取舍说明**（P3 假设，已在"假设"第 7 条固化）：核心阶段"广播"语义不引入新参数；P3 由 Profile 同时配 `channel="default"` 之外的 N 条 channel 触发，**只要 LLM 不显式指定 channel，就视为对所有已配 channel 广播**。显式指定 channel 时严格路由到单条。该取舍需在 plan 阶段用契约文档固化。
+> **设计取舍说明**（P3 假设，已在"假设"第 7 条固化）：核心阶段"广播"语义不引入新的 LLM 视角参数；P3 由 `Profile.extra.broadcast=true`（Profile 层显式声明）触发 + LLM 不传 `channel` 同时满足时，**并行**发到全部已配 N 条通道（聚合语义见 [notify-tool.md §4.4-4.6](contracts/notify-tool.md)）。显式指定 channel 时严格路由到单条（不走广播路径）；未声明 `broadcast=true` 时走 FR-006 单通道路由表。该取舍已在 [contracts/notify-tool.md §3.1](contracts/notify-tool.md) 固化。
 
 ---
 
@@ -108,7 +108,9 @@ Notify 的每次 HTTP 出站请求都必须先过 [CLAUDE.md §9.4](../CLAUDE.md
   3. 若不存在 `default` 通道且 Profile 配了 N=0 条 → `ToolResult.success=false, errorMessage="profile 未配置 notify_channels"`
   4. 若不存在 `default` 通道且 Profile 配了 N>1 条 → `ToolResult.success=false, errorMessage="channel 不能省略: profile 配了 N 条通道（无 default）"`（**MVP 显式降级**，详见 C2 修复说明 + 用户故事 4 设计取舍）
 - **FR-007**：当 LLM 显式指定 `channel="<name>"` 且 `<name>` 不在 Profile 的 `notify_channels` 中时，系统 MUST 返回 `ToolResult.success=false, errorMessage="未知通道: <name>"`，且 MUST NOT 发起任何 HTTP 请求。
-- **FR-008**：**广播语义仅在 US-4（多通道并发与部分失败，P3）落地**。MVP 阶段（US-1）的 FR-006 第 4 条把"无 default + N>1"显式降级为"必须显式指定 channel"。US-4 的广播触发条件（最终 spec 阶段将固化为契约）= LLM 不显式指定 `channel` **且** Profile 含名为 `default` 的通道 **且** Profile 同时配了 N≥2 条通道时，由 Profile 层显式声明 `broadcast: true` 开启广播；否则走 FR-006 单通道路径。
+- **FR-008**：**广播语义仅在 US-4（多通道并发与部分失败，P3）落地**。MVP 阶段（US-1）的 FR-006 第 4 条把"无 default + N>1"显式降级为"必须显式指定 channel"。US-4 的广播触发条件（已固化为契约，详见 [contracts/notify-tool.md §3.1](contracts/notify-tool.md)）= **LLM 不显式指定 `channel`** **且** **Profile 同时配了 N≥2 条通道** **且** **`Profile.extra.broadcast=true`**（由 Profile 层显式声明）三个条件 **同时** 满足时，并行发到全部 N 条通道；任一条件不满足则走 FR-006 单通道路径。
+
+  > **关于命名 "default" 的约定**：Profile 内某条通道的 `name` 字段叫 `default` **仅是命名约定**（便于 LLM/审计员识别"默认通道"），并非广播触发条件 —— 广播触发条件只看 `extra.broadcast=true` 是否显式设置，与是否存在 `default` 命名通道无关。详见 [contracts/channel-config.md §5.2](contracts/channel-config.md)。
 - **FR-009**：Notify 调用 MUST 复用既有的 `tool_invocations` 审计路径（Constitution §VI，不新增审计表）；审计行 MUST 包含 `tool_name='notify'`、`success` 布尔、`duration_ms` 数值，**以及**新增的 `channel` 字段与 `notify_status_code` 字段（HTTP 状态码；网络失败时为 `null`）。
 - **FR-010**：HTTP 状态码 < 200 或 >= 300 MUST 视为该通道发送失败；失败明细（status code、响应体前 256 字节）写入 `tool_invocations.error_message`。
 - **FR-011**：核心阶段 MUST NOT 在 Notify 调用失败时自动重试；失败立即作为 tool 错误返回给 LLM，让 LLM 决定重试或放弃（Demo-First 原则，避免无限循环）。
