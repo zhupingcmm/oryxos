@@ -2,7 +2,10 @@ package io.oryxos.cli;
 
 import io.oryxos.cli.command.ChatCommand;
 import io.oryxos.cli.command.GatewayCommand;
+import io.oryxos.cli.command.InitCommand;
+import io.oryxos.cli.command.ProfileCommand;
 import io.oryxos.cli.command.ServeCommand;
+import io.oryxos.cli.command.StatusCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -14,7 +17,7 @@ import picocli.CommandLine.Option;
  * {@link CommandLine} registry. Subcommands are grouped into:
  * <ul>
  *   <li><strong>Zero-Spring</strong> — registered statically here
- *       ({@code init}, {@code status}, {@code serve}, {@code gateway}).
+ *       ({@code init}, {@code status}, {@code profile ...}).
  *       They never boot a Spring context, per FR-011.</li>
  *   <li><strong>Spring-required</strong> — registered dynamically after
  *       Spring boots via {@code BootCommandLineRegistrar}
@@ -22,12 +25,12 @@ import picocli.CommandLine.Option;
  *       {@code session list}). Per FR-012.</li>
  * </ul>
  *
- * <p>{@code ProfileCommand} is added in its own phase (US-3, T033) so is
- * not listed in {@code subcommands} here yet — Picocli requires the class
- * to exist at registration time.
+ * <p>The must-Spring commands ({@code chat}, {@code serve}, {@code gateway})
+ * are also listed statically so {@code --help} can render without booting
+ * Spring — Spring is only booted by their {@code runBody} on actual invocation.
  *
  * <p>Run with: {@code mvn -pl oryxos-cli exec:java} (after a parent
- * {@code mvn install}), or {@code java -cp <classpath> io.oryxos.cli.OryxOsCli}.
+ * {@code mvn install}), or {@code java -jar oryxos-cli/target/oryxos-cli-*.jar}.
  */
 @Command(
     name = "oryxos",
@@ -35,19 +38,21 @@ import picocli.CommandLine.Option;
     version = "OryxOS 1.0.0-SNAPSHOT",
     description = "OryxOS — Enterprise Agent OS runtime kernel CLI",
     subcommands = {
-        // US-2 (P2): init + status — zero-Spring
-        // InitCommand.class,
-        // StatusCommand.class,
+        // US-2 (P2) init + status — zero-Spring (FR-011)
+        InitCommand.class,
+        StatusCommand.class,
+        // US-3 (P3) profile (list/show/create/delete) — zero-Spring (FR-005/011)
+        ProfileCommand.class,
         // US-1 (P1) chat — must-Spring, statically listed so --help shows it
         // without booting the Spring context (Spring is only booted by
         // ChatCommand#runBody on actual invocation).
         ChatCommand.class,
-        // US-5 stub
+        // US-5 stubs
         ServeCommand.class,
         GatewayCommand.class,
-        // US-3 (P3) profile/provider/tool/session: registered dynamically
-        // by BootCommandLineRegistrar (T013) after Spring boots, or
-        // statically once their classes land.
+        // US-3 Spring-required leaf commands registered dynamically by
+        // BootCommandLineRegistrar (T013) after Spring boots:
+        // ProviderListCommand / ToolListCommand / SessionListCommand.
     }
 )
 public class OryxOsCli implements Runnable {

@@ -16,11 +16,23 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_ROOT}"
 
 # Locate the CLI jar (built artifact). Skip the build if it's missing.
-JAR="${JAR:-$(ls -1 oryxos-cli/target/oryxos-cli-*.jar 2>/dev/null | grep -v '\\-sources' | grep -v '\\-javadoc' | head -1 || true)}"
+# Store as ABSOLUTE path (resolved against REPO_ROOT) so it survives later
+# `cd "${WORK}/project"` which would break any relative-path `java -jar`.
+JAR_REL="${JAR:-$(ls -1 oryxos-cli/target/oryxos-cli-*.jar 2>/dev/null | grep -v '\\-sources' | grep -v '\\-javadoc' | head -1 || true)}"
+if [[ -n "${JAR_REL}" && ! "${JAR_REL}" = /* ]]; then
+  JAR="${REPO_ROOT}/${JAR_REL}"
+else
+  JAR="${JAR_REL}"
+fi
 if [[ -z "${JAR}" || ! -f "${JAR}" ]]; then
   echo "Building CLI jar..."
   mvn -pl oryxos-cli -am package -DskipTests -q
-  JAR="$(ls -1 oryxos-cli/target/oryxos-cli-*.jar 2>/dev/null | grep -v '\\-sources' | grep -v '\\-javadoc' | head -1)"
+  JAR_REL="$(ls -1 oryxos-cli/target/oryxos-cli-*.jar 2>/dev/null | grep -v '\\-sources' | grep -v '\\-javadoc' | head -1 || true)"
+  if [[ -n "${JAR_REL}" && ! "${JAR_REL}" = /* ]]; then
+    JAR="${REPO_ROOT}/${JAR_REL}"
+  else
+    JAR="${JAR_REL}"
+  fi
 fi
 
 ORYXOS="java -jar ${JAR}"
