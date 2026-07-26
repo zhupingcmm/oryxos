@@ -83,7 +83,8 @@ class PromptBuilderConfigTest {
                     List.of(),
                     List.of(),
                     Profile.Settings.defaults(),
-                    Map.of()
+                    Map.of(),
+            List.of()
             );
             Session dummySession = new InMemorySession(
                     UUID.fromString("00000000-0000-0000-0000-000000000999"),

@@ -2,8 +2,8 @@ package io.oryxos.cli.command;
 
 import io.oryxos.cli.exitcode.Sysexits;
 import io.oryxos.cli.spring.SpringContextHandle;
-import io.oryxos.tool.ToolDefinition;
-import io.oryxos.tool.ToolRegistry;
+import io.oryxos.core.tool.ToolDefinition;
+import io.oryxos.core.tool.ToolRegistry;
 import picocli.CommandLine;
 
 /**

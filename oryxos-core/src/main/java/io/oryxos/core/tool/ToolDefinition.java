@@ -1,4 +1,4 @@
-package io.oryxos.tool;
+package io.oryxos.core.tool;
 
 /**
  * Lightweight metadata describing a single Tool that has been registered

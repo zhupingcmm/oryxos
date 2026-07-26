@@ -68,10 +68,40 @@ hooks:
         git commit -m "docs: amend constitution to v{version}"
         Do not push.
 
+# ---------------------------------------------------------------------------
+  # /speckit.implement  — per-US auto-commit (CLAUDE.md §17)
+  # ---------------------------------------------------------------------------
+  # MVP scope = single US → one commit per /speckit-implement invocation.
+  # Future specs with multiple US → the hook should split by US-N phase
+  # boundary in tasks.md (one commit per phase marked [X]).
+
+  after_implement:
+    - extension: speckit.git.commit
+      command: speckit.git.commit
+      optional: true
+      enabled: true
+      description: Per-US auto-commit on /speckit-implement completion (CLAUDE.md §17)
+      prompt: >
+        Inspect {feature_dir}/tasks.md to determine which User Story
+        phases were completed (marked [X]) in this /speckit-implement
+        invocation. For each completed US phase, create one commit:
+
+          git add <files belonging to that US phase>
+          git commit -m "feat({us-id}): <one-line summary>
+
+        - <bullet: what changed>
+        - <bullet: tests added>
+        - <bullet: deferrals to later US>"
+
+        MVP scope = single US → produces one commit. If a US phase
+        has no file changes, skip it (no empty commit). Use conventional
+        commits: feat(x) for new behavior, fix(x) for bugfixes, chore(x)
+        for tooling, docs(x) for spec/plan changes, refactor(x) for
+        restructuring without behavior change. Do NOT push.
+
 # Future hooks to consider (commented out — uncomment when needed):
 #
 # after_specify:    stage spec.md
 # after_clarify:    commit spec.md clarifications
 # after_plan:       stage plan.md + research.md + data-model.md + contracts/ + quickstart.md
-# after_implement:  per-US commit (Constitution §III Per-US commit)
 # after_analyze:    record the analyze verdict into specs/<feature>/checklists/analyze.log

@@ -21,12 +21,47 @@
             <artifactId>oryxos-core</artifactId>
         </dependency>
 
+        <!-- Spring Boot starter：带 spring-boot-autoconfigure（@ConfigurationProperties / @EnableConfigurationProperties
+             等注解处理）+ jackson + spring-core。版本由父 pom 的 spring-boot-dependencies BOM 管理 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Jackson 用于 Notify webhook payload 序列化（核心阶段沙箱内只用一次） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
         <!-- MCP SDK is added in US-4 once the correct artifact/version is verified
              (MCP Java SDK is currently in active development and version naming has shifted) -->
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito 用于 Notify 子模块单测 -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- AssertJ 用于 Notify 子模块单测（与 oryxos-core/oryxos-cli 风格一致） -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- WireMock 用于 Notify 集成测试（HTTP webhook 端到端） -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>3.5.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

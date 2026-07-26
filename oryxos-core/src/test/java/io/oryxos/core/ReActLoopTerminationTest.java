@@ -67,7 +67,8 @@ class ReActLoopTerminationTest {
             "weather-bot", PROVIDER, List.of("http_get"),
             List.of(), List.of(), List.of(),
             new Profile.Settings(maxIter, 20),
-            Map.of()
+            Map.of(),
+            List.of()
         );
     }
 

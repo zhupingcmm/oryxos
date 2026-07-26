@@ -1,15 +1,19 @@
 package io.oryxos.cli.config;
 
+import io.oryxos.core.NotifyChannelConfig;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -176,5 +180,75 @@ public final class ConfigLoader {
             out.put(key, e.getValue());
         }
         return out;
+    }
+
+    // ===== US-4 Notify: notify_channels YAML 解析（T026） =====
+
+    /**
+     * 从已 {@link #substituteDeep substituted} 的 frontmatter map 中解析
+     * {@code notify_channels} 列表。
+     *
+     * <p>字段缺失 → 返回空列表（Profile 仍合法，NotifyTool 在 execute 时报 "profile 未配置
+     * notify_channels"；见 [contracts/notify-tool.md §路由规则](../../../../../../specs/004-notify-channel/contracts/notify-tool.md)）。
+     *
+     * <p>校验失败抛 {@link IllegalArgumentException}（name 不合法 / type 不是 "webhook" / url 不合法
+     * / name 重复）。
+     *
+     * @param frontmatter 已做 {@code ${ENV_VAR}} 替换的 frontmatter map
+     * @param profileName 当前 Profile 名（错误信息用）
+     * @return 不可变 {@code List<NotifyChannelConfig>}（可能为空）
+     */
+    public static List<NotifyChannelConfig> parseNotifyChannels(
+            Map<String, Object> frontmatter, String profileName) {
+        Object raw = frontmatter == null ? null : frontmatter.get("notify_channels");
+        if (raw == null) {
+            return List.of();
+        }
+        if (!(raw instanceof List<?> list)) {
+            throw new IllegalArgumentException(
+                "Profile '" + profileName + "' has invalid notify_channels: "
+                    + "must be a list, got " + raw.getClass().getSimpleName());
+        }
+        List<NotifyChannelConfig> result = new ArrayList<>(list.size());
+        Set<String> seenNames = new HashSet<>();
+        for (int i = 0; i < list.size(); i++) {
+            Object item = list.get(i);
+            if (!(item instanceof Map<?, ?> map)) {
+                throw new IllegalArgumentException(
+                    "Profile '" + profileName + "' notify_channels[" + i
+                        + "] is not a mapping: " + (item == null ? "null" : item.getClass().getSimpleName()));
+            }
+            Map<String, Object> ch = toStringMap(map);
+            String name = stringField(ch, "name", profileName, i);
+            String type = stringField(ch, "type", profileName, i);
+            String url  = stringField(ch, "url",  profileName, i);
+            String secret = ch.get("secret") == null ? null : String.valueOf(ch.get("secret"));
+
+            // name 唯一性
+            if (!seenNames.add(name)) {
+                throw new IllegalArgumentException(
+                    "Profile '" + profileName + "' has duplicate notify_channels name: " + name);
+            }
+            // 构造 NotifyChannelConfig（构造器内部做 name/type/url 校验，失败抛 IAE）
+            try {
+                result.add(new NotifyChannelConfig(name, type, url, secret));
+            } catch (IllegalArgumentException | NullPointerException ex) {
+                throw new IllegalArgumentException(
+                    "Profile '" + profileName + "' notify_channels[" + i + "] invalid: "
+                        + ex.getMessage(), ex);
+            }
+        }
+        return List.copyOf(result);
+    }
+
+    private static String stringField(Map<String, Object> map, String key,
+                                      String profileName, int index) {
+        Object v = map.get(key);
+        if (v == null) {
+            throw new IllegalArgumentException(
+                "Profile '" + profileName + "' notify_channels[" + index
+                    + "] missing required field: " + key);
+        }
+        return String.valueOf(v);
     }
 }
