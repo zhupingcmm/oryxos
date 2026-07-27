@@ -30,7 +30,8 @@
 
 **验收场景**：
 
-1. **假设** `SandboxProperties.file.allowed-paths=[".oryxos/workspace"]`，**当** 调 `FileReadTool.execute(path="/etc/passwd")`，**那么** 抛 `SandboxViolationException`，errorMessage 含 `"path '/etc/passwd' not in allowed-paths"`，**并且** `DefaultToolExecutor` 写一行 `tool_invocations(success=false, error_message=...)`。
+1. **假设** `SandboxProperties.file.allowed-paths=[".oryxos/workspace"]`，**当** 调 `FileReadTool.execute(path="/etc/passwd")`（绝对路径），**那么** 抛 `SandboxViolationException`，errorMessage 含 `"absolute path not allowed: /etc/passwd"`（绝对路径分支在 allowed-paths 校验**之前**触发；详见边界情况"绝对路径 vs 相对路径"），**并且** `DefaultToolExecutor` 写一行 `tool_invocations(success=false, error_message=...)`。
+   - **旁注**："path `<x>` not in allowed-paths" 错误信息适用于**相对路径**越界场景（如 `FileReadTool.execute(path="../etc/passwd")`），由 `WhitelistSandbox` 步骤 3（白名单前缀匹配）触发（[sandbox-whitelist.md §3.2](../../005-tool-system/contracts/sandbox-whitelist.md)）。
 2. **假设** 同上，**当** 调 `FileReadTool.execute(path=".oryxos/workspace/notes.md")`，**那么** 通过校验，正常返回文件内容。
 3. **假设** 同上，**当** 调 `FileReadTool.execute(path=".oryxos/workspace/../../../etc/passwd")`（含 `..`），**那么** 抛 `SandboxViolationException`，errorMessage 含 `"path traversal detected"`（即使最终解析路径在白名单内也拒绝）。
 4. **假设** `file.allowed-paths` 未配置（空列表），**当** 任意 `FileReadTool` / `FileWriteTool` / `FileListTool` 调用，**那么** 抛 `SandboxViolationException`（fail-closed 默认）。
@@ -92,7 +93,7 @@
 - **URL 含 IPv6 字面 `[::1]`**：WhitelistSandbox 的 `isIpLiteral()` MUST 识别 IPv6 字面拒绝。
 - **空白名单（fail-closed）**：`http.allowed-domains=[]` / `file.allowed-paths=[]` / `shell.allowed-commands=[]` MUST 等价"全部拒绝"。这是宪法 §VII"Demo-First"的安全默认：业务方未声明前不许跑通。
 - **重复配置（数组含 `null` / 空串）**：`SandboxProperties` MUST 跳过 `null` / 空串，与现有 `http.allowed-domains` 处理一致。
-- **`SandboxAction.target` 含控制字符 / 极长字符串**：record compact constructor 已要求 `target.isBlank()` 抛 `IllegalArgumentException`；非空但超长（>4 KB） MUST 抛 `SandboxViolationException` 拒绝（防病态输入拖垮 IO）。
+- **`SandboxAction.target` 含控制字符 / 极长字符串**：record compact constructor 已要求 `target.isBlank()` 抛 `IllegalArgumentException`（007 阶段已落地）。**非空但超长（>4 KB）的输入**在 007 阶段**未实现**校验 —— record compact ctor 只拦截 `isBlank()`，超长 target 会穿透到 IO 层。**008 阶段补强**为 `SandboxViolationException` 拒绝（防病态输入拖垮 IO）；008 spec MUST 显式新增 FR + 对应单测。007 阶段不做（核心阶段交付清单已锁定；spec/quickstart 已 100% 覆盖）。
 - **跨进程并发**：白名单校验无状态（`WhitelistSandbox` 不持有任何 mutable state），多线程安全。
 
 ---
