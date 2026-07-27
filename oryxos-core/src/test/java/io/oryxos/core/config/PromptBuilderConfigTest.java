@@ -113,8 +113,11 @@ class PromptBuilderConfigTest {
     void noopBeansAreNotPrimary_soFutureRealImplsCanOverrideViaPrimary() {
         // Structural guard: the Noop beans must NOT be @Primary, so that when
         // US-3 lands MemoryServiceBridge as @Primary @Component or US-4 lands
-        // FilesystemBootstrapLoader / ToolRegistrySchemaAdapter similarly, the
-        // real impl wins without ambiguity.
+        // FilesystemBootstrapLoader as @Primary @Component, the real impl wins
+        // without ambiguity. (US-4's ToolSchemaProvider real impl lives in
+        // oryxos-boot/ToolSystemConfig as a @Primary @Bean; the Noop stub here
+        // is renamed to `noopToolSchemaProvider` to avoid bean-name collision,
+        // but it must STILL stay non-@Primary so the boot's @Primary wins.)
         try (AnnotationConfigApplicationContext ctx =
                  new AnnotationConfigApplicationContext(PromptBuilderConfig.class)) {
 
@@ -134,11 +137,17 @@ class PromptBuilderConfigTest {
                             + "(US-3 MemoryServiceBridge will be @Primary and must win)")
                     .isFalse();
 
+            // ToolSchemaProvider: 改名后本 config 只暴露 Noop 一个 bean；type-resolution
+            // 在生产环境由 oryxos-boot/ToolSystemConfig 的 @Primary @Bean 覆盖。
+            assertThat(ctx.getBeanNamesForType(ToolSchemaProvider.class))
+                    .as("exactly one ToolSchemaProvider bean should be registered in this slice "
+                            + "(Noop stub; the real @Primary bean lives in oryxos-boot/ToolSystemConfig)")
+                    .hasSize(1);
             @SuppressWarnings("null")
             String schemaBeanName = ctx.getBeanNamesForType(ToolSchemaProvider.class)[0];
             assertThat(bf.getBeanDefinition(schemaBeanName).isPrimary())
                     .as("Noop ToolSchemaProvider bean must NOT be @Primary "
-                            + "(US-4 ToolRegistrySchemaAdapter will be @Primary)")
+                            + "(oryxos-boot/ToolSystemConfig.toolSchemaProvider() is @Primary and must win)")
                     .isFalse();
 
             @SuppressWarnings("null")

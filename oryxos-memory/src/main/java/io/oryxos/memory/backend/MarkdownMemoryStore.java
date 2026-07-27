@@ -6,6 +6,7 @@ import io.oryxos.memory.MemoryScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -48,6 +49,11 @@ import java.util.regex.Pattern;
  * <p>详见 [specs/006-memory-layer/contracts/markdown-backend.md](../../../../../specs/006-memory-layer/contracts/markdown-backend.md)。
  */
 @Component("markdownMemoryStore")
+@ConditionalOnProperty(
+    name = "oryxos.memory.backend",
+    havingValue = "markdown",
+    matchIfMissing = true   // 默认 backend（CLAUDE.md §9.6）—— 即使没配也激活
+)
 public class MarkdownMemoryStore implements LongTermMemoryStore {
 
     private static final Logger log = LoggerFactory.getLogger(MarkdownMemoryStore.class);
@@ -256,12 +262,18 @@ public class MarkdownMemoryStore implements LongTermMemoryStore {
     @Override
     public boolean isHealthy() {
         try {
-            if (Files.notExists(filePath)) {
-                // 文件不存在 → 检查父目录可写
-                Path parent = filePath.getParent();
-                return parent != null && Files.isWritable(parent);
+            if (Files.exists(filePath)) {
+                return Files.isReadable(filePath);
             }
-            return Files.isReadable(filePath);
+            // 文件不存在 —— 沿祖先链往上找到第一个存在的目录，再检查是否可写。
+            // 首次启动时 .oryxos/memory/ 可能都不存在，仅检查直接父目录会误判为不可写。
+            // 这是个纯就绪性检查（不创建任何文件）；真正的写发生在 save()，
+            // 那里的 Files.createDirectories(filePath.getParent()) 会兜底建链。
+            Path ancestor = filePath.getParent();
+            while (ancestor != null && !Files.exists(ancestor)) {
+                ancestor = ancestor.getParent();
+            }
+            return ancestor != null && Files.isWritable(ancestor);
         } catch (RuntimeException ex) {
             log.warn("MarkdownMemoryStore isHealthy() failed: {}", ex.getMessage());
             return false;

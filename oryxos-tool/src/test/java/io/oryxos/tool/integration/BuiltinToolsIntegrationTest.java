@@ -84,6 +84,8 @@ import static org.assertj.core.api.Assertions.assertThat;
     "oryxos.tool.http.timeout-seconds=5",
     "oryxos.tool.http.max-response-bytes=4096",
     "oryxos.tool.sandbox.http.allowed-domains[0]=localhost",
+    "oryxos.tool.sandbox.shell.allowed-commands[0]=echo",
+    "oryxos.tool.sandbox.file.allowed-paths[0]=workspace",
     "spring.main.allow-bean-definition-overriding=true"
 })
 class BuiltinToolsIntegrationTest {
@@ -286,24 +288,34 @@ class BuiltinToolsIntegrationTest {
     @Test
     @DisplayName("file_write → file_read → file_list 走通")
     void file_tools_round_trip() throws Exception {
-        Path note = tmpDir.resolve("note.txt");
+        // 007 阶段 sandbox 拒绝绝对路径（I-SB-9）；用相对路径 + 临时切换 user.dir 到 tmpDir
+        // 让 FileWriteTool/FileReadTool 写入 tmpDir/workspace/ 子目录，sandbox 看到相对路径
+        // "workspace/note.txt" 与 allowed-paths[0]="workspace" 前缀匹配 → 通过校验。
+        String originalUserDir = System.getProperty("user.dir");
+        Files.createDirectories(tmpDir.resolve("workspace"));
+        System.setProperty("user.dir", tmpDir.toString());
+        try {
+            String relNote = "workspace" + java.io.File.separator + "note.txt";
 
-        ToolResult write = tool("file_write").execute(Map.of(
-            "path", note.toString(),
-            "content", "hello-oryxos"));
-        assertThat(write.success()).isTrue();
+            ToolResult write = tool("file_write").execute(Map.of(
+                "path", relNote,
+                "content", "hello-oryxos"));
+            assertThat(write.success()).isTrue();
 
-        ToolResult read = tool("file_read").execute(Map.of(
-            "path", note.toString()));
-        assertThat(read.success()).isTrue();
-        assertThat((String) read.payload().get("content")).isEqualTo("hello-oryxos");
+            ToolResult read = tool("file_read").execute(Map.of(
+                "path", relNote));
+            assertThat(read.success()).isTrue();
+            assertThat((String) read.payload().get("content")).isEqualTo("hello-oryxos");
 
-        ToolResult list = tool("file_list").execute(Map.of(
-            "path", tmpDir.toString()));
-        assertThat(list.success()).isTrue();
-        @SuppressWarnings("unchecked")
-        List<String> entries = (List<String>) list.payload().get("entries");
-        assertThat(entries).contains("note.txt");
+            ToolResult list = tool("file_list").execute(Map.of(
+                "path", "workspace"));
+            assertThat(list.success()).isTrue();
+            @SuppressWarnings("unchecked")
+            List<String> entries = (List<String>) list.payload().get("entries");
+            assertThat(entries).contains("note.txt");
+        } finally {
+            System.setProperty("user.dir", originalUserDir);
+        }
     }
 
     @Test

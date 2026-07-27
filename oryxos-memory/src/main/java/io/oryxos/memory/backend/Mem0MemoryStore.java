@@ -10,6 +10,7 @@ import io.oryxos.memory.repository.MemoryEntryIndexRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,10 @@ import java.util.UUID;
  * </ul>
  */
 @Component("mem0MemoryStore")
+@ConditionalOnProperty(
+    name = "oryxos.memory.backend",
+    havingValue = "mem0"
+)
 public class Mem0MemoryStore implements LongTermMemoryStore {
 
     private static final Logger log = LoggerFactory.getLogger(Mem0MemoryStore.class);
