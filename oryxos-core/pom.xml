@@ -27,6 +27,13 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
+        <!-- 008-agent-scheduler: cron 表达式解析 + ZoneId 原生支持 (research.md R-001) -->
+        <dependency>
+            <groupId>com.cronutils</groupId>
+            <artifactId>cron-utils</artifactId>
+            <version>${cron-utils.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
