@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -60,6 +61,19 @@ public class AgentSchedulerImpl implements AgentScheduler {
     private final Map<String, ScheduleEntry> registeredSchedules = new ConcurrentHashMap<>();
     private final Map<String, CronEvaluator> cronEvaluators = new ConcurrentHashMap<>();
     private final Map<String, Future<?>> runningFutures = new ConcurrentHashMap<>();
+
+    /**
+     * FR-006 字节级契约：同 task 串行化执行 —— 上一次执行未完成时，下个 cron tick 命中**跳过**。
+     *
+     * <p>每 task 一个 {@link AtomicBoolean}；{@code tick(taskId)} 入口用
+     * {@code compareAndSet(false, true)} 抢占；抢占失败 → 跳过 + 日志打印 skip reason。
+     * finally 块 reset 为 false 释放，让下一个 tick 可正常进入。
+     *
+     * <p>与 {@link #runningFutures} 的区别：{@code runningFutures[taskId]} 存的是
+     * <b>下一个</b> tick 的 scheduled future（用于 shutdown 时 cancel）；本字段存的是
+     * <b>当前</b> tick 正在执行的标志（用于 dedup）。
+     */
+    private final Map<String, AtomicBoolean> runningNow = new ConcurrentHashMap<>();
 
     public AgentSchedulerImpl(
         AgentService agentService,
@@ -210,6 +224,24 @@ public class AgentSchedulerImpl implements AgentScheduler {
     // --- tick 处理（核心循环，由 ScheduledExecutorService 调度） ---
 
     void tick(String taskId) {
+        // FR-006：dedup —— 同 task 串行化
+        AtomicBoolean inFlight = runningNow.computeIfAbsent(taskId, k -> new AtomicBoolean(false));
+        if (!inFlight.compareAndSet(false, true)) {
+            log.info("AgentSchedulerImpl.tick: task_id={} skip reason=\"previous run still in progress\"",
+                taskId);
+            return;
+        }
+        try {
+            tickInternal(taskId);
+        } finally {
+            inFlight.set(false);
+        }
+    }
+
+    /**
+     * tick 实际执行体 —— 单独抽出便于 dedup wrapper 处理 entry/eval lookup 之外的逻辑。
+     */
+    private void tickInternal(String taskId) {
         ScheduleEntry entry = registeredSchedules.get(taskId);
         CronEvaluator evaluator = cronEvaluators.get(taskId);
         if (entry == null || evaluator == null) {
