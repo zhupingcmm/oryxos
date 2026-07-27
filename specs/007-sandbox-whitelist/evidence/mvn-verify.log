@@ -1,0 +1,25 @@
+[INFO] --- jar:3.4.1:jar (default-jar) @ oryxos-boot ---
+[INFO] Building jar: D:\code\java\oryxos\oryxos-boot\target\oryxos.jar
+[INFO] 
+[INFO] --- spring-boot:3.3.5:repackage (default) @ oryxos-boot ---
+[INFO] Replacing main artifact D:\code\java\oryxos\oryxos-boot\target\oryxos.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to D:\code\java\oryxos\oryxos-boot\target\oryxos.jar.original
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for OryxOS Parent 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] OryxOS Parent ...................................... SUCCESS [  0.002 s]
+[INFO] OryxOS Core ........................................ SUCCESS [  1.874 s]
+[INFO] OryxOS Storage ..................................... SUCCESS [  0.820 s]
+[INFO] OryxOS Provider .................................... SUCCESS [  7.357 s]
+[INFO] OryxOS Memory ...................................... SUCCESS [ 16.933 s]
+[INFO] OryxOS Tool ........................................ SUCCESS [ 15.242 s]
+[INFO] OryxOS Channel CLI ................................. SUCCESS [  0.064 s]
+[INFO] OryxOS Web ......................................... SUCCESS [  0.223 s]
+[INFO] OryxOS CLI ......................................... SUCCESS [  9.122 s]
+[INFO] OryxOS Boot ........................................ SUCCESS [  3.065 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  54.932 s
+[INFO] Finished at: 2026-07-27T21:13:03+08:00
+[INFO] ------------------------------------------------------------------------

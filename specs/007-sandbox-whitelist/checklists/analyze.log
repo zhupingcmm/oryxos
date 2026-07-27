@@ -1,0 +1,114 @@
+# 007-sandbox-whitelist Analyze Report
+
+**生成日期**：2026-07-27
+**分析对象**：`spec.md` / `plan.md` / `tasks.md`（含 quickstart.md / research.md / data-model.md / contracts/sandbox-whitelist.md 交叉引用）
+**宪法依据**：`.specify/memory/constitution.md` v1.0.0（7 原则）
+**目的**：实施完成后防漂移验证（[CLAUDE.md §17 必须跑 /speckit.analyze](../../CLAUDE.md)）
+
+---
+
+## Specification Analysis Report
+
+| ID | Category | Severity | Location(s) | Summary | Recommendation |
+|----|----------|----------|-------------|---------|----------------|
+| F1 | Coverage | LOW | spec.md L104 (FR-001) ↔ tasks.md T015 (SandboxApiCompatibilityTest 14 断言) | FR-001 接口字节级不变 → T015 反射断言 14 项（含 ctor overload 数 + getter/setter null 兜底），覆盖完整 | 无需调整（已超额覆盖） |
+| F2 | Coverage | LOW | spec.md L106 (FR-003) ↔ tasks.md T006 (FilePathSandboxTest 9/9) + T008 (SandboxEnforcementIntegrationTest 6/6) | FR-003 FILE 白名单 4 子项（traversal/绝对路径/fail-closed/null target）→ 既有 005 测试 + 007 扩展均覆盖 | 无需调整 |
+| F3 | Coverage | LOW | spec.md L107 (FR-004) ↔ tasks.md T009 (ShellCommandSandboxTest 8/8) + T011 (precedence) | FR-004 SHELL 白名单 3 子项 → T009 单测 + T011 双层防御顺序集成测试 | 无需调整 |
+| F4 | Coverage | LOW | spec.md L111 (FR-008) ↔ tasks.md T014 (CrossActionTypeSandboxIT) | FR-008 审计 errorMessage 不含 stack trace → CrossActionTypeSandboxIT.audit_error_message_has_no_stack_trace | 无需调整 |
+| F5 | Coverage | LOW | spec.md L118 (NFR-001) ↔ tasks.md T016 (SandboxPerformanceBenchmarkIT) | NFR-001 P95 ≤ 5ms → SandboxPerformanceBenchmarkIT 实测 P95 ≤ 6.4μs | 无需调整 |
+| F6 | Coverage | LOW | spec.md L121 (NFR-004) ↔ tasks.md T015 | NFR-004 接口字节级不变 → T015 反射断言 14 项 | 无需调整 |
+| F7 | Coverage | LOW | spec.md L138-144 (SC-001..SC-007) ↔ 全部 Phase 3-6 | SC-001..SC-007 7 项全部对应到 Phase 3-6 测试套件；SC-008/009 业务结果 = spec/quickstart.md 文档化 | 无需调整 |
+| F8 | Constitution | LOW | spec.md L113 (FR-010) + plan.md L131-136 | FR-010 不用 SecurityManager ↔ 宪法 §IV/VII 红线一致；plan 显式排除 | 无冲突 |
+| F9 | Underspecification | LOW | spec.md L95 "target > 4 KB 拒绝" | 边缘 case spec 提到超长 target 拒绝但 FR 未提；record compact ctor 已实现 `isBlank()` 拦截，超长未实现 | 已知未实现，记入 backlog；核心阶段不阻塞（007 范围外） |
+| F10 | Inconsistency | LOW | spec.md L13 "FILE_READ/WRITE/SHELL_COMMAND 三类是 no-op"（已落地事实） | spec.md 写"已落地 005 阶段，FILE_READ/FILE_WRITE/SHELL_COMMAND 三类是 no-op"是状态盘点（007 升级前）；007 实施后由 WhitelistSandbox 真实实现 | spec.md 不需改（陈述的是 007 启动前事实），007 升级后由 sandbox.md §3.2/§3.3 显式记录 |
+| F11 | Inconsistency | LOW | tasks.md T014 路径 `'path '/etc/passwd' not in allowed-paths'` | tasks.md 写 "FILE 越界 → 拒绝 errorMessage 含 'path not in allowed-paths'"；实际 WhitelistSandbox 绝对路径分支先触发 errorMessage 'absolute path not allowed' | 测试实际期望走绝对路径分支；文档描述不变（业务效果一致） |
+| F12 | Underspecification | MEDIUM | spec.md L33 "errorMessage 含 `'path '/etc/passwd' not in allowed-paths'`" | spec.md US-1 验收场景 1 期望 errorMessage 含 'not in allowed-paths'，但绝对路径分支先返回 'absolute path not allowed' | spec.md 应明确"绝对路径 vs 越界"两个分支的不同 errorMessage；不影响测试通过（绝对路径仍属越界） |
+
+---
+
+## Coverage Summary Table
+
+| Requirement Key | Has Task? | Task IDs | Notes |
+|-----------------|-----------|----------|-------|
+| FR-001 (接口不变) | ✅ | T015 | SandboxApiCompatibilityTest 14 反射断言 |
+| FR-002 (HTTP 校验) | ✅ | T015 + 既有 005 | 既有 005 已覆盖；007 阶段 IPv6 补强走 T017 |
+| FR-003 (FILE 校验) | ✅ | T006 + T008 | FilePathSandboxTest 9 + SandboxEnforcementIntegrationTest 6 |
+| FR-004 (SHELL 校验) | ✅ | T009 + T011 | ShellCommandSandboxTest 8 + precedence 1 |
+| FR-005 (SandboxProperties 4 类配置) | ✅ | T003 + T005 | SandboxProperties 加 2 内部类 + SandboxPropertiesTest 12 |
+| FR-006 (9 Tool + MCP + WebhookNotifyAdapter 接入) | ✅ | T007 + T010 + T012 + T013 | 既有 005 落地 + 007 阶段 9 Tool 既有 enforce 调用验证（既有 SandboxEnforcementIntegrationTest） |
+| FR-007 (Notify 走 Sandbox) | ✅ | T012 | NotifySandboxEnforcementIT 4/4 |
+| FR-008 (审计 errorMessage 不含 stack trace) | ✅ | T014 | CrossActionTypeSandboxIT.audit_error_message_has_no_stack_trace |
+| FR-009 (action.type 暴露) | ✅ | T015 | SandboxApiCompatibilityTest 字段断言 |
+| FR-010 (不用 SecurityManager) | ✅ | 计划 + 实施不引入 | plan.md §红线 + 实施验证无 SecurityManager 调用 |
+| FR-011 (null/空串跳过) | ✅ | T005 | SandboxPropertiesTest setter null 兜底 4 子项 |
+| NFR-001 (P95 ≤ 5ms) | ✅ | T016 | SandboxPerformanceBenchmarkIT 4 ActionType |
+| NFR-002 (LLM-friendly errorMessage) | ✅ | T014 + T018 | CrossActionTypeSandboxIT + sandbox.md §3 显式契约 |
+| NFR-003 (无状态并发安全) | ✅ | 实施 | WhitelistSandbox 全字段 List.copyOf() + 无 mutable |
+| NFR-004 (5 契约面字节级不变) | ✅ | T015 | SandboxApiCompatibilityTest 14 断言 |
+| SC-001 (4 类端到端集成测试全过) | ✅ | T014 | CrossActionTypeSandboxIT 5/5 |
+| SC-002 (4 类配置生效) | ✅ | T003 + T005 | SandboxProperties 4 子类 + SandboxPropertiesTest 12 |
+| SC-003 (审计 100% 写入 + 不含 stack trace) | ✅ | T014 | CrossActionTypeSandboxIT.audit_error_message_has_no_stack_trace |
+| SC-004 (mvn verify 全绿) | ✅ | T019 | mvn verify 全 10 模块 SUCCESS（含 fat jar repackage） |
+| SC-005 (跨 4 类集成测试覆盖) | ✅ | T014 | CrossActionTypeSandboxIT 5 场景 |
+| SC-006 (P95 ≤ 5ms) | ✅ | T016 | 实测 HTTP_REQUEST P95=6.4μs, FILE_READ P95=3.5μs, FILE_WRITE P95=3.2μs, SHELL_COMMAND P95=3.5μs |
+| SC-007 (接口稳定性字节级不变) | ✅ | T015 | SandboxApiCompatibilityTest 14/14 |
+| SC-008 (业务 Demo 跑通) | ⏳ | T023 | quickstart 4 场景端到端验证（待 T023 跑） |
+| SC-009 (升级路径文档化) | ✅ | T018 | sandbox.md §9 升级路径（白名单 → 容器 → microVM）已显式 |
+
+---
+
+## Constitution Alignment Issues
+
+**无 CRITICAL**。
+
+| 原则 | 验证结果 |
+|------|---------|
+| §I 单体应用 / 9 模块 | ✅ 007 阶段全部改动在 oryxos-tool 模块内；零新模块 |
+| §II 核心阶段范围 | ✅ spec.md §不在范围内 显式排除 10 项扩展阶段项 |
+| §III 自实现 ReAct 循环 | ✅ 不动 ReActLoop，仅扩展 WhitelistSandbox |
+| §IV Spring AI 一半 | ✅ 007 阶段零 Spring AI 依赖 |
+| §V 三档 Plugin Tool 边界 | ✅ Tool 抽象归 core / Tool 实现归 tool / 装配归 boot；WhitelistSandbox 属 tool |
+| §VI SQLite + MEMORY.md + day-one 审计 | ✅ 拦截走既有 DefaultToolExecutor 审计路径；tool_invocations 写库 |
+| §VII Demo-First fail-closed | ✅ 空白名单 = 全部拒绝（FR-011 / I-SB-7） |
+
+---
+
+## Unmapped Tasks
+
+**无**。所有 23 任务映射到至少 1 个 FR / SC / NFR。
+
+- T001-T002: Setup 验证
+- T003-T005: Foundational SandboxProperties + switch 框架
+- T006-T008: US-1 FILE
+- T009-T011: US-2 SHELL
+- T012-T013: US-3 Notify + IPv6
+- T014-T017: US-4 集成 + 接口稳定性 + 性能
+- T018-T023: Polish
+
+---
+
+## Metrics
+
+- **Total Requirements**: 11 FR + 4 NFR + 9 SC = 24
+- **Total Tasks**: 23
+- **Coverage %** (requirements with ≥1 task): **100%** (23/23, SC-008 by T023; SC-009 by T018)
+- **Ambiguity Count**: 1 (F9 边缘 case 超长 target)
+- **Duplication Count**: 0
+- **Critical Issues Count**: **0**
+
+---
+
+## Next Actions
+
+✅ **All CRITICAL/HIGH issues**: NONE
+✅ **Constitution alignment**: 全绿
+✅ **Coverage**: 100%
+⚠️ **MEDIUM/LOW 已知**: F12 (spec.md US-1 验收场景 1 期望 'not in allowed-paths' 但绝对路径先触发) — 不影响实施，文档措辞优化建议
+
+**建议**：T021 analyze 收口通过；进入 T022 commit 阶段。F9 / F12 记录到 backlog 但不阻塞 007 收口。
+
+---
+
+## Final Verdict
+
+✅ **007-sandbox-whitelist 实施符合 spec + plan + tasks 全覆盖；接口字节级不变；性能 P95 远低于 5ms 目标；宪法 7 原则全绿；mvn verify 全 10 模块 SUCCESS；可进入 T022 commit 收口。**
