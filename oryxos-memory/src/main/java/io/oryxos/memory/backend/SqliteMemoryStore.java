@@ -12,6 +12,7 @@ import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,10 @@ import java.util.UUID;
  * 门面层 {@code DefaultMemoryService} 也再校验一次）。
  */
 @Component("sqliteMemoryStore")
+@ConditionalOnProperty(
+    name = "oryxos.memory.backend",
+    havingValue = "sqlite"
+)
 public class SqliteMemoryStore implements LongTermMemoryStore {
 
     private static final Logger log = LoggerFactory.getLogger(SqliteMemoryStore.class);

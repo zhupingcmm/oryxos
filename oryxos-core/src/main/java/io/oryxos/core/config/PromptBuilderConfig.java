@@ -12,29 +12,24 @@ import java.time.Clock;
 /**
  * US-2 production wiring for {@link PromptBuilder}.
  *
- * <p>背景：{@link PromptBuilder} 自身带 {@code @Component}，但其 4 个依赖
- * {@link MemoryInjector} / {@link ToolSchemaProvider} / {@link BootstrapLoader} /
- * {@link java.time.Clock} 在 US-2 阶段**没有** Spring bean —— 它们是接口 + 嵌套的
- * {@code Noop*} 桩实现（{@link MemoryInjector.NoopMemoryInjector} 等）。
+ * <p>背景：{@link PromptBuilder} 自身**没有** {@code @Component}（[PromptBuilder.java §2]
+ * 显式声明），Spring 不会自动构造它；本 config 通过显式 {@code @Bean} 工厂方法
+ * （{@link #promptBuilder}）完成装配，避免 4 参 vs 2 便捷构造的歧义。
  *
- * <p>如果直接让 {@code PromptBuilder}（{@code @Component}）自己被 Spring 装配，Spring
- * 会因为 {@link PromptBuilder} 提供了 2 个 public 构造（4 参 + 2 参）而无法决定用哪一个
- * —— 退回去找无参构造 → {@code NoSuchMethodException}（典型错误日志：
- * {@code Failed to instantiate [io.oryxos.core.PromptBuilder]: No default constructor found}）。
- *
- * <p>本 config 提供 US-2 阶段所需的 4 个桩 bean，让 {@code PromptBuilder} 的 4 参构造能
- * 顺利被 Spring 装配。这些 Noop bean 都**不带** {@code @Primary} —— 等 US-3（MemoryService
- * 桥接） / US-4（ToolRegistry + 文件系统 BootstrapLoader）落地真实实现时，只需给真实
- * 实现加 {@code @Primary} 即可自动覆盖，本 config 不需要再改。
+ * <p>本 config 同时为 {@link MemoryInjector} / {@link ToolSchemaProvider} /
+ * {@link BootstrapLoader} / {@link java.time.Clock} 这 4 个依赖提供 US-2 阶段
+ * 的 Noop 桩 —— 让 {@code promptBuilder} 工厂方法能直接拿到 4 个参数。
  *
  * <h2>US-3 / US-4 切换路径</h2>
  * <ul>
  *   <li>US-3：加 {@code @Primary @Component public class MemoryServiceBridge
  *       implements MemoryInjector} —— Spring 自动选这个，Noop 不再生效（但仍然在
  *       容器里，无害）。</li>
- *   <li>US-4：加 {@code @Primary @Component FilesystemBootstrapLoader implements
- *       BootstrapLoader} 与 {@code @Primary @Component ToolRegistrySchemaAdapter
- *       implements ToolSchemaProvider}。</li>
+ *   <li>US-4：{@code ToolRegistrySchemaAdapter implements ToolSchemaProvider} 的真实
+ *       {@code @Primary @Bean} 已经在 {@code oryxos-boot/.../ToolSystemConfig}
+ *       注册 —— 本 config 的 Noop 桩**改名**为 {@code noopToolSchemaProvider}，
+ *       以避免同名 bean definition 冲突；type-resolution 时 {@code @Primary} 胜出，
+ *       Noop 仅在 slice test（只加载本 config）场景作为 fallback 生效。</li>
  *   <li>{@link java.time.Clock} 没有"真实"实现路径；测试 / US-5 通过
  *       {@code @Primary @Bean Clock} 注入固定时钟覆盖。</li>
  * </ul>
@@ -51,9 +46,12 @@ public class PromptBuilderConfig {
         return new MemoryInjector.NoopMemoryInjector();
     }
 
-    /** US-2 桩 —— US-4 {@code ToolRegistrySchemaAdapter} 落地后被覆盖。 */
+    /**
+     * US-2 桩 —— US-4 后由 {@code boot/config/ToolSystemConfig.toolSchemaProvider()}
+     * 的 {@code @Primary @Bean} 覆盖；本 bean 改名避免同名冲突，slice test 场景作 fallback。
+     */
     @Bean
-    public ToolSchemaProvider toolSchemaProvider() {
+    public ToolSchemaProvider noopToolSchemaProvider() {
         return new ToolSchemaProvider.NoopToolSchemaProvider();
     }
 
