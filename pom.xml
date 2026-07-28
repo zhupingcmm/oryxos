@@ -58,6 +58,9 @@
              community-dialects is NOT included in the BOM and must be pinned explicitly.
              6.5.3.Final matches Spring Boot 3.3.5's managed hibernate-core version. -->
         <hibernate-community-dialects.version>6.5.3.Final</hibernate-community-dialects.version>
+
+        <!-- 008-agent-scheduler: cron expression parsing (research.md R-001) -->
+        <cron-utils.version>9.2.1</cron-utils.version>
     </properties>
 
     <dependencyManagement>
