@@ -132,12 +132,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T028 [P] [US4] Spring Boot integration test for timezone + DST (`user.timezone=UTC` 强制 JVM UTC + Profile `Asia/Shanghai` + `0 9 * * *` → `next_run_at_utc == 01:00:00Z`；Profile `America/New_York` + 2026-03-08 07:30 UTC → 触发 1 次 = `07:00:00Z` 不丢不双) in `oryxos-core/src/test/java/io/oryxos/core/scheduler/SchedulerTimezoneIT.java`
-- [ ] T029 [P] [US4] Integration test for audit completeness (`task_executions.session_id` 在 `sessions` 表 1 行命中 + `sessions.metadata.task_id == task_executions.task_id` 双向关联 + `tool_invocations.session_id` 一致 — SC-005 + data-model.md 实体关系图) in `oryxos-core/src/test/java/io/oryxos/core/scheduler/SchedulerEndToEndIT.java`（扩展既有文件）
+- [X] T028 [P] [US4] Spring Boot integration test for timezone + DST（**实施说明**：6 个 case 均 GREEN：(1) Shanghai + 0 9 * * * from 00:00 UTC → 01:00:00Z；(2) Shanghai + rollover from 12:00 UTC → 次日 01:00:00Z；(3) NY + DST spring-forward (2026-03-08) → 13:00:00Z（EDT，非 14:00 EST）+ DST 前一天 14:00:00Z 对照；(4) NY + DST fall-back (2026-11-01) → 14:00:00Z（已回退 EST）；(5) null zone → JVM 默认；(6) 非法 zone → IllegalArgumentException fail-closed） (`user.timezone=UTC` 强制 JVM UTC + Profile `Asia/Shanghai` + `0 9 * * *` → `next_run_at_utc == 01:00:00Z`；Profile `America/New_York` + 2026-03-08 07:30 UTC → 触发 1 次 = `07:00:00Z` 不丢不双) in `oryxos-core/src/test/java/io/oryxos/core/scheduler/SchedulerTimezoneIT.java`
+- [X] T029 [P] [US4] Integration test for audit completeness（**实施说明**：扩展 T018 的 `SchedulerEndToEndIT` 已含 `auditCompletenessBidirectionalLink` —— 4 个断言均 GREEN：(1) `task_executions.session_id == sessions.id` byte-level；(2) `sessions.metadata.task_id == task_executions.task_id` 双向；(3) `sessions.metadata.source == "scheduler"`；(4) AgentService 收到的 Session 必是 SessionFactory 创建的那个对象（同 UUID）） (`task_executions.session_id` 在 `sessions` 表 1 行命中 + `sessions.metadata.task_id == task_executions.task_id` 双向关联 + `tool_invocations.session_id` 一致 — SC-005 + data-model.md 实体关系图) in `oryxos-core/src/test/java/io/oryxos/core/scheduler/SchedulerEndToEndIT.java`（扩展既有文件）
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] Extend `CronEvaluatorImpl` with IANA `ZoneId` + `ZonedDateTime` DST handling (构造时 `ZoneId.of(zone)` 拒绝非法 zone — FR-009 fail-closed；`nextRunAt` 通过 `ZonedDateTime.ofInstant(fromUtc, zone)` 转 zone 后算 cron tick 再转回 UTC 瞬时 — research.md R-003) in `oryxos-core/src/main/java/io/oryxos/core/scheduler/CronEvaluatorImpl.java`
+- [X] T030 [US4] Extend `CronEvaluatorImpl` with IANA `ZoneId` + `ZonedDateTime` DST handling（**实施说明**：Phase 3 (T013) 已落地完整实现 —— `ZoneId.of(zone)` 拒绝非法 zone（C-CE-2 fail-closed），`null/blank → ZoneId.systemDefault()`；`nextRunAt(Instant)` 走 `atZone(zone) → ExecutionTime.nextExecution → toInstant` 链路；DST 由 JDK ZonedDateTime + IANA tzdata 自动处理（R-003）；6 个 T028 case GREEN） (构造时 `ZoneId.of(zone)` 拒绝非法 zone — FR-009 fail-closed；`nextRunAt` 通过 `ZonedDateTime.ofInstant(fromUtc, zone)` 转 zone 后算 cron tick 再转回 UTC 瞬时 — research.md R-003) in `oryxos-core/src/main/java/io/oryxos/core/scheduler/CronEvaluatorImpl.java`
 
 **Checkpoint**: All 4 US 应该都独立可测；Demo 三「每日 GitHub 日报」可用；SC-005 跨时区准确性验收
 

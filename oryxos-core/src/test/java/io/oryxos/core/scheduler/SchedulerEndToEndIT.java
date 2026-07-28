@@ -159,6 +159,45 @@ class SchedulerEndToEndIT {
     }
 
     @Test
+    @DisplayName("US-4 SC-005 + data-model.md 实体关系：task_executions ↔ sessions 双向关联")
+    void auditCompletenessBidirectionalLink() throws Exception {
+        scheduler.bootstrap(List.of(new Schedule(
+            "daily-weather-agent", "morning", "0 8 * * *", "UTC", "weather-msg", true)));
+        scheduler.triggerNow("daily-weather-agent:morning");
+
+        long deadline = System.currentTimeMillis() + 30_000;
+        while (System.currentTimeMillis() < deadline
+            && recorder.records.isEmpty()) {
+            Thread.sleep(50);
+        }
+
+        // AS-2 + AS-3 必须同时成立：task_executions ↔ sessions 双向关联
+        assertEquals(1, recorder.records.size(), "应写 1 行 task_executions");
+        assertEquals(1, sessionFactory.created.size(), "应创建 1 个 Session");
+
+        var rec = recorder.records.get(0);
+        SessionEntityStub stub = (SessionEntityStub) sessionFactory.created.get(0);
+
+        // 1) task_executions.session_id → sessions.id 命中（byte-level）
+        String sessionIdFromExec = rec.sessionId();
+        String sessionIdFromSession = stub.id().toString();
+        assertEquals(sessionIdFromSession, sessionIdFromExec,
+            "task_executions.session_id 必须等于 sessions.id（byte-level）; "
+                + "exec=" + sessionIdFromExec + " session=" + sessionIdFromSession);
+
+        // 2) sessions.metadata.task_id → task_executions.task_id 命中
+        assertEquals(rec.taskId(), stub.getMetadata().get("task_id"),
+            "sessions.metadata.task_id 必须等于 task_executions.task_id（双向）");
+
+        // 3) sessions.metadata.source = "scheduler"（per FR-005 / data-model.md 实体 4）
+        assertEquals("scheduler", stub.getMetadata().get("source"));
+
+        // 4) 同一 Session 对象传给 AgentService（确保 session_id 真的传下去了）
+        assertEquals(stub, agentService.lastSession,
+            "AgentService 收到的 Session 必须是 SessionFactory 创建的那个对象（同 UUID）");
+    }
+
+    @Test
     @DisplayName("US-2 SC-004：scheduler 触发与 CLI/Web 共享同一 AgentService.process 方法对象")
     void pathAlignmentSharedProcessMethod() throws Exception {
         scheduler.bootstrap(List.of(new Schedule(
@@ -222,10 +261,12 @@ class SchedulerEndToEndIT {
     static class FakeAgentService implements AgentService {
         final List<String> messagesReceived = new CopyOnWriteArrayList<>();
         final AtomicReference<RuntimeException> toThrow = new AtomicReference<>();
+        volatile Session lastSession;
         int processCalls = 0;
         @Override
         public LoopResult process(Session session, String userMessage) {
             processCalls++;
+            lastSession = session;
             if (toThrow.get() != null) throw toThrow.get();
             messagesReceived.add(userMessage);
             return new LoopResult(
