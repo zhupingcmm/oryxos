@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -56,6 +57,24 @@ public class SessionEntity implements Session {
     @Column(name = "updated_at", nullable = false, columnDefinition = "TEXT")
     private Instant updatedAt;
 
+    /**
+     * 008-agent-scheduler 阶段新增 —— Session 元数据 JSON 字段。
+     *
+     * <p>对应 SQLite {@code sessions.metadata} TEXT 列（已在 DDL 中，JPA 实体之前未映射）。
+     * 由 {@code SessionFactoryImpl.create()} 在 scheduler 触发时写入
+     * {@code task_id} / {@code source} / {@code started_at} 三个键（per [data-model.md §实体 4](../../../../../../specs/008-agent-scheduler/data-model.md)）。
+     *
+     * <p>键名固定（[data-model.md §实体 4 JSON shape 字节级契约](../../../../../../specs/008-agent-scheduler/data-model.md)）：
+     * <ul>
+     *   <li>{@code task_id} (String) — 仅 {@code source="scheduler"} 时填；映射 {@code scheduled_tasks.task_id}</li>
+     *   <li>{@code source} (String) — 三选一：{@code "cli"} / {@code "web"} / {@code "scheduler"}</li>
+     *   <li>{@code started_at} (String ISO-8601 UTC) — 可选；触发起始时间</li>
+     * </ul>
+     */
+    @Type(JsonType.class)
+    @Column(name = "metadata", columnDefinition = "TEXT")
+    private Map<String, Object> metadata;
+
     // --- 构造器 / 工厂 ---
 
     /** JPA 用的 protected no-arg 构造器。 */
@@ -79,6 +98,44 @@ public class SessionEntity implements Session {
             throw new IllegalArgumentException("profileName must not be blank");
         }
         return new SessionEntity(id, profileName, Instant.now());
+    }
+
+    /**
+     * 工厂方法 —— 创建 Session 同时写入 metadata JSON。
+     *
+     * <p>用于 Scheduler 触发场景（data-model.md §实体 4）—— 一次性写入
+     * {@code task_id} + {@code source} + {@code started_at} 三个键，缺一抛
+     * {@link IllegalArgumentException}（fail-closed per data-model.md 字节级契约）。
+     *
+     * @param id            Session UUID
+     * @param profileName   Profile 名
+     * @param taskId        {@code <profileName>:<id>} 形式；仅在 {@code source="scheduler"} 时必填
+     * @param source        三选一：{@code "cli"} / {@code "web"} / {@code "scheduler"}
+     * @param startedAtUtc  触发起始时间（UTC）
+     * @return 新 Session
+     */
+    public static SessionEntity createWithMetadata(
+        UUID id, String profileName, String taskId, String source, Instant startedAtUtc
+    ) {
+        if (source == null
+            || !(source.equals("cli") || source.equals("web") || source.equals("scheduler"))) {
+            throw new IllegalArgumentException(
+                "source must be one of {cli, web, scheduler}, got: " + source);
+        }
+        if ("scheduler".equals(source) && (taskId == null || taskId.isBlank())) {
+            throw new IllegalArgumentException(
+                "taskId is required when source=\"scheduler\" (data-model.md §实体 4 字节级契约)");
+        }
+        SessionEntity entity = create(id, profileName);
+        entity.metadata = new java.util.HashMap<>();
+        entity.metadata.put("source", source);
+        if (taskId != null) {
+            entity.metadata.put("task_id", taskId);
+        }
+        if (startedAtUtc != null) {
+            entity.metadata.put("started_at", startedAtUtc.toString());
+        }
+        return entity;
     }
 
     // --- Session 接口实现 ---
@@ -115,5 +172,34 @@ public class SessionEntity implements Session {
     /** 测试用 setter —— 抑制 JPA-only 反射写入警告。 */
     void setMessagesForTesting(List<Message> m) {
         this.messages = new ArrayList<>(m);
+    }
+
+    // --- metadata JSON helper（008-agent-scheduler 阶段新增） ---
+
+    /** 读取 metadata JSON（不可变视图；{@code null} 表示 session 无元数据）。 */
+    public Map<String, Object> getMetadata() {
+        return metadata == null ? Map.of() : Map.copyOf(metadata);
+    }
+
+    /** 写入整个 metadata map（覆盖语义）。 */
+    public void setMetadata(Map<String, Object> m) {
+        this.metadata = m == null ? null : new java.util.HashMap<>(m);
+    }
+
+    /** 取 metadata 中某个键（{@code null} 安全；键不存在返回 {@code null}）。 */
+    public Object getMetadataValue(String key) {
+        return metadata == null ? null : metadata.get(key);
+    }
+
+    /** 写入单个 metadata 键（增量语义）。 */
+    public void setMetadataValue(String key, Object value) {
+        if (this.metadata == null) {
+            this.metadata = new java.util.HashMap<>();
+        }
+        if (value == null) {
+            this.metadata.remove(key);
+        } else {
+            this.metadata.put(key, value);
+        }
     }
 }

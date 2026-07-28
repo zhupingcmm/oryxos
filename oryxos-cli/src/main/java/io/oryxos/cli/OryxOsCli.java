@@ -5,6 +5,7 @@ import io.oryxos.cli.command.GatewayCommand;
 import io.oryxos.cli.command.InitCommand;
 import io.oryxos.cli.command.ProfileCommand;
 import io.oryxos.cli.command.ServeCommand;
+import io.oryxos.cli.schedule.ScheduleListCommand;
 import io.oryxos.cli.command.StatusCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -53,6 +54,8 @@ import picocli.CommandLine.Option;
         // US-3 Spring-required leaf commands registered dynamically by
         // BootCommandLineRegistrar (T013) after Spring boots:
         // ProviderListCommand / ToolListCommand / SessionListCommand.
+        // 008-agent-scheduler: schedule list (US-3 spec)
+        ScheduleListCommand.class,
     }
 )
 public class OryxOsCli implements Runnable {
