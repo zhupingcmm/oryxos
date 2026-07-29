@@ -57,4 +57,16 @@ public interface MemoryService {
      * @throws IllegalStateException scope == core
      */
     void clear(MemoryScope scope);
+
+    /**
+     * 008-agent-web-service 阶段新增 —— 后端元数据汇总 (REST /api/v1/memory).
+     *
+     * <p>仅暴露非敏感元信息 (backend 类型 / 各 scope 条数 / 文件路径).
+     * 内容读取需经 Agent 调 Tool (per CLAUDE.md §15 "核心阶段不做 Memory REST 详情").
+     */
+    default MemorySummary summary() {
+        // Default no-op impl for 003 stub stage — 006 子类覆盖实现.
+        return new MemorySummary(
+            "unknown", 0, 0, null);
+    }
 }

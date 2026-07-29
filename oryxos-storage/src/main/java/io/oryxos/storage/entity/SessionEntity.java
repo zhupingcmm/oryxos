@@ -75,6 +75,19 @@ public class SessionEntity implements Session {
     @Column(name = "metadata", columnDefinition = "TEXT")
     private Map<String, Object> metadata;
 
+    /**
+     * 008-agent-web-service 阶段新增 —— 软删除时间戳.
+     *
+     * <p>{@code null} = 活跃;非空 = 软删除时刻 (UTC).
+     * 软删除契约 (per [data-model.md §端点 5](../../../../../../specs/008-agent-web-service/data-model.md)) :
+     * DELETE /api/v1/sessions/{id} → {@code UPDATE sessions SET deleted_at = now() WHERE id = ?}
+     * 而非真删,后续 GET 返回 404 session_not_found.
+     *
+     * <p>对齐 006-memory-layer 删除契约 (C-MD / C-SQ 后端都支持软删或真删,核心阶段统一为软删).
+     */
+    @Column(name = "deleted_at", columnDefinition = "TEXT")
+    private Instant deletedAt;
+
     // --- 构造器 / 工厂 ---
 
     /** JPA 用的 protected no-arg 构造器。 */
@@ -201,5 +214,28 @@ public class SessionEntity implements Session {
         } else {
             this.metadata.put(key, value);
         }
+    }
+
+    // --- 008-agent-web-service 软删除 (T025) ---
+
+    /** 读取软删除时间戳;{@code null} = 活跃会话. */
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    /**
+     * 标记软删除. {@code deletedAt} 写入当前 UTC 时刻,JPA 脏检查自动 flush.
+     *
+     * <p>幂等: 二次调用会刷新 deletedAt,但 {@code GET /api/v1/sessions/{id}} 已
+     * 在控制器层按 deletedAt is null 过滤,因此二次删除对业务方无感知.
+     */
+    @Transactional
+    public void markDeleted() {
+        this.deletedAt = Instant.now();
+    }
+
+    /** 当前会话是否已被软删除. */
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 }

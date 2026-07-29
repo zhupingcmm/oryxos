@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: oryxos-web
+  threads:
+    virtual:
+      enabled: true   # T001 — JDK 21 virtual threads for HTTP server IO (per research.md R-001)
+  jackson:
+    default-property-inclusion: NON_NULL   # T009 — omit null fields in JSON (e.g. ErrorResponse.field)
+
+server:
+  port: 8080   # T002 — default REST server port (per spec FR-001 / CLAUDE.md §15)
+  error:
+    include-message: never
+    include-stacktrace: never   # T041 — error responses MUST NOT expose stack trace (per 007-sandbox-whitelist FR-007)
+    include-binding-errors: never
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+# 008-agent-web-service — REST 端点业务配置
+oryxos:
+  web:
+    enabled: true   # 业务系统 REST 端点总开关（per spec FR-001；core 阶段固定 true）

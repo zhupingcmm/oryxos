@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -21,4 +22,12 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
 
     /** 列出在给定时间点之后被更新过的 Session（用于"最近活跃会话"查询）。 */
     List<SessionEntity> findByUpdatedAtAfter(Instant cutoff);
+
+    /**
+     * 008-agent-web-service 阶段新增 —— 按 ID 查活跃 Session.
+     *
+     * <p>{@code deleted_at IS NULL} 过滤掉已软删除的会话;REST 层走此方法保持
+     * "软删除后 GET 返回 404 session_not_found" 的契约.
+     */
+    Optional<SessionEntity> findByIdAndDeletedAtIsNull(UUID id);
 }
