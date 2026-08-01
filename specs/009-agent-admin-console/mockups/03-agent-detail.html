@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>agent-weather — OryxOS Admin Console</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+      OryxOS Console
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">📚 Mockups</a></li>
+      <li><a href="01-dashboard.html">📊 Dashboard</a></li>
+      <li><a href="02-agents-list.html" class="active">🤖 Agents</a></li>
+      <li><a href="04-sessions-list.html">💬 Sessions</a></li>
+      <li><a href="06-tools.html">🔧 Tools</a></li>
+      <li><a href="07-providers.html">⚡ Providers</a></li>
+      <li><a href="08-schedules.html">⏰ Schedules</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="flex items-center gap-2">
+        <span class="health-dot healthy"></span>
+        <span>OryxOS <span class="text-mono">v0.1.0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <a href="02-agents-list.html" style="color: var(--color-text-secondary); text-decoration: none; font-size: 13px;">← 返回 Agents</a>
+        <h1 class="page-title mt-2">🤖 agent-weather</h1>
+        <p class="page-subtitle">查询天气 · deepseek/deepseek-v3 · 启用</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary">▶ 手动触发测试</button>
+        <button class="btn btn-secondary">⏸ 禁用</button>
+      </div>
+    </div>
+
+    <!-- Profile YAML (collapsible) -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="card-title">Profile YAML</h3>
+        <button class="btn btn-ghost copy-btn">📋 复制</button>
+      </div>
+      <div class="code">
+<code><span style="color: var(--color-accent);">name</span>: agent-weather
+<span style="color: var(--color-accent);">description</span>: 查询天气
+<span style="color: var(--color-accent);">identity</span>:
+  <span style="color: var(--color-accent);">agent_name</span>: 天气助手
+  <span style="color: var(--color-accent);">prompt</span>: 你是一个温度感知助手，根据用户所在地给出天气建议
+<span style="color: var(--color-accent);">provider</span>:
+  <span style="color: var(--color-accent);">name</span>: deepseek
+  <span style="color: var(--color-accent);">model</span>: deepseek-v3
+  <span style="color: var(--color-accent);">temperature</span>: 0.3
+<span style="color: var(--color-accent);">tools</span>: [file_read, http_get, notify]
+<span style="color: var(--color-accent);">skills</span>: [weather-cn]
+<span style="color: var(--color-accent);">channels</span>: [webhook]
+<span style="color: var(--color-accent);">schedules</span>: [daily-8am]
+<span style="color: var(--color-accent);">settings</span>:
+  <span style="color: var(--color-accent);">max_iterations</span>: 10
+  <span style="color: var(--color-accent);">max_history_turns</span>: 20</code>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" data-tabs="#tab-panels">
+      <div class="tab active" data-tab="calls">调用历史</div>
+      <div class="tab" data-tab="cost">成本</div>
+      <div class="tab" data-tab="tools">Tool 分布</div>
+      <div class="tab" data-tab="errors">错误</div>
+    </div>
+
+    <div id="tab-panels">
+      <!-- Tab 1: 调用历史 -->
+      <div data-tab-panel="calls">
+        <div class="card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>触发源</th>
+                <th>Session</th>
+                <th>消息</th>
+                <th>耗时</th>
+                <th>结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-mono text-small">2026-07-29 14:23</td>
+                <td><span class="badge badge-source-scheduler">scheduler</span></td>
+                <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-91abc...</a></td>
+                <td>4</td>
+                <td class="text-mono text-small">1.2s</td>
+                <td><span class="badge badge-success">✓</span></td>
+              </tr>
+              <tr>
+                <td class="text-mono text-small">2026-07-29 08:00</td>
+                <td><span class="badge badge-source-scheduler">scheduler</span></td>
+                <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-90xyz...</a></td>
+                <td>4</td>
+                <td class="text-mono text-small">1.4s</td>
+                <td><span class="badge badge-success">✓</span></td>
+              </tr>
+              <tr>
+                <td class="text-mono text-small">2026-07-29 06:12</td>
+                <td><span class="badge badge-source-chat">chat</span></td>
+                <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-89def...</a></td>
+                <td>3</td>
+                <td class="text-mono text-small">0.8s</td>
+                <td><span class="badge badge-success">✓</span></td>
+              </tr>
+              <tr>
+                <td class="text-mono text-small">2026-07-28 22:30</td>
+                <td><span class="badge badge-source-api">api</span></td>
+                <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-88uvw...</a></td>
+                <td>5</td>
+                <td class="text-mono text-small">1.6s</td>
+                <td><span class="badge badge-success">✓</span></td>
+              </tr>
+              <tr>
+                <td class="text-mono text-small">2026-07-28 14:00</td>
+                <td><span class="badge badge-source-scheduler">scheduler</span></td>
+                <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-87rst...</a></td>
+                <td>4</td>
+                <td class="text-mono text-small">1.1s</td>
+                <td><span class="badge badge-success">✓</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-small text-muted mt-2 text-center">显示最近 5 次 · 共 812 次调用</div>
+        </div>
+      </div>
+
+      <!-- Tab 2: 成本 -->
+      <div data-tab-panel="cost" style="display: none;">
+        <div class="grid-2">
+          <div class="stat-tile">
+            <div class="stat-label">24h Tokens</div>
+            <div class="stat-value">8.2M</div>
+            <div class="stat-trend up">▲ +12.3%</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">24h 估算费用</div>
+            <div class="stat-value">$1.64</div>
+            <div class="stat-trend text-muted">@ $0.2/M tokens</div>
+          </div>
+        </div>
+        <div class="card mt-4">
+          <h3 class="card-title mb-4">按时间窗口</h3>
+          <table class="data-table">
+            <thead>
+              <tr><th>窗口</th><th>调用</th><th>Tokens</th><th>费用</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>24h</td><td class="text-mono">812</td><td class="text-mono">8.2M</td><td class="text-mono">$1.64</td></tr>
+              <tr><td>7d</td><td class="text-mono">5,234</td><td class="text-mono">52M</td><td class="text-mono">$10.40</td></tr>
+              <tr><td>30d</td><td class="text-mono">22,156</td><td class="text-mono">218M</td><td class="text-mono">$43.60</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 3: Tool 分布 -->
+      <div data-tab-panel="tools" style="display: none;">
+        <div class="card">
+          <h3 class="card-title mb-4">Tool 调用分布（24h）</h3>
+          <div class="flex flex-col gap-3">
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-small">file_read</span><span class="text-mono text-small">234</span></div>
+              <div style="height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 75%; height: 100%; background: var(--color-secondary);"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-small">http_get</span><span class="text-mono text-small">812</span></div>
+              <div style="height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 100%; height: 100%; background: var(--color-accent);"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span class="text-small">notify</span><span class="text-mono text-small">812</span></div>
+              <div style="height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 100%; height: 100%; background: var(--color-success);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: 错误 -->
+      <div data-tab-panel="errors" style="display: none;">
+        <div class="card">
+          <p class="text-secondary text-small">24h 错误率 0.0% · 无错误记录</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

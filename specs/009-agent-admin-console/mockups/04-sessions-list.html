@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sessions — OryxOS Admin Console</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+      OryxOS Console
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">📚 Mockups</a></li>
+      <li><a href="01-dashboard.html">📊 Dashboard</a></li>
+      <li><a href="02-agents-list.html">🤖 Agents</a></li>
+      <li><a href="04-sessions-list.html" class="active">💬 Sessions</a></li>
+      <li><a href="06-tools.html">🔧 Tools</a></li>
+      <li><a href="07-providers.html">⚡ Providers</a></li>
+      <li><a href="08-schedules.html">⏰ Schedules</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="flex items-center gap-2">
+        <span class="health-dot healthy"></span>
+        <span>OryxOS <span class="text-mono">v0.1.0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">💬 Session 会话</h1>
+        <p class="page-subtitle">共 1,234 条 · 过滤后 47 条 · 自动刷新 5s</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary">📥 导出 CSV</button>
+        <button class="btn btn-secondary">🔄 刷新</button>
+        <button class="btn btn-primary">+ 新建 Session</button>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card mb-4">
+      <div class="flex gap-3 items-center" style="flex-wrap: wrap;">
+        <div>
+          <div class="text-tiny text-muted mb-1">Agent</div>
+          <select class="select">
+            <option>全部</option>
+            <option>agent-weather</option>
+            <option>agent-github</option>
+            <option selected>agent-stock</option>
+          </select>
+        </div>
+        <div>
+          <div class="text-tiny text-muted mb-1">触发源</div>
+          <select class="select">
+            <option>全部</option>
+            <option>chat</option>
+            <option>api</option>
+            <option selected>scheduler</option>
+          </select>
+        </div>
+        <div>
+          <div class="text-tiny text-muted mb-1">状态</div>
+          <select class="select">
+            <option>全部</option>
+            <option>success</option>
+            <option selected>failed</option>
+            <option>running</option>
+          </select>
+        </div>
+        <div>
+          <div class="text-tiny text-muted mb-1">时间</div>
+          <select class="select">
+            <option>全部</option>
+            <option>最近 1h</option>
+            <option>最近 24h</option>
+            <option selected>最近 7d</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+          <div class="text-tiny text-muted mb-1">关键字</div>
+          <input type="text" class="input search-input" placeholder="搜索消息内容或 session ID..." style="width: 100%;">
+        </div>
+        <div style="align-self: flex-end;">
+          <button class="btn btn-secondary">清除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Table -->
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Session ID</th>
+            <th>Agent</th>
+            <th>触发源</th>
+            <th>消息</th>
+            <th>状态</th>
+            <th>耗时</th>
+            <th>开始时间</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-91abc-def-123</a></td>
+            <td>agent-stock</td>
+            <td><span class="badge badge-source-scheduler">scheduler</span></td>
+            <td class="text-mono">8</td>
+            <td><span class="badge badge-failed">❌</span></td>
+            <td class="text-mono text-small" style="color: var(--color-danger);">30.0s</td>
+            <td class="text-small text-muted">3 分钟前</td>
+          </tr>
+          <tr>
+            <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-90xyz-abc-456</a></td>
+            <td>agent-stock</td>
+            <td><span class="badge badge-source-scheduler">scheduler</span></td>
+            <td class="text-mono">8</td>
+            <td><span class="badge badge-success">✓</span></td>
+            <td class="text-mono text-small">2.1s</td>
+            <td class="text-small text-muted">1 小时前</td>
+          </tr>
+          <tr>
+            <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-89def-ghi-789</a></td>
+            <td>agent-stock</td>
+            <td><span class="badge badge-source-api">api</span></td>
+            <td class="text-mono">12</td>
+            <td><span class="badge badge-failed">❌ 429</span></td>
+            <td class="text-mono text-small" style="color: var(--color-danger);">8.4s</td>
+            <td class="text-small text-muted">2 小时前</td>
+          </tr>
+          <tr>
+            <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-88uvw-jkl-012</a></td>
+            <td>agent-stock</td>
+            <td><span class="badge badge-source-scheduler">scheduler</span></td>
+            <td class="text-mono">8</td>
+            <td><span class="badge badge-success">✓</span></td>
+            <td class="text-mono text-small">1.9s</td>
+            <td class="text-small text-muted">3 小时前</td>
+          </tr>
+          <tr>
+            <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-87rst-mno-345</a></td>
+            <td>agent-stock</td>
+            <td><span class="badge badge-source-api">api</span></td>
+            <td class="text-mono">6</td>
+            <td><span class="badge badge-success">✓</span></td>
+            <td class="text-mono text-small">2.4s</td>
+            <td class="text-small text-muted">4 小时前</td>
+          </tr>
+          <tr>
+            <td><a href="05-session-detail.html" class="text-mono text-small" style="color: var(--color-accent); text-decoration: none;">s-86pqr-stu-678</a></td>
+            <td>agent-stock</td>
+            <td><span class="badge badge-source-api">api</span></td>
+            <td class="text-mono">15</td>
+            <td><span class="badge badge-failed">❌ TIMEOUT</span></td>
+            <td class="text-mono text-small" style="color: var(--color-danger);">30.0s</td>
+            <td class="text-small text-muted">5 小时前</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="flex justify-between items-center mt-4">
+        <div class="text-small text-muted">共 47 条 · 第 1 / 8 页</div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary" disabled>◄ 上一页</button>
+          <button class="btn btn-primary">1</button>
+          <button class="btn btn-secondary">2</button>
+          <button class="btn btn-secondary">3</button>
+          <button class="btn btn-secondary">...</button>
+          <button class="btn btn-secondary">8</button>
+          <button class="btn btn-secondary">下一页 ►</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

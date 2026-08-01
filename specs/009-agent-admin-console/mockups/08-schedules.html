@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedules — OryxOS Admin Console</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+      OryxOS Console
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">📚 Mockups</a></li>
+      <li><a href="01-dashboard.html">📊 Dashboard</a></li>
+      <li><a href="02-agents-list.html">🤖 Agents</a></li>
+      <li><a href="04-sessions-list.html">💬 Sessions</a></li>
+      <li><a href="06-tools.html">🔧 Tools</a></li>
+      <li><a href="07-providers.html">⚡ Providers</a></li>
+      <li><a href="08-schedules.html" class="active">⏰ Schedules</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="flex items-center gap-2">
+        <span class="health-dot healthy"></span>
+        <span>OryxOS <span class="text-mono">v0.1.0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">⏰ 定时任务</h1>
+        <p class="page-subtitle">共 3 个任务 · 自动刷新 30s · <span class="text-warning">⚠ 核心阶段仅读，写操作请用 CLI</span></p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary" disabled title="M0 阶段未实现，请用 oryxos schedule list">+ 新建</button>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="card-title">⚠ M0 阶段说明</h3>
+      </div>
+      <div class="text-small text-secondary">
+        当前核心阶段仅提供 <code class="text-mono">oryxos schedule list / enable / disable</code> CLI 命令，
+        <strong>本页面</strong>为只读视图，写操作按钮已禁用。M1 阶段（per spec 扩展路线图）将开放 Web 端增删改。
+      </div>
+    </div>
+
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Task ID</th>
+            <th>Agent</th>
+            <th>Cron</th>
+            <th>时区</th>
+            <th>消息</th>
+            <th>上次执行</th>
+            <th>下次执行</th>
+            <th>状态</th>
+            <th style="width: 80px;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-mono text-small">daily-8am</td>
+            <td>agent-weather</td>
+            <td class="text-mono text-small">0 8 * * *</td>
+            <td class="text-mono text-small">Asia/Shanghai</td>
+            <td class="text-small text-muted">查询今日天气</td>
+            <td class="text-small text-muted">2 小时前</td>
+            <td class="text-small text-muted">明天 08:00</td>
+            <td><span class="badge badge-success"><span class="dot"></span>启用</span></td>
+            <td>
+              <button class="btn btn-ghost text-tiny" disabled title="M0 不可用">▶ 触发</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="text-mono text-small">daily-9am</td>
+            <td>agent-github</td>
+            <td class="text-mono text-small">0 9 * * *</td>
+            <td class="text-mono text-small">Asia/Shanghai</td>
+            <td class="text-small text-muted">生成 GitHub 日报</td>
+            <td class="text-small text-muted">1 小时前</td>
+            <td class="text-small text-muted">明天 09:00</td>
+            <td><span class="badge badge-success"><span class="dot"></span>启用</span></td>
+            <td>
+              <button class="btn btn-ghost text-tiny" disabled title="M0 不可用">▶ 触发</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="text-mono text-small">weekly-mon</td>
+            <td>agent-news</td>
+            <td class="text-mono text-small">0 9 * * 1</td>
+            <td class="text-mono text-small">UTC</td>
+            <td class="text-small text-muted">周报：科技热点</td>
+            <td class="text-small text-muted">6 天前</td>
+            <td class="text-small text-muted">周一 09:00</td>
+            <td><span class="badge badge-cancelled">◐ 禁用</span></td>
+            <td>
+              <button class="btn btn-ghost text-tiny" disabled title="M0 不可用">▶ 触发</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cron human-readable -->
+    <div class="card mt-4">
+      <h3 class="card-title mb-4">📜 Cron 表达式释义</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Cron</th>
+            <th>人类可读</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-mono text-small">daily-8am</td>
+            <td class="text-mono text-small">0 8 * * *</td>
+            <td class="text-small">每天 08:00（任意时区 / 任意日）</td>
+          </tr>
+          <tr>
+            <td class="text-mono text-small">daily-9am</td>
+            <td class="text-mono text-small">0 9 * * *</td>
+            <td class="text-small">每天 09:00（任意时区 / 任意日）</td>
+          </tr>
+          <tr>
+            <td class="text-mono text-small">weekly-mon</td>
+            <td class="text-mono text-small">0 9 * * 1</td>
+            <td class="text-small">每周一 09:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OryxOS Admin Console — Mockups</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .entry-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      transition: border 0.15s, transform 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .entry-card:hover {
+      border-color: var(--color-accent);
+      transform: translateY(-2px);
+    }
+    .entry-card-number {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-accent);
+      margin-bottom: 4px;
+    }
+    .entry-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--color-text-primary);
+    }
+    .entry-card-desc {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+    .entry-card-priority {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      background: var(--color-surface-2);
+      color: var(--color-text-secondary);
+    }
+    .entry-card-priority.p1 {
+      background: rgba(124, 92, 255, 0.15);
+      color: var(--color-accent);
+    }
+    .entry-card-priority.p2 {
+      background: rgba(0, 212, 255, 0.15);
+      color: var(--color-secondary);
+    }
+    .entry-card-priority.p3 {
+      background: rgba(155, 163, 180, 0.15);
+      color: var(--color-text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+      OryxOS Console
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html" class="active">📚 Mockups</a></li>
+      <li style="padding: 16px 24px 8px; font-size: 11px; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.04em;">页面索引</li>
+      <li><a href="01-dashboard.html">📊 01 Dashboard</a></li>
+      <li><a href="02-agents-list.html">🤖 02 Agents 列表</a></li>
+      <li><a href="03-agent-detail.html">🤖 03 Agent 详情</a></li>
+      <li><a href="04-sessions-list.html">💬 04 Sessions 列表</a></li>
+      <li><a href="05-session-detail.html">💬 05 Session 详情</a></li>
+      <li><a href="06-tools.html">🔧 06 Tools</a></li>
+      <li><a href="07-providers.html">⚡ 07 Providers</a></li>
+      <li><a href="08-schedules.html">⏰ 08 Schedules</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      v0.1.0 Mockup<br>
+      per spec FR-019 ~ FR-022
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">OryxOS Admin Console — Mockup 索引</h1>
+        <p class="page-subtitle">8 个核心页面 · 静态 HTML + Tailwind CSS · 浏览器双击即可预览</p>
+      </div>
+      <div class="flex gap-2">
+        <span class="badge badge-success"><span class="dot"></span>health UP</span>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <h2 class="card-title">📦 规格说明</h2>
+      <p class="text-secondary text-small mt-2">
+        本目录是 spec 阶段的视觉交付物（per <a href="../spec.md" style="color: var(--color-accent);">spec.md</a> FR-019 ~ FR-022）。
+        8 个 HTML 文件对应 MVP 全部 8 个核心页面，<strong>不</strong>是 M0 最终实现 —— M0 实现
+        （在独立 SPA <code>oryxos-admin/</code> 中）会按 spec / mockup 用 Vue 3 + Naive UI 重新写代码。
+      </p>
+      <p class="text-secondary text-small mt-2">
+        <strong>交互半静态</strong>：折叠 / hover / 状态徽章 / Tab 切换可用；轮询 / 真实 API 调用需 M0 实现。
+        <strong>调色板固定</strong>：<code>#0f1115</code> / <code>#7c5cff</code> / <code>#00d4ff</code> / <code>#f87171</code>。
+      </p>
+    </div>
+
+    <h2 class="card-title mt-4 mb-4">页面列表（按权重排序）</h2>
+
+    <div class="entry-grid">
+      <a href="01-dashboard.html" class="entry-card">
+        <div class="entry-card-number">P1 · MVP</div>
+        <div class="entry-card-title">📊 01 Dashboard</div>
+        <div class="entry-card-desc">首屏总览：4 个统计卡片 + 24h Token 趋势 + Top 5 异常 Session + 最近触发事件</div>
+        <span class="entry-card-priority p1">核心入口</span>
+      </a>
+
+      <a href="04-sessions-list.html" class="entry-card">
+        <div class="entry-card-number">P1 · MVP</div>
+        <div class="entry-card-title">💬 04 Sessions 列表</div>
+        <div class="entry-card-desc">按 Agent / 触发源 / 状态 / 时间段过滤；hover 完整 ID；URL 同步过滤条件</div>
+        <span class="entry-card-priority p1">排错起点</span>
+      </a>
+
+      <a href="05-session-detail.html" class="entry-card">
+        <div class="entry-card-number">P1 · MVP</div>
+        <div class="entry-card-title">💬 05 Session 详情</div>
+        <div class="entry-card-desc">5 步时间线（User / LLM / Tool / Notify / Final）；失败标红；折叠 Prompt 摘要</div>
+        <span class="entry-card-priority p1">排错核心</span>
+      </a>
+
+      <a href="02-agents-list.html" class="entry-card">
+        <div class="entry-card-number">P2</div>
+        <div class="entry-card-title">🤖 02 Agents 列表</div>
+        <div class="entry-card-desc">所有 Profile 汇总；24h 调用数 + 错误率；高错误率标红</div>
+        <span class="entry-card-priority p2">业务方</span>
+      </a>
+
+      <a href="03-agent-detail.html" class="entry-card">
+        <div class="entry-card-number">P2</div>
+        <div class="entry-card-title">🤖 03 Agent 详情</div>
+        <div class="entry-card-desc">Profile YAML + 4 Tab（调用历史 / 成本 / Tool 分布 / 错误）；手动触发测试</div>
+        <span class="entry-card-priority p2">手动触发</span>
+      </a>
+
+      <a href="06-tools.html" class="entry-card">
+        <div class="entry-card-number">P2</div>
+        <div class="entry-card-title">🔧 06 Tools</div>
+        <div class="entry-card-desc">9 个内置 Tool + MCP + 自定义；source 徽章（builtin / mcp / java_bean）</div>
+        <span class="entry-card-priority p2">能力审计</span>
+      </a>
+
+      <a href="07-providers.html" class="entry-card">
+        <div class="entry-card-number">P2</div>
+        <div class="entry-card-title">⚡ 07 Providers</div>
+        <div class="entry-card-desc">LLM Provider 卡片：健康 / 24h 调用 / tokens / 错误率 / P50-P95 延迟</div>
+        <span class="entry-card-priority p2">成本透明</span>
+      </a>
+
+      <a href="08-schedules.html" class="entry-card">
+        <div class="entry-card-number">P3</div>
+        <div class="entry-card-title">⏰ 08 Schedules</div>
+        <div class="entry-card-desc">定时任务列表（只读）；Cron 表达式 + 时区 + 状态</div>
+        <span class="entry-card-priority p3">运维</span>
+      </a>
+    </div>
+
+    <div class="card mt-4">
+      <h2 class="card-title">🔧 技术栈</h2>
+      <ul style="margin: 8px 0 0; padding-left: 20px; color: var(--color-text-secondary); font-size: 13px; line-height: 1.8;">
+        <li>静态 HTML + CSS + vanilla JS（每个文件独立可用）</li>
+        <li>Tailwind CSS 通过 CDN（仅设计文档兼容性参考，M0 实际用 Naive UI）</li>
+        <li>Inter 字体（sans）+ JetBrains Mono（code）</li>
+        <li>图标：Lucide SVG（inline）</li>
+        <li>导航：左侧固定 sidebar + 顶部 page header</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
