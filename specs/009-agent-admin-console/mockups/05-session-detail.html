@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session s-91abc — OryxOS Admin Console</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .step-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .step-meta-item {
+      background: var(--color-surface-2);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+    }
+    .step-meta-label {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+    }
+    .step-meta-value {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--color-text-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+      OryxOS Console
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">📚 Mockups</a></li>
+      <li><a href="01-dashboard.html">📊 Dashboard</a></li>
+      <li><a href="02-agents-list.html">🤖 Agents</a></li>
+      <li><a href="04-sessions-list.html" class="active">💬 Sessions</a></li>
+      <li><a href="06-tools.html">🔧 Tools</a></li>
+      <li><a href="07-providers.html">⚡ Providers</a></li>
+      <li><a href="08-schedules.html">⏰ Schedules</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="flex items-center gap-2">
+        <span class="health-dot healthy"></span>
+        <span>OryxOS <span class="text-mono">v0.1.0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <a href="04-sessions-list.html" style="color: var(--color-text-secondary); text-decoration: none; font-size: 13px;">← 返回 Sessions</a>
+        <h1 class="page-title mt-2">💬 s-91abc-def-123</h1>
+        <p class="page-subtitle">agent-stock · scheduler · 2 分钟前开始</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary">🔄 自动刷新</button>
+        <button class="btn btn-danger">🗑 删除</button>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card mb-4">
+      <div class="step-meta">
+        <div class="step-meta-item">
+          <div class="step-meta-label">Agent</div>
+          <div class="step-meta-value">agent-stock</div>
+        </div>
+        <div class="step-meta-item">
+          <div class="step-meta-label">触发</div>
+          <div class="step-meta-value">scheduler</div>
+        </div>
+        <div class="step-meta-item">
+          <div class="step-meta-label">耗时</div>
+          <div class="step-meta-value" style="color: var(--color-danger);">30.0s</div>
+        </div>
+        <div class="step-meta-item">
+          <div class="step-meta-label">状态</div>
+          <div class="step-meta-value"><span class="badge badge-failed">❌ TIMEOUT</span></div>
+        </div>
+        <div class="step-meta-item">
+          <div class="step-meta-label">消息数</div>
+          <div class="step-meta-value">8</div>
+        </div>
+        <div class="step-meta-item">
+          <div class="step-meta-label">Iterations</div>
+          <div class="step-meta-value">3</div>
+        </div>
+        <div class="step-meta-item">
+          <div class="step-meta-label">Tokens</div>
+          <div class="step-meta-value">2,341</div>
+        </div>
+        <div class="step-meta-item">
+          <div class="step-meta-label">User</div>
+          <div class="step-meta-value">scheduler-daily</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline">
+      <!-- Step 1: User Input -->
+      <div class="timeline-item">
+        <div class="timeline-card">
+          <div class="timeline-card-header">
+            <div class="timeline-card-title">
+              <span style="color: var(--color-accent);">▶</span> Step 1: User Input
+              <span class="text-tiny text-muted">14:23:08.234</span>
+            </div>
+            <span class="text-tiny text-muted">点击展开/折叠 ▼</span>
+          </div>
+          <div class="timeline-card-body">
+"查询今日上证指数收盘价"
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: LLM Call -->
+      <div class="timeline-item">
+        <div class="timeline-card">
+          <div class="timeline-card-header">
+            <div class="timeline-card-title">
+              <span style="color: var(--color-accent);">🤖</span> Step 2: LLM Call
+              <span class="text-tiny text-muted">14:23:08.612</span>
+            </div>
+            <span class="text-tiny text-muted">点击展开/折叠 ▼</span>
+          </div>
+          <div class="step-meta">
+            <div class="step-meta-item">
+              <div class="step-meta-label">Model</div>
+              <div class="step-meta-value">qwen-max</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Tokens</div>
+              <div class="step-meta-value">234 + 156 = 390</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Duration</div>
+              <div class="step-meta-value">0.8s</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Cost</div>
+              <div class="step-meta-value">$0.0002</div>
+            </div>
+          </div>
+          <div class="timeline-card-body">
+[人格] 你是一个股票监控助手
+[Memory] 检索 "上证指数" 命中 0 条
+[Tools] file_read, http_get, notify
+[Response]
+&lt;reasoning&gt;用户要查上证指数收盘价，应该用 http_get 调新浪财经 API&lt;/reasoning&gt;
+&lt;tool_call&gt;
+  name: http_get
+  args: {url: "https://hq.sinajs.cn/list=sh000001"}
+&lt;/tool_call&gt;
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Tool Call (FAILED) -->
+      <div class="timeline-item tool-step failed-step">
+        <div class="timeline-card failed">
+          <div class="timeline-card-header">
+            <div class="timeline-card-title">
+              <span style="color: var(--color-danger);">🔧</span> Step 3: Tool Call
+              <span class="text-tiny text-muted">14:23:09.420</span>
+              <span class="badge badge-failed">❌ 失败</span>
+            </div>
+            <span class="text-tiny text-muted">点击展开/折叠 ▼</span>
+          </div>
+          <div class="step-meta">
+            <div class="step-meta-item">
+              <div class="step-meta-label">Tool</div>
+              <div class="step-meta-value">http_get</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Source</div>
+              <div class="step-meta-value"><span class="badge badge-source-builtin">builtin</span></div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Sandbox</div>
+              <div class="step-meta-value" style="color: var(--color-danger);">✗ 拒绝</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Duration</div>
+              <div class="step-meta-value">—</div>
+            </div>
+          </div>
+          <div class="timeline-card-body">
+Args:
+{
+  "url": "https://hq.sinajs.cn/list=sh000001"
+}
+
+Error: sandbox violation: domain not whitelisted
+  Allowed: ["api.deepseek.com", "wttr.in", "api.github.com"]
+
+Detected: hq.sinajs.cn
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: LLM Retry -->
+      <div class="timeline-item">
+        <div class="timeline-card">
+          <div class="timeline-card-header">
+            <div class="timeline-card-title">
+              <span style="color: var(--color-accent);">🤖</span> Step 4: LLM Call (Retry)
+              <span class="text-tiny text-muted">14:23:10.521</span>
+            </div>
+            <span class="text-tiny text-muted">点击展开/折叠 ▼</span>
+          </div>
+          <div class="step-meta">
+            <div class="step-meta-item">
+              <div class="step-meta-label">Tokens</div>
+              <div class="step-meta-value">456 + 234 = 690</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Duration</div>
+              <div class="step-meta-value">1.2s</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Iterations</div>
+              <div class="step-meta-value">2 / 10</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Cost</div>
+              <div class="step-meta-value">$0.0004</div>
+            </div>
+          </div>
+          <div class="timeline-card-body">
+[Response]
+&lt;reasoning&gt;http_get 被 sandbox 拒绝。尝试用 file_read 读本地缓存文件 /data/stocks/sse.json&lt;/reasoning&gt;
+&lt;tool_call&gt;
+  name: file_read
+  args: {path: "/data/stocks/sse.json"}
+&lt;/tool_call&gt;
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Tool Call (HANG) -->
+      <div class="timeline-item tool-step failed-step">
+        <div class="timeline-card failed">
+          <div class="timeline-card-header">
+            <div class="timeline-card-title">
+              <span style="color: var(--color-danger);">🔧</span> Step 5: Tool Call
+              <span class="text-tiny text-muted">14:23:38.123</span>
+              <span class="badge badge-failed">❌ TIMEOUT</span>
+            </div>
+            <span class="text-tiny text-muted">点击展开/折叠 ▼</span>
+          </div>
+          <div class="step-meta">
+            <div class="step-meta-item">
+              <div class="step-meta-label">Tool</div>
+              <div class="step-meta-value">file_read</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Source</div>
+              <div class="step-meta-value"><span class="badge badge-source-builtin">builtin</span></div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Sandbox</div>
+              <div class="step-meta-value">✓ 通过</div>
+            </div>
+            <div class="step-meta-item">
+              <div class="step-meta-label">Duration</div>
+              <div class="step-meta-value" style="color: var(--color-danger);">30.0s</div>
+            </div>
+          </div>
+          <div class="timeline-card-body">
+Args:
+{
+  "path": "/data/stocks/sse.json"
+}
+
+Error: timeout after 30s
+  File size: 234MB
+  Read started: 2026-07-29 14:23:08.612
+  Read timeout: 2026-07-29 14:23:38.612
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6: Final Answer -->
+      <div class="timeline-item failed-step">
+        <div class="timeline-card failed">
+          <div class="timeline-card-header">
+            <div class="timeline-card-title">
+              <span style="color: var(--color-danger);">💬</span> Step 6: Final Answer (Error Fallback)
+              <span class="text-tiny text-muted">14:23:38.612</span>
+            </div>
+            <span class="text-tiny text-muted">点击展开/折叠 ▼</span>
+          </div>
+          <div class="timeline-card-body">
+抱歉，我无法获取今日上证指数收盘价。请稍后重试或联系管理员。
+错误原因：数据源不可用
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="card mt-4">
+      <div class="flex justify-between text-small text-muted">
+        <span>Session ID: <span class="text-mono">s-91abc-def-123</span></span>
+        <span>Session 创建于 2026-07-29 14:23:08 · 持续 30.4s</span>
+        <span>Metadata: <span class="text-mono">{"source": "scheduler", "task_id": "daily-9am"}</span></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

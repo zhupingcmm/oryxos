@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agents — OryxOS Admin Console</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+      OryxOS Console
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">📚 Mockups</a></li>
+      <li><a href="01-dashboard.html">📊 Dashboard</a></li>
+      <li><a href="02-agents-list.html" class="active">🤖 Agents</a></li>
+      <li><a href="04-sessions-list.html">💬 Sessions</a></li>
+      <li><a href="06-tools.html">🔧 Tools</a></li>
+      <li><a href="07-providers.html">⚡ Providers</a></li>
+      <li><a href="08-schedules.html">⏰ Schedules</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="flex items-center gap-2">
+        <span class="health-dot healthy"></span>
+        <span>OryxOS <span class="text-mono">v0.1.0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">🤖 Agent 管理</h1>
+        <p class="page-subtitle">已注册 4 个 Agent · 自动刷新 60s</p>
+      </div>
+      <div class="flex gap-2">
+        <input type="text" class="input search-input" placeholder="🔍 搜索 Agent..." style="min-width: 240px;">
+        <button class="btn btn-secondary">🔄 刷新</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Agent 名称</th>
+            <th>Provider</th>
+            <th>模型</th>
+            <th>状态</th>
+            <th style="text-align: right;">24h 调用</th>
+            <th style="text-align: right;">错误率</th>
+            <th style="width: 80px;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr onclick="location.href='03-agent-detail.html'">
+            <td>
+              <a href="03-agent-detail.html" style="color: var(--color-accent); text-decoration: none; font-weight: 500;">agent-weather</a>
+              <div class="text-tiny text-muted">查询天气</div>
+            </td>
+            <td>deepseek</td>
+            <td class="text-mono text-small">deepseek-v3</td>
+            <td><span class="badge badge-success"><span class="dot"></span>启用</span></td>
+            <td style="text-align: right;" class="text-mono">812</td>
+            <td style="text-align: right;" class="text-mono">0.0%</td>
+            <td><a href="05-session-detail.html" style="color: var(--color-accent); text-decoration: none;">查看 →</a></td>
+          </tr>
+          <tr onclick="location.href='03-agent-detail.html'">
+            <td>
+              <a href="03-agent-detail.html" style="color: var(--color-accent); text-decoration: none; font-weight: 500;">agent-github</a>
+              <div class="text-tiny text-muted">GitHub 日报</div>
+            </td>
+            <td>deepseek</td>
+            <td class="text-mono text-small">deepseek-v3</td>
+            <td><span class="badge badge-success"><span class="dot"></span>启用</span></td>
+            <td style="text-align: right;" class="text-mono">234</td>
+            <td style="text-align: right;" class="text-mono">2.1%</td>
+            <td><a href="05-session-detail.html" style="color: var(--color-accent); text-decoration: none;">查看 →</a></td>
+          </tr>
+          <tr onclick="location.href='03-agent-detail.html'">
+            <td>
+              <a href="03-agent-detail.html" style="color: var(--color-accent); text-decoration: none; font-weight: 500;">agent-news</a>
+              <div class="text-tiny text-muted">科技日报</div>
+            </td>
+            <td>kimi</td>
+            <td class="text-mono text-small">kimi-k2</td>
+            <td><span class="badge badge-cancelled">◐ 禁用</span></td>
+            <td style="text-align: right;" class="text-mono">0</td>
+            <td style="text-align: right;" class="text-muted">-</td>
+            <td><a href="03-agent-detail.html" style="color: var(--color-accent); text-decoration: none;">查看 →</a></td>
+          </tr>
+          <tr onclick="location.href='03-agent-detail.html'">
+            <td>
+              <a href="03-agent-detail.html" style="color: var(--color-accent); text-decoration: none; font-weight: 500;">agent-stock</a>
+              <div class="text-tiny text-muted">股票监控</div>
+            </td>
+            <td>qwen</td>
+            <td class="text-mono text-small">qwen-max</td>
+            <td><span class="badge badge-warning">⚠ 异常</span></td>
+            <td style="text-align: right;" class="text-mono">56</td>
+            <td style="text-align: right;" class="text-mono" style="color: var(--color-danger);">
+              <span style="color: var(--color-danger);">12.5%</span>
+            </td>
+            <td><a href="05-session-detail.html" style="color: var(--color-accent); text-decoration: none;">查看 →</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card mt-4">
+      <h3 class="card-title mb-4">📊 Agent 分布</h3>
+      <div class="grid-2">
+        <div>
+          <div class="text-small text-secondary mb-2">按 Provider 分布</div>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-mono text-small" style="width: 80px;">deepseek</span>
+              <div style="flex: 1; height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 50%; height: 100%; background: var(--color-accent);"></div>
+              </div>
+              <span class="text-mono text-small">2 / 4</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-mono text-small" style="width: 80px;">kimi</span>
+              <div style="flex: 1; height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 25%; height: 100%; background: var(--color-secondary);"></div>
+              </div>
+              <span class="text-mono text-small">1 / 4</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-mono text-small" style="width: 80px;">qwen</span>
+              <div style="flex: 1; height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 25%; height: 100%; background: var(--color-success);"></div>
+              </div>
+              <span class="text-mono text-small">1 / 4</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="text-small text-secondary mb-2">按状态分布</div>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-mono text-small" style="width: 80px;">启用</span>
+              <div style="flex: 1; height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 75%; height: 100%; background: var(--color-success);"></div>
+              </div>
+              <span class="text-mono text-small">3 / 4</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-mono text-small" style="width: 80px;">禁用</span>
+              <div style="flex: 1; height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 25%; height: 100%; background: var(--color-text-muted);"></div>
+              </div>
+              <span class="text-mono text-small">1 / 4</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-mono text-small" style="width: 80px;">异常</span>
+              <div style="flex: 1; height: 8px; background: var(--color-surface-2); border-radius: 4px; overflow: hidden;">
+                <div style="width: 25%; height: 100%; background: var(--color-warning);"></div>
+              </div>
+              <span class="text-mono text-small">1 / 4</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

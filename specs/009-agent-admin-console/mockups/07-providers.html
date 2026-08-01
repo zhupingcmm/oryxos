@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Providers — OryxOS Admin Console</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+      OryxOS Console
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="index.html">📚 Mockups</a></li>
+      <li><a href="01-dashboard.html">📊 Dashboard</a></li>
+      <li><a href="02-agents-list.html">🤖 Agents</a></li>
+      <li><a href="04-sessions-list.html">💬 Sessions</a></li>
+      <li><a href="06-tools.html">🔧 Tools</a></li>
+      <li><a href="07-providers.html" class="active">⚡ Providers</a></li>
+      <li><a href="08-schedules.html">⏰ Schedules</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="flex items-center gap-2">
+        <span class="health-dot healthy"></span>
+        <span>OryxOS <span class="text-mono">v0.1.0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">⚡ Provider 模型</h1>
+        <p class="page-subtitle">3 个 Provider 在线 · 自动刷新 5min</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary">🔄 刷新</button>
+      </div>
+    </div>
+
+    <!-- DeepSeek -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="flex items-center gap-3">
+          <h3 class="card-title">deepseek</h3>
+          <span class="badge badge-success"><span class="dot"></span>健康</span>
+        </div>
+        <span class="text-small text-muted">最近探测 14:23</span>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="text-small text-secondary mb-2">支持模型</div>
+          <div class="flex gap-2 mb-4" style="flex-wrap: wrap;">
+            <span class="badge badge-source-builtin">deepseek-v3</span>
+            <span class="badge badge-source-builtin">deepseek-coder</span>
+            <span class="badge badge-source-builtin">deepseek-r1</span>
+          </div>
+          <div class="grid-2">
+            <div class="stat-tile">
+              <div class="stat-label">24h 调用</div>
+              <div class="stat-value">1,046</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">24h tokens</div>
+              <div class="stat-value">7.4M</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">错误率</div>
+              <div class="stat-value" style="color: var(--color-success);">0.4%</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">P50 延迟</div>
+              <div class="stat-value">1.2s</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">P95 延迟</div>
+              <div class="stat-value">3.8s</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">24h 费用</div>
+              <div class="stat-value">$1.48</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="text-small text-secondary mb-2">24h 调用时序</div>
+          <div class="sparkline" style="height: 120px;">
+            <div class="sparkline-bar" style="height: 20%;"></div>
+            <div class="sparkline-bar" style="height: 15%;"></div>
+            <div class="sparkline-bar" style="height: 25%;"></div>
+            <div class="sparkline-bar" style="height: 30%;"></div>
+            <div class="sparkline-bar" style="height: 45%;"></div>
+            <div class="sparkline-bar" style="height: 60%;"></div>
+            <div class="sparkline-bar" style="height: 85%;"></div>
+            <div class="sparkline-bar" style="height: 75%;"></div>
+            <div class="sparkline-bar" style="height: 70%;"></div>
+            <div class="sparkline-bar" style="height: 55%;"></div>
+            <div class="sparkline-bar" style="height: 50%;"></div>
+            <div class="sparkline-bar" style="height: 45%;"></div>
+            <div class="sparkline-bar" style="height: 40%;"></div>
+            <div class="sparkline-bar" style="height: 35%;"></div>
+            <div class="sparkline-bar" style="height: 30%;"></div>
+            <div class="sparkline-bar" style="height: 35%;"></div>
+            <div class="sparkline-bar" style="height: 50%;"></div>
+            <div class="sparkline-bar" style="height: 65%;"></div>
+            <div class="sparkline-bar" style="height: 78%;"></div>
+            <div class="sparkline-bar" style="height: 70%;"></div>
+            <div class="sparkline-bar" style="height: 55%;"></div>
+            <div class="sparkline-bar" style="height: 40%;"></div>
+            <div class="sparkline-bar" style="height: 30%;"></div>
+            <div class="sparkline-bar" style="height: 25%;"></div>
+          </div>
+          <div class="flex justify-between mt-2 text-tiny text-muted">
+            <span>00:00</span><span>12:00</span><span>24:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kimi -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="flex items-center gap-3">
+          <h3 class="card-title">kimi</h3>
+          <span class="badge badge-success"><span class="dot"></span>健康</span>
+        </div>
+        <span class="text-small text-muted">最近探测 14:23</span>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="text-small text-secondary mb-2">支持模型</div>
+          <div class="flex gap-2 mb-4" style="flex-wrap: wrap;">
+            <span class="badge badge-source-builtin">kimi-k2</span>
+          </div>
+          <div class="grid-2">
+            <div class="stat-tile">
+              <div class="stat-label">24h 调用</div>
+              <div class="stat-value">234</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">24h tokens</div>
+              <div class="stat-value">2.3M</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">错误率</div>
+              <div class="stat-value">1.2%</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">P50 延迟</div>
+              <div class="stat-value">2.1s</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">P95 延迟</div>
+              <div class="stat-value">5.4s</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">24h 费用</div>
+              <div class="stat-value">$0.92</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="text-small text-secondary mb-2">24h 调用时序</div>
+          <div class="sparkline" style="height: 120px;">
+            <div class="sparkline-bar" style="height: 10%;"></div>
+            <div class="sparkline-bar" style="height: 8%;"></div>
+            <div class="sparkline-bar" style="height: 12%;"></div>
+            <div class="sparkline-bar" style="height: 15%;"></div>
+            <div class="sparkline-bar" style="height: 22%;"></div>
+            <div class="sparkline-bar" style="height: 35%;"></div>
+            <div class="sparkline-bar" style="height: 50%;"></div>
+            <div class="sparkline-bar" style="height: 45%;"></div>
+            <div class="sparkline-bar" style="height: 40%;"></div>
+            <div class="sparkline-bar" style="height: 30%;"></div>
+            <div class="sparkline-bar" style="height: 25%;"></div>
+            <div class="sparkline-bar" style="height: 22%;"></div>
+            <div class="sparkline-bar" style="height: 20%;"></div>
+            <div class="sparkline-bar" style="height: 18%;"></div>
+            <div class="sparkline-bar" style="height: 15%;"></div>
+            <div class="sparkline-bar" style="height: 18%;"></div>
+            <div class="sparkline-bar" style="height: 25%;"></div>
+            <div class="sparkline-bar" style="height: 38%;"></div>
+            <div class="sparkline-bar" style="height: 50%;"></div>
+            <div class="sparkline-bar" style="height: 45%;"></div>
+            <div class="sparkline-bar" style="height: 35%;"></div>
+            <div class="sparkline-bar" style="height: 25%;"></div>
+            <div class="sparkline-bar" style="height: 18%;"></div>
+            <div class="sparkline-bar" style="height: 12%;"></div>
+          </div>
+          <div class="flex justify-between mt-2 text-tiny text-muted">
+            <span>00:00</span><span>12:00</span><span>24:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Qwen (with warning) -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="flex items-center gap-3">
+          <h3 class="card-title">qwen</h3>
+          <span class="badge badge-warning"><span class="dot dot-pulse"></span>部分异常</span>
+        </div>
+        <span class="text-small text-muted">最近探测 14:23</span>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="text-small text-secondary mb-2">支持模型</div>
+          <div class="flex gap-2 mb-4" style="flex-wrap: wrap;">
+            <span class="badge badge-source-builtin">qwen-max</span>
+            <span class="badge badge-source-builtin">qwen-turbo</span>
+          </div>
+          <div class="grid-2">
+            <div class="stat-tile">
+              <div class="stat-label">24h 调用</div>
+              <div class="stat-value">56</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">24h tokens</div>
+              <div class="stat-value">0.6M</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">错误率</div>
+              <div class="stat-value" style="color: var(--color-danger);">12.5%</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">P50 延迟</div>
+              <div class="stat-value">3.2s</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">P95 延迟</div>
+              <div class="stat-value">8.7s</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-label">24h 费用</div>
+              <div class="stat-value">$0.30</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="text-small text-secondary mb-2">24h 调用时序</div>
+          <div class="sparkline" style="height: 120px;">
+            <div class="sparkline-bar" style="height: 5%;"></div>
+            <div class="sparkline-bar" style="height: 4%;"></div>
+            <div class="sparkline-bar" style="height: 5%;"></div>
+            <div class="sparkline-bar" style="height: 6%;"></div>
+            <div class="sparkline-bar" style="height: 12%;"></div>
+            <div class="sparkline-bar" style="height: 20%;"></div>
+            <div class="sparkline-bar" style="height: 30%;"></div>
+            <div class="sparkline-bar" style="height: 25%;"></div>
+            <div class="sparkline-bar" style="height: 22%;"></div>
+            <div class="sparkline-bar" style="height: 18%;"></div>
+            <div class="sparkline-bar" style="height: 15%;"></div>
+            <div class="sparkline-bar" style="height: 12%;"></div>
+            <div class="sparkline-bar" style="height: 10%;"></div>
+            <div class="sparkline-bar" style="height: 8%;"></div>
+            <div class="sparkline-bar" style="height: 7%;"></div>
+            <div class="sparkline-bar" style="height: 8%;"></div>
+            <div class="sparkline-bar" style="height: 12%;"></div>
+            <div class="sparkline-bar" style="height: 18%;"></div>
+            <div class="sparkline-bar" style="height: 25%;"></div>
+            <div class="sparkline-bar" style="height: 22%;"></div>
+            <div class="sparkline-bar" style="height: 18%;"></div>
+            <div class="sparkline-bar" style="height: 12%;"></div>
+            <div class="sparkline-bar" style="height: 8%;"></div>
+            <div class="sparkline-bar" style="height: 5%;"></div>
+          </div>
+          <div class="flex justify-between mt-2 text-tiny text-muted">
+            <span>00:00</span><span>12:00</span><span>24:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
